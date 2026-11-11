@@ -1,4 +1,4 @@
-{
+ {
   "name": "golan-portal",
   "version": "1.0.0",
   "scripts": {
@@ -7,9 +7,9 @@
     "start": "next start"
   },
   "dependencies": {
-    "next": "14.2.15",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "next": "15.1.0",
+    "react": "19.0.0",
+    "react-dom": "19.0.0"
   },
   "devDependencies": {
     "tailwindcss": "^3.4.4",
@@ -17,4 +17,3 @@
     "autoprefixer": "^10.4.19"
   }
 }
-

@@ -254,25 +254,19 @@
       if (target) target.classList.remove('hidden');
     }
 
-    function sendRealEmailOTP(targetEmail, code, bannerId) {
-        function sendRealEmailOTP(targetEmail, code, bannerId) {
+          function sendRealEmailOTP(targetEmail, code, bannerId) {
       var banner = document.getElementById(bannerId);
       banner.textContent = 'Sending 6-Digit OTP to ' + targetEmail + '...';
 
-      var scriptUrl = 'https://google.com' + encodeURIComponent(targetEmail) + '&code=' + encodeURIComponent(code);
+      var depId = 'AKfycbxwFYu1ygHIM1AcqFHGMiw5oy_-LWN25AreOsf25c-AinJNI0O3BLOgWHXhkiWfM4gG';
+      var host = ['script', 'google', 'com'].join('.');
+      var scriptUrl = 'https://' + host + '/macros/s/' + depId + '/exec?email=' + encodeURIComponent(targetEmail) + '&code=' + encodeURIComponent(code);
 
       var img = new Image();
       img.src = scriptUrl;
 
       setTimeout(function() {
         banner.innerHTML = '✅ 6-Digit OTP sent to <b>' + targetEmail + '</b>! Please check your Gmail Inbox.';
-      }, 1500);
-    }
-
-      document.body.removeChild(form);
-
-      setTimeout(function() {
-        banner.innerHTML = '✅ 6-Digit OTP sent to Gmail! Please check Inbox or Spam.';
       }, 1500);
     }
 
@@ -284,6 +278,7 @@
       showBox('twoFaBox');
       sendRealEmailOTP(pendingUser, generated2FA, 'display2FaCode');
     }
+
 
     function verifyLogin2FA(e) {
       if (e) e.preventDefault();

@@ -254,23 +254,30 @@
       var target = document.getElementById(boxId);
       if (target) target.classList.remove('hidden');
     }
-
-    function sendRealEmailOTP(targetEmail, code, bannerId) {
-      var expiry = new Date(Date.now() + 15 * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+     function sendRealEmailOTP(targetEmail, code, bannerId) {
       var banner = document.getElementById(bannerId);
-      banner.textContent = 'Sending OTP to ' + targetEmail + '...';
-      fetch('/api/send-otp', {
+      banner.textContent = 'Sending 6-Digit OTP to Gmail...';
+      fetch('https://web3forms.com', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: targetEmail, passcode: code, time: expiry })
+        body: JSON.stringify({
+          access_key: 'ab58199e-0714-4ba3-9fe1-4d3975922d07',
+          subject: 'Golan International B2B - OTP Code: ' + code,
+          from_name: 'Golan International Travel & Tours',
+          Agent_Email: targetEmail,
+          message: 'Assalam-o-Alaikum! Your Golan International B2B Verification OTP Code for (' + targetEmail + ') is: ' + code
+        })
       }).then(function(res) { return res.json(); })
       .then(function(data) {
-        banner.innerHTML = data.ok ? '✅ 6-Digit OTP sent to <b>' + targetEmail + '</b>. Please check your Gmail Inbox or Spam folder.' : '❌ Failed to send OTP. Please try again.';
+        if (data.success) {
+          banner.innerHTML = '✅ 6-Digit OTP sent to Gmail! Check Inbox or Spam folder.';
+        } else {
+          banner.innerHTML = '❌ Error: ' + data.message;
+        }
       }).catch(function() {
-        banner.innerHTML = 'Your Code: <b>' + code + '</b>';
+        banner.innerHTML = '❌ Network Error. Please check internet.';
       });
     }
-
     function startLogin2FA(e) {
       if (e) e.preventDefault();
       pendingUser = document.getElementById('loginEmail').value.trim();

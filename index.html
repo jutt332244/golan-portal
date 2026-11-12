@@ -1,4 +1,4 @@
-  <!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -8,15 +8,16 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background: #f1f5f9; color: #1e293b; }
     .hidden { display: none !important; }
-    .topbar { background: #0f172a; color: #e2e8f0; font-size: 12px; padding: 10px 20px; border-bottom: 2px solid #d97706; }
+    .topbar { background: #0f172a; color: #e2e8f0; font-size: 12px; padding: 9px 20px; border-bottom: 2px solid #d97706; }
     .container { max-width: 1200px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
     .badge-top { color: #fbbf24; font-weight: 700; letter-spacing: 0.5px; }
-    header { background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%); border-bottom: 1px solid #1e40af; padding: 16px 20px; box-shadow: 0 4px 12px rgba(15,23,42,0.15); }
+    .wa-channel-top { background: #16a34a; color: #ffffff; padding: 5px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
+    header { background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%); border-bottom: 1px solid #1e40af; padding: 16px 20px; }
     .brand-wrap { display: flex; align-items: center; gap: 14px; }
     .logo-box { width: 54px; height: 54px; border-radius: 12px; background: #fff; border: 2px solid #fbbf24; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
     .logo-box img { width: 100%; height: 100%; object-fit: contain; }
     .logo-fallback { font-weight: 900; font-size: 20px; color: #1e3a8a; }
-    .brand h1 { color: #ffffff; font-size: 24px; font-weight: 800; letter-spacing: 0.5px; }
+    .brand h1 { color: #ffffff; font-size: 24px; font-weight: 800; }
     .brand p { color: #fbbf24; font-size: 11px; font-weight: 700; letter-spacing: 1.8px; text-transform: uppercase; margin-top: 2px; }
     .ceo { text-align: right; }
     .ceo span { font-size: 11px; color: #93c5fd; display: block; }
@@ -29,7 +30,7 @@
     .hero p.desc { color: #475569; font-size: 15px; line-height: 1.6; margin-bottom: 24px; }
     .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
     @media (max-width: 600px) { .cards { grid-template-columns: 1fr; } }
-    .card { background: #ffffff; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; border-top: 3px solid #1d4ed8; box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
+    .card { background: #ffffff; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; border-top: 3px solid #1d4ed8; }
     .card h4 { color: #1e3a8a; font-size: 15px; margin-bottom: 6px; }
     .card p { font-size: 12px; color: #64748b; line-height: 1.4; }
     .login-box { background: #ffffff; padding: 30px; border-radius: 18px; border: 1px solid #e2e8f0; border-top: 4px solid #d97706; box-shadow: 0 12px 28px rgba(15,23,42,0.1); }
@@ -62,14 +63,23 @@
     .modal-card { background: #fff; max-width: 440px; width: 100%; padding: 26px; border-radius: 16px; border-top: 4px solid #1e3a8a; }
     .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
     .close-x { background: none; border: none; font-size: 20px; cursor: pointer; }
-    footer { background: #0f172a; color: #94a3b8; font-size: 12px; padding: 22px 20px; margin-top: 60px; border-top: 2px solid #d97706; }
+    footer { background: #0f172a; color: #cbd5e1; font-size: 13px; padding: 40px 20px 26px; margin-top: 80px; border-top: 3px solid #d97706; }
+    .footer-grid { max-width: 1200px; margin: 0 auto 28px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; }
+    .footer-card { background: rgba(30, 41, 59, 0.7); padding: 18px 20px; border-radius: 12px; border: 1px solid #334155; }
+    .footer-card h4 { color: #fbbf24; font-size: 14px; margin-bottom: 10px; text-transform: uppercase; }
+    .footer-card p { line-height: 1.8; font-size: 13px; color: #e2e8f0; }
+    .wa-btn-big { display: inline-block; margin-top: 8px; background: #16a34a; color: #fff; font-weight: 700; padding: 10px 18px; border-radius: 8px; text-decoration: none; font-size: 13px; }
+    .footer-bottom { max-width: 1200px; margin: 0 auto; padding-top: 18px; border-top: 1px solid #1e293b; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; font-size: 12px; color: #94a3b8; }
   </style>
 </head>
 <body>
   <div class="topbar">
     <div class="container">
-      <div>📞 PTCL: 046-2512722 &nbsp;|&nbsp; 📱 0345-3326318 | 0318-6392322 | 0331-6379110 &nbsp;|&nbsp; ✉️ golaninternational322@gmail.com</div>
-      <div class="badge-top">🔒 2FA PROTECTED B2B TRAVEL & UMRAH PORTAL</div>
+      <div class="badge-top">OFFICIAL B2B TRAVEL, TICKETING & UMRAH PARTNER PORTAL</div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="color:#93c5fd;font-weight:600;">🔒 2FA SECURED</span>
+        <a href="https://whatsapp.com" target="_blank" class="wa-channel-top">📢 Join WhatsApp Channel</a>
+      </div>
     </div>
   </div>
   <header>
@@ -118,7 +128,7 @@
       <div id="twoFaBox" class="hidden">
         <h3>🔐 2FA Security Check</h3>
         <p class="sub">Enter the 6-digit 2FA security code to unlock dashboard.</p>
-        <div class="otp-banner">Your 2FA Security Code: <strong id="display2FaCode" style="font-size:16px;"></strong></div>
+        <div class="otp-banner">Your 2FA Security Code: <strong id="display2FaCode" style="font-size:15px;"></strong></div>
         <form onsubmit="verifyLogin2FA(event)">
           <div class="field"><label>Enter 6-Digit 2FA Code</label><input type="text" id="input2FaCode" maxlength="6" class="otp-input" placeholder="••••••" required /></div>
           <button type="submit" class="btn-primary">Verify 2FA & Open Dashboard</button>
@@ -141,8 +151,8 @@
 
       <div id="regOtpBox" class="hidden">
         <h3>📲 Verify Registration OTP</h3>
-        <p class="sub">Step 2 of 2: Enter the 6-digit OTP sent to your number.</p>
-        <div class="otp-banner">Verification OTP Sent: <strong id="displayRegOtp" style="font-size:16px;"></strong></div>
+        <p class="sub">Step 2 of 2: Enter the 6-digit OTP sent to your email.</p>
+        <div class="otp-banner">Verification OTP: <strong id="displayRegOtp" style="font-size:15px;"></strong></div>
         <form onsubmit="verifyRegisterOTP(event)">
           <div class="field"><label>Enter 6-Digit OTP</label><input type="text" id="inputRegOtp" maxlength="6" class="otp-input" placeholder="••••••" required /></div>
           <button type="submit" class="btn-primary">Verify OTP & Activate Account</button>
@@ -194,8 +204,26 @@
     </div>
   </div>
 
-  <footer><div class="container"><p>© 2026 <strong>Golan International Travel & Tours</strong>. All Rights Reserved.</p><p>Toba Tek Singh • Support: 046-2512722 | 0345-3326318</p></div></footer>
-    <script>
+  <footer>
+    <div class="footer-grid">
+      <div class="footer-card">
+        <h4>🏢 Head Office</h4>
+        <p><strong>Golan International Travel & Tours</strong><br />Chief Executive: <strong>Shan Chairman</strong><br />Toba Tek Singh, Punjab, Pakistan</p>
+      </div>
+      <div class="footer-card">
+        <h4>📞 24/7 B2B Support & Numbers</h4>
+        <p>
+          <strong>PTCL Landline:</strong> 046-2512722<br />
+          <strong>Mobile / WhatsApp:</strong> 0345-3326318<br />
+          <strong>Support Lines:</strong> 0318-6392322 | 0331-6379110<br />
+          <strong>Official Email:</strong> golaninternational322@gmail.com
+        </p>
+      </div>
+      <div class="footer-card">
+        <h4>📢 Official WhatsApp Channel</h4>
+        <p>Join our official B2B WhatsApp Channel for daily group flight fares, Umrah packages & visa updates.</p>
+        <a href="https://whatsapp.com" target="_blank" class="wa-btn-big">Join WhatsApp Channel →</a>
+  <script>
     var flights = [
       { airline: 'Saudia Airlines', sector: 'LHE - JED', date: '20 Nov 2026', bag: '46+7 KG', seats: 14, fare: '124,500' },
       { airline: 'PIA', sector: 'ISB - RUH', date: '22 Nov 2026', bag: '30+7 KG', seats: 9, fare: '112,000' },
@@ -231,40 +259,21 @@
       var expiry = new Date(Date.now() + 15 * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       var banner = document.getElementById(bannerId);
       banner.textContent = 'Sending OTP to ' + targetEmail + '...';
-
-      fetch('https://emailjs.com', {
+      fetch('/api/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          service_id: 'service_x4flyen',
-          template_id: 'template_csrue8p',
-          user_id: 'gMrrdOr6utn_kwlZx',
-          template_params: {
-            email: targetEmail,
-            passcode: code,
-            time: expiry
-          }
-        })
-      }).then(function(res) {
-        if (res.ok) {
-          banner.innerHTML = '✅ OTP Sent to <b>' + targetEmail + '</b>! (Check Gmail Inbox or Spam)';
-        } else {
-          return res.text().then(function(txt) {
-            banner.innerHTML = '⚠️ Error (' + txt + ') • Your Code: <b>' + code + '</b>';
-          });
-        }
+        body: JSON.stringify({ email: targetEmail, passcode: code, time: expiry })
+      }).then(function(res) { return res.json(); })
+      .then(function(data) {
+        banner.innerHTML = data.ok ? '✅ OTP Sent to <b>' + targetEmail + '</b>!' : 'Your Code: <b>' + code + '</b>';
       }).catch(function() {
-        banner.innerHTML = '⚠️ Network Blocked • Your Code: <b>' + code + '</b>';
+        banner.innerHTML = 'Your Code: <b>' + code + '</b>';
       });
     }
 
     function startLogin2FA(e) {
       if (e) e.preventDefault();
       pendingUser = document.getElementById('loginEmail').value.trim();
-      if (!pendingUser.includes('@')) {
-        alert('Please enter a valid Gmail address!');
-        return;
-      }
       generated2FA = String(Math.floor(100000 + Math.random() * 900000));
       document.getElementById('input2FaCode').value = '';
       showBox('twoFaBox');
@@ -273,10 +282,7 @@
 
     function verifyLogin2FA(e) {
       if (e) e.preventDefault();
-      if (document.getElementById('input2FaCode').value.trim() !== generated2FA) {
-        alert('Invalid 2FA Code! Please enter the 6-digit code sent to your Gmail.');
-        return;
-      }
+      if (document.getElementById('input2FaCode').value.trim() !== generated2FA) { alert('Invalid 2FA Code!'); return; }
       document.getElementById('authView').classList.add('hidden');
       document.getElementById('dashboardView').classList.remove('hidden');
       document.getElementById('welcomeAgency').textContent = 'Welcome, ' + pendingUser.toUpperCase();
@@ -294,13 +300,10 @@
 
     function verifyRegisterOTP(e) {
       if (e) e.preventDefault();
-      if (document.getElementById('inputRegOtp').value.trim() !== generatedRegOtp) {
-        alert('Wrong OTP! Please check your Gmail inbox for the 6-digit code.');
-        return;
-      }
+      if (document.getElementById('inputRegOtp').value.trim() !== generatedRegOtp) { alert('Wrong OTP!'); return; }
       var ag = document.getElementById('regAgency').value, ph = document.getElementById('regPhone').value, em = document.getElementById('regEmail').value;
-      window.open('https://wa.me' + encodeURIComponent('GMAIL OTP VERIFIED NEW B2B AGENCY:\nAgency: ' + ag + '\nPhone: ' + ph + '\nEmail: ' + em), '_blank');
-      alert('Email OTP Verified! Agency Account Activated. Now Sign In with 2FA.');
+      window.open('https://wa.me' + encodeURIComponent('NEW B2B AGENCY:\nAgency: ' + ag + '\nPhone: ' + ph + '\nEmail: ' + em), '_blank');
+      alert('OTP Verified! Now Sign In.');
       document.getElementById('loginEmail').value = em;
       showBox('loginFormBox');
     }

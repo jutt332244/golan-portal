@@ -255,6 +255,7 @@
       if (target) target.classList.remove('hidden');
     }
      function sendRealEmailOTP(targetEmail, code, bannerId) {
+          function sendRealEmailOTP(targetEmail, code, bannerId) {
       var banner = document.getElementById(bannerId);
       banner.textContent = 'Sending 6-Digit OTP to Gmail...';
       fetch('https://web3forms.com', {
@@ -270,6 +271,14 @@
       }).then(function(res) { return res.json(); })
       .then(function(data) {
         if (data.success) {
+          banner.innerHTML = '✅ 6-Digit OTP sent to Gmail! Check Inbox or Spam folder.';
+        } else {
+          banner.innerHTML = '❌ Error: ' + data.message;
+        }
+      }).catch(function() {
+        banner.innerHTML = '❌ Network Error. Please check internet.';
+      });
+    }
           banner.innerHTML = '✅ 6-Digit OTP sent to Gmail! Check Inbox or Spam folder.';
         } else {
           banner.innerHTML = '❌ Error: ' + data.message;

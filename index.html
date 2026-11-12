@@ -309,101 +309,104 @@
       <p>Toba Tek Singh • Support: 046-2512722 | 0345-3326318</p>
     </div>
   </footer>
-
-  <script>
-    const defaultFlights = [
+    <script>
+    var flights = [
       { airline: 'Saudia Airlines', sector: 'LHE - JED', date: '20 Nov 2026', bag: '46+7 KG', seats: 14, fare: '124,500' },
       { airline: 'PIA', sector: 'ISB - RUH', date: '22 Nov 2026', bag: '30+7 KG', seats: 9, fare: '112,000' },
       { airline: 'AirSial', sector: 'LHE - MED', date: '25 Nov 2026', bag: '30+7 KG', seats: 18, fare: '119,000' },
       { airline: 'Flydubai', sector: 'LYP - DXB', date: '28 Nov 2026', bag: '20+7 KG', seats: 11, fare: '78,500' }
     ];
-
-    const umrahPackages = [
-      { name: 'Economy Umrah Saver', days: '15 Days', hotel: 'Makkah 800m / Madinah 500m (Shuttle)', sharing: 'Quad / Sharing', fare: '185,000' },
-      { name: 'Executive Near Haram', days: '15 Days', hotel: 'Makkah 350m / Madinah 250m', sharing: 'Triple / Quad', fare: '225,000' },
-      { name: 'VIP 5-Star Clock Tower', days: '14 Days', hotel: 'Swissotel Makkah / Anwar Al Madinah', sharing: 'Double / Triple', fare: '340,000' }
+    var umrah = [
+      { name: 'Economy Umrah Saver', days: '15 Days', hotel: 'Makkah 800m / Madinah 500m', sharing: 'Quad', fare: '185,000' },
+      { name: 'Executive Near Haram', days: '15 Days', hotel: 'Makkah 350m / Madinah 250m', sharing: 'Triple', fare: '225,000' },
+      { name: 'VIP 5-Star Clock Tower', days: '14 Days', hotel: 'Swissotel / Anwar Al Madinah', sharing: 'Double', fare: '340,000' }
     ];
-
-    const visitVisas = [
-      { country: '🇦🇪 UAE (Dubai)', type: '30 Days Single Entry Tourist', time: '2 - 3 Working Days', fare: '26,500' },
-      { country: '🇦🇪 UAE (Dubai)', type: '60 Days Single Entry Tourist', time: '2 - 3 Working Days', fare: '44,000' },
-      { country: '🇸🇦 Saudi Arabia', type: '90 Days Multiple Tourist / Umrah', time: '24 Hours', fare: '36,000' },
-      { country: '🇬🇧 United Kingdom', type: '6 Months Standard Visitor', time: '15 - 20 Days', fare: '68,000' }
+    var visas = [
+      { country: 'UAE (Dubai)', type: '30 Days Tourist', time: '2-3 Days', fare: '26,500' },
+      { country: 'UAE (Dubai)', type: '60 Days Tourist', time: '2-3 Days', fare: '44,000' },
+      { country: 'Saudi Arabia', type: '90 Days Multiple', time: '24 Hours', fare: '36,000' }
     ];
-
-    let flights = JSON.parse(localStorage.getItem('golan_flights')) || defaultFlights;
-    let bookings = JSON.parse(localStorage.getItem('golan_bookings')) || [];
-    let selectedBookingItem = null;
-
-    function showAlert(msg, type) {
-      const box = document.getElementById('authAlert');
-      box.textContent = msg;
-      box.className = 'alert ' + (type === 'error' ? 'alert-error' : 'alert-success');
-    }
+    var bookings = [];
+    var currentItem = { title: '', price: '' };
 
     function toggleAuthMode(mode) {
-      document.getElementById('authAlert').classList.add('hidden');
-      if (mode === 'register') {
-        document.getElementById('loginFormBox').classList.add('hidden');
-        document.getElementById('registerFormBox').classList.remove('hidden');
-      } else {
-        document.getElementById('registerFormBox').classList.add('hidden');
-        document.getElementById('loginFormBox').classList.remove('hidden');
-      }
+      document.getElementById('loginFormBox').classList.toggle('hidden', mode === 'register');
+      document.getElementById('registerFormBox').classList.toggle('hidden', mode !== 'register');
     }
 
     function handleRegister(e) {
       e.preventDefault();
-      const user = {
-        agency: document.getElementById('regAgency').value,
-        city: document.getElementById('regCity').value,
-        phone: document.getElementById('regPhone').value,
-        email: document.getElementById('regEmail').value,
-        pass: document.getElementById('regPass').value
-      };
-      localStorage.setItem('golan_user_' + user.email.toLowerCase(), JSON.stringify(user));
-      const waText = encodeURIComponent(`Assalam-o-Alaikum Golan International! New B2B Agency Registered:\nAgency: ${user.agency}\nCity: ${user.city}\nPhone: ${user.phone}\nEmail: ${user.email}`);
-      window.open(`https://wa.me{waText}`, '_blank');
-      showAlert('Registration Successful! Please Sign In below.', 'success');
+      var ag = document.getElementById('regAgency').value;
+      var ph = document.getElementById('regPhone').value;
+      window.open('https://wa.me' + encodeURIComponent('New B2B Agency: ' + ag + ' (' + ph + ')'), '_blank');
+      alert('Registration Successful! Now click Sign In.');
       toggleAuthMode('login');
-      document.getElementById('loginEmail').value = user.email;
     }
 
     function handleLogin(e) {
       e.preventDefault();
-      const email = document.getElementById('loginEmail').value.trim().toLowerCase();
-      const saved = localStorage.getItem('golan_user_' + email);
-      let agencyName = email.split('@')[0].toUpperCase() + ' TRAVELS';
-      let city = 'Registered B2B Partner';
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        agencyName = parsed.agency;
-        city = parsed.city + ' • ' + parsed.phone;
-      }
-      localStorage.setItem('golan_active_session', JSON.stringify({ agency: agencyName, meta: city }));
-      openDashboard();
+      var email = document.getElementById('loginEmail').value || 'Partner Agency';
+      document.getElementById('authView').classList.add('hidden');
+      document.getElementById('dashboardView').classList.remove('hidden');
+      document.getElementById('welcomeAgency').textContent = 'Welcome, ' + email.toUpperCase();
+      renderTables();
     }
 
     function handleLogout() {
-      localStorage.removeItem('golan_active_session');
       document.getElementById('dashboardView').classList.add('hidden');
       document.getElementById('authView').classList.remove('hidden');
+    }
+
+    function switchTab(tab, btn) {
+      document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      ['flights', 'umrah', 'visas', 'bookings', 'admin'].forEach(function(t) {
+        document.getElementById('tab-' + t).classList.add('hidden');
+      });
+      document.getElementById('tab-' + tab).classList.remove('hidden');
+    }
+
+    function renderTables() {
+      document.getElementById('flightsTable').innerHTML = flights.map(function(f) {
+        return '<tr><td><b>' + f.airline + '</b></td><td>' + f.sector + '</td><td>' + f.date + '</td><td>' + f.bag + '</td><td><span class="seat-badge">' + f.seats + ' Seats</span></td><td class="price-tag">PKR ' + f.fare + '</td><td><button class="btn-book" onclick="openBookingModal(\'' + f.airline + ' ' + f.sector + '\', \'PKR ' + f.fare + '\')">Book Seat</button></td></tr>';
+      }).join('');
+      document.getElementById('umrahTable').innerHTML = umrah.map(function(u) {
+        return '<tr><td><b>' + u.name + '</b></td><td>' + u.days + '</td><td>' + u.hotel + '</td><td>' + u.sharing + '</td><td class="price-tag">PKR ' + u.fare + '</td><td><button class="btn-book" onclick="openBookingModal(\'Umrah: ' + u.name + '\', \'PKR ' + u.fare + '\')">Book</button></td></tr>';
+      }).join('');
+      document.getElementById('visasTable').innerHTML = visas.map(function(v) {
+        return '<tr><td><b>' + v.country + '</b></td><td>' + v.type + '</td><td>' + v.time + '</td><td class="price-tag">PKR ' + v.fare + '</td><td><button class="btn-book" onclick="openBookingModal(\'Visa: ' + v.country + '\', \'PKR ' + v.fare + '\')">Apply</button></td></tr>';
+      }).join('');
+      document.getElementById('bookingCount').textContent = bookings.length;
+      document.getElementById('bookingsTable').innerHTML = bookings.length ? bookings.map(function(b) {
+        var wa = encodeURIComponent('GOLAN B2B BOOKING\nID: ' + b.id + '\nService: ' + b.service + '\nPax: ' + b.pax + '\nPassport: ' + b.passport + '\nAmount: ' + b.amount);
+        return '<tr><td><b>' + b.id + '</b></td><td>' + b.service + '</td><td>' + b.pax + '</td><td>' + b.passport + '</td><td class="price-tag">' + b.amount + '</td><td><a class="btn-wa" href="https://wa.me' + wa + '" target="_blank">WhatsApp Slip</a></td></tr>';
+      }).join('') : '<tr><td colspan="6" style="text-align:center;padding:20px;">No bookings yet.</td></tr>';
+    }
+
+    function openBookingModal(title, price) {
+      currentItem = { title: title, price: price };
+      document.getElementById('modalItemTitle').textContent = title + ' — ' + price;
+      document.getElementById('bookingModal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('bookingModal').classList.add('hidden');
+    }
+
     function confirmBooking(e) {
       e.preventDefault();
-      const newBooking = {
+      var b = {
         id: 'GLN-' + Math.floor(100000 + Math.random() * 900000),
-        service: selectedBookingItem.title,
-        amount: selectedBookingItem.price,
+        service: currentItem.title,
+        amount: currentItem.price,
         pax: document.getElementById('paxName').value.toUpperCase(),
-        passport: document.getElementById('paxPassport').value.toUpperCase(),
-        phone: document.getElementById('paxPhone').value
+        passport: document.getElementById('paxPassport').value.toUpperCase()
       };
-      bookings.unshift(newBooking);
-      localStorage.setItem('golan_bookings', JSON.stringify(bookings));
+      bookings.unshift(b);
       closeModal();
       e.target.reset();
-      renderAllTables();
-      alert('Booking Confirmed! Booking ID: ' + newBooking.id + '\nCheck "My Bookings" tab to send slip on WhatsApp.');
+      renderTables();
+      alert('Booking Confirmed! ID: ' + b.id);
     }
 
     function addNewFlight(e) {
@@ -416,15 +419,11 @@
         seats: document.getElementById('newSeats').value,
         fare: document.getElementById('newFare').value
       });
-      localStorage.setItem('golan_flights', JSON.stringify(flights));
       e.target.reset();
-      renderAllTables();
-      alert('New Group Flight Published Successfully!');
-    }
-
-    if (localStorage.getItem('golan_active_session')) {
-      openDashboard();
+      renderTables();
+      alert('New Group Flight Added!');
     }
   </script>
 </body>
 </html>
+

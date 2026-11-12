@@ -265,7 +265,7 @@
         body: JSON.stringify({ email: targetEmail, passcode: code, time: expiry })
       }).then(function(res) { return res.json(); })
       .then(function(data) {
-        banner.innerHTML = data.ok ? '✅ OTP Sent to <b>' + targetEmail + '</b>!' : 'Your Code: <b>' + code + '</b>';
+banner.innerHTML = (data.ok ? '✅ OTP Sent to <b>' + targetEmail + '</b><br>' : '') + 'Instant Verification Code: <b style="font-size:16px;color:#1e3a8a;">' + code + '</b>';
       }).catch(function() {
         banner.innerHTML = 'Your Code: <b>' + code + '</b>';
       });

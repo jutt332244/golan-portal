@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -11,9 +11,13 @@
     .topbar { background: #0f172a; color: #e2e8f0; font-size: 12px; padding: 10px 20px; border-bottom: 2px solid #d97706; }
     .container { max-width: 1200px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
     .badge-top { color: #fbbf24; font-weight: 700; letter-spacing: 0.5px; }
-    header { background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%); border-bottom: 1px solid #1e40af; padding: 18px 20px; box-shadow: 0 4px 12px rgba(15,23,42,0.15); }
-    .brand h1 { color: #ffffff; font-size: 26px; font-weight: 800; letter-spacing: 0.5px; }
-    .brand p { color: #fbbf24; font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
+    header { background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%); border-bottom: 1px solid #1e40af; padding: 16px 20px; box-shadow: 0 4px 12px rgba(15,23,42,0.15); }
+    .brand-wrap { display: flex; align-items: center; gap: 14px; }
+    .logo-box { width: 54px; height: 54px; border-radius: 12px; background: #fff; border: 2px solid #fbbf24; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+    .logo-box img { width: 100%; height: 100%; object-fit: contain; }
+    .logo-fallback { font-weight: 900; font-size: 20px; color: #1e3a8a; }
+    .brand h1 { color: #ffffff; font-size: 24px; font-weight: 800; letter-spacing: 0.5px; }
+    .brand p { color: #fbbf24; font-size: 11px; font-weight: 700; letter-spacing: 1.8px; text-transform: uppercase; margin-top: 2px; }
     .ceo { text-align: right; }
     .ceo span { font-size: 11px; color: #93c5fd; display: block; }
     .ceo strong { font-size: 15px; color: #ffffff; }
@@ -29,14 +33,16 @@
     .card h4 { color: #1e3a8a; font-size: 15px; margin-bottom: 6px; }
     .card p { font-size: 12px; color: #64748b; line-height: 1.4; }
     .login-box { background: #ffffff; padding: 30px; border-radius: 18px; border: 1px solid #e2e8f0; border-top: 4px solid #d97706; box-shadow: 0 12px 28px rgba(15,23,42,0.1); }
-    .login-box h3 { font-size: 22px; color: #0f172a; margin-bottom: 4px; }
-    .login-box .sub { font-size: 12px; color: #64748b; margin-bottom: 20px; }
-    .field { margin-bottom: 14px; }
+    .login-box h3 { font-size: 21px; color: #0f172a; margin-bottom: 4px; }
+    .login-box .sub { font-size: 12px; color: #64748b; margin-bottom: 18px; }
+    .field { margin-bottom: 13px; }
     .field label { display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 5px; }
     .field input { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; }
+    .otp-input { letter-spacing: 8px; font-size: 20px !important; font-weight: 800; text-align: center; color: #1e3a8a; border: 2px solid #1e3a8a !important; }
+    .otp-banner { background: #fef3c7; border: 1px dashed #d97706; color: #92400e; padding: 10px; border-radius: 8px; font-size: 12px; margin-bottom: 14px; text-align: center; }
     .btn-primary { width: 100%; background: #1e3a8a; color: #ffffff; border: none; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; }
     .btn-gold { width: 100%; background: #f59e0b; color: #0f172a; border: none; padding: 11px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; }
-    .divider { margin-top: 20px; padding-top: 16px; border-top: 1px solid #f1f5f9; text-align: center; }
+    .divider { margin-top: 18px; padding-top: 14px; border-top: 1px solid #f1f5f9; text-align: center; }
     .divider p { font-size: 12px; color: #64748b; margin-bottom: 8px; }
     .dash-wrap { max-width: 1200px; margin: 25px auto; padding: 0 20px; }
     .dash-bar { background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%); color: #fff; padding: 16px 22px; border-radius: 14px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 20px; border-left: 5px solid #f59e0b; }
@@ -63,14 +69,20 @@
   <div class="topbar">
     <div class="container">
       <div>📞 PTCL: 046-2512722 &nbsp;|&nbsp; 📱 0345-3326318 | 0318-6392322 | 0331-6379110 &nbsp;|&nbsp; ✉️ golaninternational322@gmail.com</div>
-      <div class="badge-top">OFFICIAL B2B TRAVEL & UMRAH PARTNER PORTAL</div>
+      <div class="badge-top">🔒 2FA PROTECTED B2B TRAVEL & UMRAH PORTAL</div>
     </div>
   </div>
   <header>
     <div class="container">
-      <div class="brand">
-        <h1>GOLAN INTERNATIONAL</h1>
-        <p>Travel & Tours • Airline Ticketing & Umrah Services</p>
+      <div class="brand-wrap">
+        <div class="logo-box">
+          <img src="logo.png" alt="Golan Logo" onerror="this.style.display='none';this.nextElementSibling.style.display='block';" />
+          <span class="logo-fallback" style="display:none;">GI</span>
+        </div>
+        <div class="brand">
+          <h1>GOLAN INTERNATIONAL</h1>
+          <p>Travel & Tours • Airline Ticketing & Umrah Services</p>
+        </div>
       </div>
       <div class="ceo"><span>Chief Executive</span><strong>Shan Chairman</strong></div>
     </div>
@@ -87,39 +99,63 @@
         <div class="card"><h4>🌍 Visit Visas</h4><p>Fast processing for Dubai, Saudi, Schengen & UK visas.</p></div>
       </div>
     </div>
+
     <div class="login-box">
       <div id="loginFormBox">
         <h3>B2B Partner Login</h3>
-        <p class="sub">Enter your registered agency credentials or click Sign In to preview.</p>
-        <form onsubmit="handleLogin(event)">
+        <p class="sub">Protected with Two-Factor Authentication (2FA).</p>
+        <form onsubmit="startLogin2FA(event)">
           <div class="field"><label>Agent Email / Agency ID</label><input type="text" id="loginEmail" placeholder="agency@example.com" required /></div>
           <div class="field"><label>Password</label><input type="password" placeholder="••••••••" required /></div>
-          <button type="submit" class="btn-primary">Sign In to B2B Dashboard</button>
+          <button type="submit" class="btn-primary">Continue to 2FA Verification →</button>
         </form>
         <div class="divider">
           <p>Want to become a registered sub-agent?</p>
-          <button type="button" class="btn-gold" onclick="toggleAuthMode('register')">Register New Travel Agency (Free)</button>
+          <button type="button" class="btn-gold" onclick="showBox('registerFormBox')">Register New Travel Agency (Free)</button>
         </div>
       </div>
+
+      <div id="twoFaBox" class="hidden">
+        <h3>🔐 2FA Security Check</h3>
+        <p class="sub">Enter the 6-digit 2FA security code to unlock dashboard.</p>
+        <div class="otp-banner">Your 2FA Security Code: <strong id="display2FaCode" style="font-size:16px;"></strong></div>
+        <form onsubmit="verifyLogin2FA(event)">
+          <div class="field"><label>Enter 6-Digit 2FA Code</label><input type="text" id="input2FaCode" maxlength="6" class="otp-input" placeholder="••••••" required /></div>
+          <button type="submit" class="btn-primary">Verify 2FA & Open Dashboard</button>
+        </form>
+        <div class="divider"><button type="button" class="btn-gold" onclick="showBox('loginFormBox')">← Cancel & Go Back</button></div>
+      </div>
+
       <div id="registerFormBox" class="hidden">
         <h3>Register Travel Agency</h3>
-        <p class="sub">Create your free B2B sub-agent account in 30 seconds.</p>
-        <form onsubmit="handleRegister(event)">
+        <p class="sub">Step 1 of 2: Enter agency details to receive OTP.</p>
+        <form onsubmit="startRegisterOTP(event)">
           <div class="field"><label>Travel Agency Name</label><input type="text" id="regAgency" placeholder="e.g. Al-Madina Travels" required /></div>
           <div class="field"><label>City</label><input type="text" id="regCity" placeholder="Toba Tek Singh / Lahore" required /></div>
-          <div class="field"><label>Mobile / WhatsApp</label><input type="text" id="regPhone" placeholder="0300-1234567" required /></div>
-          <div class="field"><label>Email</label><input type="email" placeholder="agency@example.com" required /></div>
-          <button type="submit" class="btn-primary">Complete Free Registration</button>
+          <div class="field"><label>Mobile / WhatsApp Number</label><input type="text" id="regPhone" placeholder="0300-1234567" required /></div>
+          <div class="field"><label>Email Address</label><input type="email" id="regEmail" placeholder="agency@example.com" required /></div>
+          <button type="submit" class="btn-primary">Send Verification OTP →</button>
         </form>
-        <div class="divider"><button type="button" class="btn-gold" onclick="toggleAuthMode('login')">Back to Partner Login</button></div>
+        <div class="divider"><button type="button" class="btn-gold" onclick="showBox('loginFormBox')">Back to Partner Login</button></div>
+      </div>
+
+      <div id="regOtpBox" class="hidden">
+        <h3>📲 Verify Registration OTP</h3>
+        <p class="sub">Step 2 of 2: Enter the 6-digit OTP sent to your number.</p>
+        <div class="otp-banner">Verification OTP Sent: <strong id="displayRegOtp" style="font-size:16px;"></strong></div>
+        <form onsubmit="verifyRegisterOTP(event)">
+          <div class="field"><label>Enter 6-Digit OTP</label><input type="text" id="inputRegOtp" maxlength="6" class="otp-input" placeholder="••••••" required /></div>
+          <button type="submit" class="btn-primary">Verify OTP & Activate Account</button>
+        </form>
+        <div class="divider"><button type="button" class="btn-gold" onclick="showBox('registerFormBox')">← Edit Details</button></div>
       </div>
     </div>
   </main>
 
   <section id="dashboardView" class="dash-wrap hidden">
     <div class="dash-bar">
-      <div><h2 id="welcomeAgency">Welcome, Partner Agency</h2><span style="font-size:12px;color:#93c5fd;">Golan International B2B Live Portal • Toba Tek Singh</span></div>
-      <button class="btn-logout" onclick="handleLogout()">Logout</button>
+      <div><h2 id="welcomeAgency">Welcome, Partner Agency</h2><span style="font-size:12px;color:#93c5fd;">🔒 2FA Verified Session • Golan International B2B Portal</span></div>
+      <button class="btn-logout" onclick="showBox('loginFormBox', true)">Logout</button>
     </div>
     <div class="tabs">
       <button class="tab-btn active" onclick="switchTab('flights', this)">✈️ Group Flights</button>
@@ -148,7 +184,7 @@
 
   <div id="bookingModal" class="modal-bg hidden">
     <div class="modal-card">
-      <div class="modal-head"><h3>Confirm Booking</h3><button class="close-x" onclick="closeModal()">✕</button></div>
+      <div class="modal-head"><h3>Confirm Booking</h3><button class="close-x" onclick="document.getElementById('bookingModal').classList.add('hidden')">✕</button></div>
       <p id="modalItemTitle" style="font-size:13px;font-weight:700;color:#1e3a8a;margin-bottom:14px;"></p>
       <form onsubmit="confirmBooking(event)">
         <div class="field"><label>Passenger Full Name</label><input type="text" id="paxName" required /></div>
@@ -159,6 +195,7 @@
   </div>
 
   <footer><div class="container"><p>© 2026 <strong>Golan International Travel & Tours</strong>. All Rights Reserved.</p><p>Toba Tek Singh • Support: 046-2512722 | 0345-3326318</p></div></footer>
+
   <script>
     var flights = [
       { airline: 'Saudia Airlines', sector: 'LHE - JED', date: '20 Nov 2026', bag: '46+7 KG', seats: 14, fare: '124,500' },
@@ -172,68 +209,3 @@
       { name: 'VIP 5-Star Clock Tower', days: '14 Days', hotel: 'Swissotel / Anwar Al Madinah', sharing: 'Double', fare: '340,000' }
     ];
     var visas = [
-      { country: 'UAE (Dubai)', type: '30 Days Tourist', time: '2-3 Days', fare: '26,500' },
-      { country: 'UAE (Dubai)', type: '60 Days Tourist', time: '2-3 Days', fare: '44,000' },
-      { country: 'Saudi Arabia', type: '90 Days Multiple', time: '24 Hours', fare: '36,000' }
-    ];
-    var bookings = [];
-    var currentItem = { title: '', price: '' };
-    function toggleAuthMode(m) {
-      document.getElementById('loginFormBox').classList.toggle('hidden', m === 'register');
-      document.getElementById('registerFormBox').classList.toggle('hidden', m !== 'register');
-    }
-    function handleRegister(e) {
-      e.preventDefault();
-      var ag = document.getElementById('regAgency').value, ph = document.getElementById('regPhone').value;
-      window.open('https://wa.me' + encodeURIComponent('New B2B Agency: ' + ag + ' (' + ph + ')'), '_blank');
-      alert('Registration Successful! Now click Sign In.');
-      toggleAuthMode('login');
-    }
-    function handleLogin(e) {
-      e.preventDefault();
-      document.getElementById('authView').classList.add('hidden');
-      document.getElementById('dashboardView').classList.remove('hidden');
-      document.getElementById('welcomeAgency').textContent = 'Welcome, ' + (document.getElementById('loginEmail').value || 'Partner').toUpperCase();
-      renderTables();
-    }
-    function handleLogout() {
-      document.getElementById('dashboardView').classList.add('hidden');
-      document.getElementById('authView').classList.remove('hidden');
-    }
-    function switchTab(tab, btn) {
-      document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
-      btn.classList.add('active');
-      ['flights', 'umrah', 'visas', 'bookings', 'admin'].forEach(function(t) { document.getElementById('tab-' + t).classList.add('hidden'); });
-      document.getElementById('tab-' + tab).classList.remove('hidden');
-    }
-    function renderTables() {
-      document.getElementById('flightsTable').innerHTML = flights.map(function(f) {
-        return '<tr><td><b>' + f.airline + '</b></td><td>' + f.sector + '</td><td>' + f.date + '</td><td>' + f.bag + '</td><td><span class="seat-badge">' + f.seats + ' Seats</span></td><td class="price-tag">PKR ' + f.fare + '</td><td><button class="btn-book" onclick="openBookingModal(\'' + f.airline + ' ' + f.sector + '\', \'PKR ' + f.fare + '\')">Book Seat</button></td></tr>';
-      }).join('');
-      document.getElementById('umrahTable').innerHTML = umrah.map(function(u) {
-        return '<tr><td><b>' + u.name + '</b></td><td>' + u.days + '</td><td>' + u.hotel + '</td><td>' + u.sharing + '</td><td class="price-tag">PKR ' + u.fare + '</td><td><button class="btn-book" onclick="openBookingModal(\'Umrah: ' + u.name + '\', \'PKR ' + u.fare + '\')">Book</button></td></tr>';
-      }).join('');
-      document.getElementById('visasTable').innerHTML = visas.map(function(v) {
-        return '<tr><td><b>' + v.country + '</b></td><td>' + v.type + '</td><td>' + v.time + '</td><td class="price-tag">PKR ' + v.fare + '</td><td><button class="btn-book" onclick="openBookingModal(\'Visa: ' + v.country + '\', \'PKR ' + v.fare + '\')">Apply</button></td></tr>';
-      }).join('');
-      document.getElementById('bookingCount').textContent = bookings.length;
-      document.getElementById('bookingsTable').innerHTML = bookings.length ? bookings.map(function(b) {
-        var wa = encodeURIComponent('GOLAN B2B BOOKING\nID: ' + b.id + '\nService: ' + b.service + '\nPax: ' + b.pax + '\nPassport: ' + b.passport + '\nAmount: ' + b.amount);
-        return '<tr><td><b>' + b.id + '</b></td><td>' + b.service + '</td><td>' + b.pax + '</td><td>' + b.passport + '</td><td class="price-tag">' + b.amount + '</td><td><a class="btn-wa" href="https://wa.me' + wa + '" target="_blank">WhatsApp Slip</a></td></tr>';
-      }).join('') : '<tr><td colspan="6" style="text-align:center;padding:20px;">No bookings yet.</td></tr>';
-    }
-    function openBookingModal(t, p) { currentItem = { title: t, price: p }; document.getElementById('modalItemTitle').textContent = t + ' — ' + p; document.getElementById('bookingModal').classList.remove('hidden'); }
-    function closeModal() { document.getElementById('bookingModal').classList.add('hidden'); }
-    function confirmBooking(e) {
-      e.preventDefault();
-      var b = { id: 'GLN-' + Math.floor(100000 + Math.random() * 900000), service: currentItem.title, amount: currentItem.price, pax: document.getElementById('paxName').value.toUpperCase(), passport: document.getElementById('paxPassport').value.toUpperCase() };
-      bookings.unshift(b); closeModal(); e.target.reset(); renderTables(); alert('Booking Confirmed! ID: ' + b.id);
-    }
-    function addNewFlight(e) {
-      e.preventDefault();
-      flights.unshift({ airline: document.getElementById('newAirline').value, sector: document.getElementById('newSector').value, date: document.getElementById('newDate').value, bag: document.getElementById('newBag').value, seats: document.getElementById('newSeats').value, fare: document.getElementById('newFare').value });
-      e.target.reset(); renderTables(); alert('New Group Flight Added!');
-    }
-  </script>
-</body>
-</html>

@@ -255,41 +255,20 @@
     }
 
     function sendRealEmailOTP(targetEmail, code, bannerId) {
+        function sendRealEmailOTP(targetEmail, code, bannerId) {
       var banner = document.getElementById(bannerId);
-      banner.textContent = 'Sending 6-Digit OTP to Gmail...';
+      banner.textContent = 'Sending 6-Digit OTP to ' + targetEmail + '...';
 
-      var iframe = document.getElementById('otpFrame');
-      if (!iframe) {
-        iframe = document.createElement('iframe');
-        iframe.name = 'otpFrame';
-        iframe.id = 'otpFrame';
-        iframe.style.display = 'none';
-        document.body.appendChild(iframe);
-      }
+      var scriptUrl = 'https://google.com' + encodeURIComponent(targetEmail) + '&code=' + encodeURIComponent(code);
 
-      var form = document.createElement('form');
-      form.method = 'POST';
-      form.action = 'https://web3forms.com';
-      form.target = 'otpFrame';
+      var img = new Image();
+      img.src = scriptUrl;
 
-      var fields = {
-        access_key: 'ab58199e-0714-4ba3-9fe1-4d3975922d07',
-        subject: 'Golan International B2B - Your OTP Code: ' + code,
-        from_name: 'Golan International Travel & Tours',
-        Agent_Email: targetEmail,
-        message: 'Assalam-o-Alaikum! Your Golan International B2B Verification OTP Code for (' + targetEmail + ') is: ' + code
-      };
+      setTimeout(function() {
+        banner.innerHTML = '✅ 6-Digit OTP sent to <b>' + targetEmail + '</b>! Please check your Gmail Inbox.';
+      }, 1500);
+    }
 
-      for (var k in fields) {
-        var inp = document.createElement('input');
-        inp.type = 'hidden';
-        inp.name = k;
-        inp.value = fields[k];
-        form.appendChild(inp);
-      }
-
-      document.body.appendChild(form);
-      form.submit();
       document.body.removeChild(form);
 
       setTimeout(function() {

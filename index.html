@@ -207,6 +207,21 @@
       { name: 'Executive Near Haram', days: '15 Days', hotel: 'Makkah 350m / Madinah 250m', sharing: 'Triple', fare: '225,000' },
       { name: 'VIP 5-Star Clock Tower', days: '14 Days', hotel: 'Swissotel / Anwar Al Madinah', sharing: 'Double', fare: '340,000' }
     ];
+      <script src="https://jsdelivr.net"></script>
+  <script>
+    emailjs.init({ publicKey: 'gMrrdOr6utn_kwlZx' });
+
+    var flights = [
+      { airline: 'Saudia Airlines', sector: 'LHE - JED', date: '20 Nov 2026', bag: '46+7 KG', seats: 14, fare: '124,500' },
+      { airline: 'PIA', sector: 'ISB - RUH', date: '22 Nov 2026', bag: '30+7 KG', seats: 9, fare: '112,000' },
+      { airline: 'AirSial', sector: 'LHE - MED', date: '25 Nov 2026', bag: '30+7 KG', seats: 18, fare: '119,000' },
+      { airline: 'Flydubai', sector: 'LYP - DXB', date: '28 Nov 2026', bag: '20+7 KG', seats: 11, fare: '78,500' }
+    ];
+    var umrah = [
+      { name: 'Economy Umrah Saver', days: '15 Days', hotel: 'Makkah 800m / Madinah 500m', sharing: 'Quad', fare: '185,000' },
+      { name: 'Executive Near Haram', days: '15 Days', hotel: 'Makkah 350m / Madinah 250m', sharing: 'Triple', fare: '225,000' },
+      { name: 'VIP 5-Star Clock Tower', days: '14 Days', hotel: 'Swissotel / Anwar Al Madinah', sharing: 'Double', fare: '340,000' }
+    ];
     var visas = [
       { country: 'UAE (Dubai)', type: '30 Days Tourist', time: '2-3 Days', fare: '26,500' },
       { country: 'UAE (Dubai)', type: '60 Days Tourist', time: '2-3 Days', fare: '44,000' },
@@ -220,24 +235,44 @@
         document.getElementById('authView').classList.remove('hidden');
       }
       ['loginFormBox', 'twoFaBox', 'registerFormBox', 'regOtpBox'].forEach(function(id) {
-        document.getElementById(id).classList.add('hidden');
+        var el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
       });
-      document.getElementById(boxId).classList.remove('hidden');
+      var target = document.getElementById(boxId);
+      if (target) target.classList.remove('hidden');
+    }
+
+    function sendRealEmailOTP(targetEmail, code, bannerId) {
+      var expiry = new Date(Date.now() + 15 * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      document.getElementById(bannerId).textContent = 'Sending OTP to ' + targetEmail + '...';
+      emailjs.send('service_x4flyen', 'template_csrue8p', {
+        email: targetEmail,
+        passcode: code,
+        time: expiry
+      }).then(function() {
+        document.getElementById(bannerId).textContent = 'Sent to ' + targetEmail + ' (Check Inbox/Spam)';
+      }, function(err) {
+        document.getElementById(bannerId).textContent = 'Backup Code: ' + code;
+      });
     }
 
     function startLogin2FA(e) {
-      e.preventDefault();
-      pendingUser = document.getElementById('loginEmail').value || 'Partner';
+      if (e) e.preventDefault();
+      pendingUser = document.getElementById('loginEmail').value.trim();
+      if (!pendingUser.includes('@')) {
+        alert('Please enter a valid Gmail / Email address to receive 2FA OTP!');
+        return;
+      }
       generated2FA = String(Math.floor(100000 + Math.random() * 900000));
-      document.getElementById('display2FaCode').textContent = generated2FA;
       document.getElementById('input2FaCode').value = '';
       showBox('twoFaBox');
+      sendRealEmailOTP(pendingUser, generated2FA, 'display2FaCode');
     }
 
     function verifyLogin2FA(e) {
-      e.preventDefault();
+      if (e) e.preventDefault();
       if (document.getElementById('input2FaCode').value.trim() !== generated2FA) {
-        alert('❌ Invalid 2FA Code! Please enter the exact 6-digit code shown.');
+        alert('Invalid 2FA Code! Please enter the 6-digit code sent to your Gmail.');
         return;
       }
       document.getElementById('authView').classList.add('hidden');
@@ -247,22 +282,23 @@
     }
 
     function startRegisterOTP(e) {
-      e.preventDefault();
+      if (e) e.preventDefault();
+      var regEm = document.getElementById('regEmail').value.trim();
       generatedRegOtp = String(Math.floor(100000 + Math.random() * 900000));
-      document.getElementById('displayRegOtp').textContent = generatedRegOtp;
       document.getElementById('inputRegOtp').value = '';
       showBox('regOtpBox');
+      sendRealEmailOTP(regEm, generatedRegOtp, 'displayRegOtp');
     }
 
     function verifyRegisterOTP(e) {
-      e.preventDefault();
+      if (e) e.preventDefault();
       if (document.getElementById('inputRegOtp').value.trim() !== generatedRegOtp) {
-        alert('❌ Wrong OTP! Please enter the 6-digit verification code.');
+        alert('Wrong OTP! Please check your Gmail inbox for the 6-digit code.');
         return;
       }
       var ag = document.getElementById('regAgency').value, ph = document.getElementById('regPhone').value, em = document.getElementById('regEmail').value;
-      window.open('https://wa.me' + encodeURIComponent('✅ OTP VERIFIED NEW B2B AGENCY:\nAgency: ' + ag + '\nPhone: ' + ph + '\nEmail: ' + em), '_blank');
-      alert('✅ OTP Verified! Agency Account Activated. Now Sign In with 2FA.');
+      window.open('https://wa.me' + encodeURIComponent('GMAIL OTP VERIFIED NEW B2B AGENCY:\nAgency: ' + ag + '\nPhone: ' + ph + '\nEmail: ' + em), '_blank');
+      alert('Email OTP Verified! Agency Account Activated. Now Sign In with 2FA.');
       document.getElementById('loginEmail').value = em;
       showBox('loginFormBox');
     }
@@ -293,12 +329,12 @@
 
     function openBookingModal(t, p) { currentItem = { title: t, price: p }; document.getElementById('modalItemTitle').textContent = t + ' — ' + p; document.getElementById('bookingModal').classList.remove('hidden'); }
     function confirmBooking(e) {
-      e.preventDefault();
+      if (e) e.preventDefault();
       bookings.unshift({ id: 'GLN-' + Math.floor(100000 + Math.random() * 900000), service: currentItem.title, amount: currentItem.price, pax: document.getElementById('paxName').value.toUpperCase(), passport: document.getElementById('paxPassport').value.toUpperCase() });
       document.getElementById('bookingModal').classList.add('hidden'); e.target.reset(); renderTables(); alert('Booking Confirmed!');
     }
     function addNewFlight(e) {
-      e.preventDefault();
+      if (e) e.preventDefault();
       flights.unshift({ airline: document.getElementById('newAirline').value, sector: document.getElementById('newSector').value, date: document.getElementById('newDate').value, bag: document.getElementById('newBag').value, seats: document.getElementById('newSeats').value, fare: document.getElementById('newFare').value });
       e.target.reset(); renderTables(); alert('New Group Flight Added!');
     }

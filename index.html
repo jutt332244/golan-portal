@@ -255,29 +255,43 @@
       if (target) target.classList.remove('hidden');
     }
      function sendRealEmailOTP(targetEmail, code, bannerId) {
-          function sendRealEmailOTP(targetEmail, code, bannerId) {
+             function sendRealEmailOTP(targetEmail, code, bannerId) {
       var banner = document.getElementById(bannerId);
       banner.textContent = 'Sending 6-Digit OTP to Gmail...';
-      fetch('https://web3forms.com', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          access_key: 'ab58199e-0714-4ba3-9fe1-4d3975922d07',
-          subject: 'Golan International B2B - OTP Code: ' + code,
-          from_name: 'Golan International Travel & Tours',
-          Agent_Email: targetEmail,
-          message: 'Assalam-o-Alaikum! Your Golan International B2B Verification OTP Code for (' + targetEmail + ') is: ' + code
-        })
-      }).then(function(res) { return res.json(); })
-      .then(function(data) {
-        if (data.success) {
-          banner.innerHTML = '✅ 6-Digit OTP sent to Gmail! Check Inbox or Spam folder.';
-        } else {
-          banner.innerHTML = '❌ Error: ' + data.message;
-        }
-      }).catch(function() {
-        banner.innerHTML = '❌ Network Error. Please check internet.';
-      });
+      var iframe = document.getElementById('otpFrame');
+      if (!iframe) {
+        iframe = document.createElement('iframe');
+        iframe.name = 'otpFrame';
+        iframe.id = 'otpFrame';
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+      }
+      var form = document.createElement('form');
+      form.method = 'POST';
+      form.action = 'https://web3forms.com';
+      form.target = 'otpFrame';
+      var fields = {
+        access_key: 'ab58199e-0714-4ba3-9fe1-4d3975922d07',
+        subject: 'Golan International B2B - Your OTP Code: ' + code,
+        from_name: 'Golan International Travel & Tours',
+        Agent_Email: targetEmail,
+        message: 'Assalam-o-Alaikum! Your Golan International B2B Verification OTP Code for (' + targetEmail + ') is: ' + code
+      };
+      for (var k in fields) {
+        var inp = document.createElement('input');
+        inp.type = 'hidden';
+        inp.name = k;
+        inp.value = fields[k];
+        form.appendChild(inp);
+      }
+      document.body.appendChild(form);
+      form.submit();
+      document.body.removeChild(form);
+
+      setTimeout(function() {
+        banner.innerHTML = '✅ 6-Digit OTP sent to Gmail! Please check Inbox or Spam.';
+      }, 1500);
+    }
     }
           banner.innerHTML = '✅ 6-Digit OTP sent to Gmail! Check Inbox or Spam folder.';
         } else {

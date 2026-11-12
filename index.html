@@ -265,7 +265,7 @@
         body: JSON.stringify({ email: targetEmail, passcode: code, time: expiry })
       }).then(function(res) { return res.json(); })
       .then(function(data) {
-banner.innerHTML = (data.ok ? '✅ OTP Sent to <b>' + targetEmail + '</b><br>' : '') + 'Instant Verification Code: <b style="font-size:16px;color:#1e3a8a;">' + code + '</b>';
+        banner.innerHTML = data.ok ? '✅ 6-Digit OTP sent to <b>' + targetEmail + '</b>. Please check your Gmail Inbox or Spam folder.' : '❌ Failed to send OTP. Please try again.';
       }).catch(function() {
         banner.innerHTML = 'Your Code: <b>' + code + '</b>';
       });

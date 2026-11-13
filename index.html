@@ -293,7 +293,7 @@
     </div>
   </div>
   <script>
-        var API_URL = 'https://google.com';
+  var API_URL = 'https://google.com';
 
      var currentEmail = '';
     var currentToken = '';
@@ -331,21 +331,15 @@
             logout();
           }
         });
-      } else {
-        logout();
-      }
-    };
+      function backToLogin() {
+   var r = document.getElementById('registerBox');
+   var t = document.getElementById('totpBox');
+   var l = document.getElementById('loginBox');
+   if (r) r.classList.add('hidden');
+   if (t) t.classList.add('hidden');
+   if (l) l.classList.remove('hidden');
+ }
 
-    function showRegister() {
-      document.getElementById('loginBox').classList.add('hidden');
-      document.getElementById('registerBox').classList.remove('hidden');
-    }
-
-    function backToLogin() {
-      document.getElementById('registerBox').classList.add('hidden');
-      document.getElementById('totpBox').classList.add('hidden');
-      document.getElementById('loginBox').classList.remove('hidden');
-    }
 
     function handleRegister(e) {
       e.preventDefault();

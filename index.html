@@ -353,6 +353,37 @@ var depId = 'AKfycbya_OI52HifjM5wCtq0VnGuNJXNxCG-996SPaxHyOJzRmJXNiNhvUmnNpqeZ2M
       flights.unshift({ airline: document.getElementById('newAirline').value, sector: document.getElementById('newSector').value, date: document.getElementById('newDate').value, bag: document.getElementById('newBag').value, seats: document.getElementById('newSeats').value, fare: document.getElementById('newFare').value });
       e.target.reset(); renderTables(); alert('New Group Flight Added!');
     }
+    async function searchLiveDuffelFlights(origin, destination, date, pax = 1) {
+  const tableBody = document.getElementById('flightsTable');
+  if (tableBody) {
+    tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;">Searching Live Duffel Flights...</td></tr>';
+  }
+  try {
+    const res = await fetch('/api/flights', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ origin: origin, destination: destination, departureDate: date, passengers: pax })
+    });
+    const data = await res.json();
+    if (data.offers && data.offers.length > 0) {
+      const liveRows = data.offers.map(function(offer) {
+        const airline = offer.owner ? offer.owner.name : 'Airline';
+        const slice = offer.slices[0];
+        const sector = slice.origin.iata_code + ' - ' + slice.destination.iata_code;
+        const depDate = slice.segments[0].departing_at.split('T')[0];
+        const price = offer.total_currency + ' ' + offer.total_amount;
+        return '<tr><td><b>' + airline + ' (Live)</b></td><td>' + sector + '</td><td>' + depDate + '</td><td>20+7 KG</td><td class="price-tag">' + price + '</td><td><button class="btn-book" onclick="openBookingModal(\'' + airline + ' ' + sector + '\', \'' + price + '\')">Book Now</button></td></tr>';
+      }).join('');
+      if (tableBody) tableBody.innerHTML = liveRows;
+    } else {
+      alert(data.error || 'No live flights found for this route/date.');
+      renderTables();
+    }
+  } catch (err) {
+    alert('API Connection Error: ' + err.message);
+    renderTables();
+  }
+}
   </script>
 </body>
 </html>

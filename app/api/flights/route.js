@@ -2,7 +2,11 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request) {
   try {
-    const { origin, destination, departureDate, passengers = 1 } = await request.json();
+    const body = await request.json();
+    const origin = (body.origin || '').toUpperCase();
+    const destination = (body.destination || '').toUpperCase();
+    const departureDate = body.departureDate;
+    const passengers = Number(body.passengers || 1);
 
     const response = await fetch('https://duffel.com', {
       method: 'POST',
@@ -16,12 +20,12 @@ export async function POST(request) {
         data: {
           slices: [
             {
-              origin: origin.toUpperCase(),
-              destination: destination.toUpperCase(),
+              origin: origin,
+              destination: destination,
               departure_date: departureDate
             }
           ],
-          passengers: Array.from({ length: Number(passengers) }, () => ({ type: 'adult' })),
+          passengers: Array.from({ length: passengers }, () => ({ type: 'adult' })),
           cabin_class: 'economy'
         }
       })
@@ -30,10 +34,12 @@ export async function POST(request) {
     const data = await response.json();
 
     if (!response.ok) {
-      return NextResponse.json({ error: data.errors?.[0]?.message || 'Duffel API Error' }, { status: 400 });
+      const errMsg = (data.errors && data.errors[0] && data.errors[0].message) ? data.errors[0].message : 'Duffel API Error';
+      return NextResponse.json({ error: errMsg }, { status: 400 });
     }
 
-    return NextResponse.json({ offers: data.data.offers.slice(0, 15) });
+    const offers = (data.data && data.data.offers) ? data.data.offers.slice(0, 15) : [];
+    return NextResponse.json({ offers: offers });
   } catch (error) {
     return NextResponse.json({ error: 'Server Error: ' + error.message }, { status: 500 });
   }

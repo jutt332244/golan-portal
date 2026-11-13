@@ -308,12 +308,13 @@
       }
     ];
 
-    function callBackend(payload) {
-      return fetch(API_URL, {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      }).then(function(r) { return r.json(); });
+        function callBackend(payload) {
+      var qs = Object.keys(payload).map(function(k) {
+        return encodeURIComponent(k) + '=' + encodeURIComponent(payload[k]);
+      }).join('&');
+      return fetch(API_URL + '?' + qs).then(function(r) { return r.json(); });
     }
+
 
     window.onload = function() {
       var savedEmail = localStorage.getItem('golan_email');

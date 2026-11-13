@@ -520,6 +520,76 @@
       }).then(function(res) {
         alert(res.message);
         closeBookingModal();
+                loadDashboardData();
+      });
+    }
+
+    function handleAdminAddFare(e) {
+      e.preventDefault();
+      callBackend({
+        action: 'adminAddFare',
+        email: currentEmail,
+        token: currentToken,
+        category: document.getElementById('admCat').value,
+        title: document.getElementById('admTitle').value,
+        details: document.getElementById('admDetails').value,
+        travelDate: document.getElementById('admDate').value,
+        seats: document.getElementById('admSeats').value,
+        farePKR: document.getElementById('admFare').value
+      }).then(function(res) {
+        alert(res.message);
+        e.target.reset();
+        loadDashboardData();
+      });
+    }
+
+    function handleAdminAddBank(e) {
+      e.preventDefault();
+      callBackend({
+        action: 'adminAddBank',
+        email: currentEmail,
+        token: currentToken,
+        bankName: document.getElementById('bankName').value,
+        accountTitle: document.getElementById('bankTitle').value,
+        accountNumber: document.getElementById('bankAcc').value,
+        iban: document.getElementById('bankIban').value
+      }).then(function(res) {
+        alert(res.message);
+        e.target.reset();
+        loadDashboardData();
+      });
+    }
+
+    function manageAgent(targetEmail, subAction) {
+      if (!confirm('Are you sure you want to ' + subAction + ' ' + targetEmail + '?')) return;
+      callBackend({
+        action: 'adminManageAgent',
+        email: currentEmail,
+        token: currentToken,
+        targetEmail: targetEmail,
+        subAction: subAction
+      }).then(function(res) {
+        alert(res.message);
+        loadDashboardData();
+      });
+    }
+
+    function resetAgentPass(targetEmail) {
+      var newPass = prompt('Enter NEW password for ' + targetEmail + ' (This will also reset their 2FA QR code):');
+      if (!newPass) return;
+      callBackend({
+        action: 'adminManageAgent',
+        email: currentEmail,
+        token: currentToken,
+        targetEmail: targetEmail,
+        subAction: 'RESET_PASSWORD',
+        newPassword: newPass
+      }).then(function(res) {
+        alert(res.message);
+        loadDashboardData();
+      });
+    }
+
     function logout() {
       localStorage.removeItem('golan_email');
       localStorage.removeItem('golan_token');

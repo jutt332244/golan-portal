@@ -220,10 +220,25 @@
 
     var DEFAULT_BANKS = [{ BankName:'UBL (United Bank Limited)', AccountTitle:'Golan International Travel & Tourism', AccountNumber:'384263615', IBAN:'PK30UNIL0109000384263615' }];
 
-    function callBackend(payload) {
-      var qs = Object.keys(payload).map(function(k) { return encodeURIComponent(k) + '=' + encodeURIComponent(payload[k]); }).join('&');
-      return fetch(API_URL + '?' + qs).then(function(r) { return r.json(); });
+        function callBackend(payload) {
+      return new Promise(function(resolve, reject) {
+        var cbName = 'golan_cb_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+        window[cbName] = function(data) {
+          delete window[cbName];
+          var el = document.getElementById(cbName);
+          if (el) el.remove();
+          resolve(data);
+        };
+        payload.callback = cbName;
+        var qs = Object.keys(payload).map(function(k) { return encodeURIComponent(k) + '=' + encodeURIComponent(payload[k]); }).join('&');
+        var sc = document.createElement('script');
+        sc.id = cbName;
+        sc.src = API_URL + '?' + qs;
+        sc.onerror = function() { delete window[cbName]; reject(new Error('Network error')); };
+        document.body.appendChild(sc);
+      });
     }
+
 
     window.onload = function() {
       var e = localStorage.getItem('golan_email'), t = localStorage.getItem('golan_token'), ex = Number(localStorage.getItem('golan_expiry') || 0);

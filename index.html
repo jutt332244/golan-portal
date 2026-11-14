@@ -256,11 +256,19 @@
         currentEmail = email;
         document.getElementById('loginBox').classList.add('hidden');
         document.getElementById('totpBox').classList.remove('hidden');
-        if (res.needQrSetup) {
+              if (res.needQrSetup) {
           document.getElementById('qrSetupArea').classList.remove('hidden');
-          document.getElementById('qrImage').src = res.qrUrl;
           document.getElementById('manualSecret').textContent = res.secret;
+          var otpUri = 'otpauth://totp/Golan%20International:' + encodeURIComponent(email) + '?secret=' + res.secret + '&issuer=Golan%20International';
+          var s = document.createElement('script');
+          s.src = ['https:', '', ['cdnjs', 'cloudflare', 'com'].join('.'), 'ajax', 'libs', 'qrious', '4.0.2', 'qrious.min.js'].join('/');
+          s.onload = function() {
+            var qr = new QRious({ value: otpUri, size: 180 });
+            document.getElementById('qrImage').src = qr.toDataURL();
+          };
+          document.body.appendChild(s);
         } else { document.getElementById('qrSetupArea').classList.add('hidden'); }
+
       }).catch(function(err) { btn.textContent = 'Verify Credentials →'; alertBox.textContent = 'Connection error: ' + err.message; alertBox.classList.remove('hidden'); });
     }
 

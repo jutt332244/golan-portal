@@ -27,10 +27,11 @@ function defaultState() {
         FailedAttempts: 0
       }
     },
-    fares: [
-      { ID: 'F1', Category: 'Group Flight', Title: 'LHE - JED (Saudi Airlines)', Details: 'Direct Flight • 30+7 KG Baggage', TravelDate: '25 Nov 2026', Seats: 18, FarePKR: 138500, Status: 'ACTIVE' },
-      { ID: 'F2', Category: 'Umrah Package', Title: '15 Days Economy Umrah Package', Details: 'Makkah 7N + Madinah 7N • Visa + Transport', TravelDate: '01 Dec 2026', Seats: 25, FarePKR: 215000, Status: 'ACTIVE' }
+      fares: [
+      { ID: 'F1', Category: 'Group Flight', Title: 'LHE - JED (Saudi Airlines SV-737)', Timing: 'Dep: 04:15 AM | Arr: 07:45 AM (Direct)', Luggage: '30 KG Check-in + 7 KG Hand Carry', Meal: 'Hot Halal Meal Included', Stay: 'Non-Stop Direct Flight', Details: 'Refundable Before 72 Hrs • Free Seat Selection', TravelDate: '25 Nov 2026', Seats: 18, FarePKR: 138500, Status: 'ACTIVE' },
+      { ID: 'F2', Category: 'Umrah Package', Title: '15 Days Economy Umrah Package', Timing: 'LHE-JED-LHE Return Flights Included', Luggage: '30 KG + 7 KG + 5L Zamzam', Meal: 'Breakfast Optional / Room Only', Stay: 'Makkah 7N (Shuttle) + Madinah 7N (Markazia)', Details: 'Umrah Visa + Full Ziyarat & AC Transport Included', TravelDate: '01 Dec 2026', Seats: 25, FarePKR: 215000, Status: 'ACTIVE' }
     ],
+
     bookings: [],
     banks: [],
     deposits: []

@@ -364,6 +364,22 @@
       e.preventDefault();
       callBackend({ action:'addBooking', email:currentEmail, token:currentToken, passengerName:document.getElementById('paxName').value, passportNo:document.getElementById('paxPassport').value, category:selectedItem.category, itemTitle:selectedItem.itemTitle, farePKR:selectedItem.farePKR }).then(function(res) { alert(res.message); closeBookingModal(); loadDashboardData(); });
     }
+    function toggleVisaFields() {
+      var isVisa = document.getElementById('admCat').value === 'Visit Visa';
+      document.getElementById('grpSeats').style.display = isVisa ? 'none' : 'block';
+      document.getElementById('grpDate').style.display = isVisa ? 'none' : 'block';
+      document.getElementById('admSeats').required = !isVisa;
+      document.getElementById('admDate').required = !isVisa;
+      if (isVisa) {
+        document.getElementById('admSeats').value = '999';
+        document.getElementById('admDate').value = 'Open Validity';
+        document.getElementById('lblTitle').textContent = 'Country / Visa Type (e.g. UAE 30 Days Visit Visa)';
+      } else {
+        document.getElementById('admSeats').value = '15';
+        document.getElementById('admDate').value = '';
+        document.getElementById('lblTitle').textContent = 'Title / Sector';
+      }
+    }
 
     function handleAdminAddFare(e) {
       e.preventDefault();

@@ -46,7 +46,7 @@ function base32ToBuffer(base32) {
   const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
   let bits = '';
   base32 = base32.replace(/=+$/, '').toUpperCase();
-  <script src="https://cloudflare.com"></script>
+  for (let i = 0; i < base32.length; i++) {
     const val = alphabet.indexOf(base32[i]);
     if (val >= 0) bits += val.toString(2).padStart(5, '0');
   }

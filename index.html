@@ -431,13 +431,37 @@
       e.preventDefault();
       callBackend({ action:'adminAddFare', email:currentEmail, token:currentToken, category:document.getElementById('admCat').value, title:document.getElementById('admTitle').value, details:document.getElementById('admDetails').value, travelDate:document.getElementById('admDate').value, seats:document.getElementById('admSeats').value, farePKR:document.getElementById('admFare').value }).then(function(res) { alert(res.message); e.target.reset(); loadDashboardData(); });
     }
+        function handleAdminAddBank(e) {
+      e.preventDefault();
+      callBackend({ action:'adminAddBank', email:currentEmail, token:currentToken, bankName:document.getElementById('bankName').value, accountTitle:document.getElementById('bankTitle').value, accountNumber:document.getElementById('bankAcc').value, iban:document.getElementById('bankIban').value }).then(function(res) { alert(res.message); e.target.reset(); loadDashboardData(); });
+    }
+
+    function manageAgent(targetEmail, subAction) {
+      if (!confirm('Confirm ' + subAction + ' for ' + targetEmail + '?')) return;
+      callBackend({ action:'adminManageAgent', email:currentEmail, token:currentToken, targetEmail:targetEmail, subAction:subAction }).then(function(res) { alert(res.message); loadDashboardData(); });
+    }
+
+    function resetAgentPass(targetEmail) {
+      var np = prompt('Enter NEW temporary password for ' + targetEmail + ':');
+      if (!np) return;
+      callBackend({ action:'adminManageAgent', email:currentEmail, token:currentToken, targetEmail:targetEmail, subAction:'RESET_PASSWORD', newPassword:np }).then(function(res) { alert(res.message); loadDashboardData(); });
+    }
+
+    function logout() { localStorage.removeItem('golan_sess'); location.reload(); }
+
     function submitBooking(e) {
       e.preventDefault();
+      var pp = document.getElementById('paxPassport').value.trim().toUpperCase();
+      if (!/^[A-Z]{2}[0-9]{7}$/.test(pp) && !/^[A-Z0-9]{6,9}$/.test(pp)) {
+        alert('❌ Invalid Passport Number! Enter valid Passport No (e.g. AB1234567 — 2 Letters + 7 Digits, no commas, dots, or spaces).');
+        document.getElementById('paxPassport').focus();
+        return;
+      }
       var fullName = (document.getElementById('paxFirstName').value.trim() + ' ' + document.getElementById('paxLastName').value.trim()).toUpperCase();
       callBackend({
         action:'addBooking', email:currentEmail, token:currentToken,
         passengerName:fullName,
-        passportNo:document.getElementById('paxPassport').value.trim().toUpperCase(),
+        passportNo:pp,
         dob:document.getElementById('paxDob').value,
         passportExpiry:document.getElementById('paxExp').value,
         nationality:document.getElementById('paxNat').value,
@@ -446,26 +470,50 @@
       }).then(function(res) { alert(res.message); closeBookingModal(); loadDashboardData(); });
     }
 
-    function handleAdminAddBank(e) {
-      e.preventDefault();
-      callBackend({ action:'adminAddBank', email:currentEmail, token:currentToken, bankName:document.getElementById('bankName').value, accountTitle:document.getElementById('bankTitle').value, accountNumber:document.getElementById('bankAcc').value, iban:document.getElementById('bankIban').value }).then(function(res) { alert(res.message); e.target.reset(); loadDashboardData(); });
+    function renderBookingsTable(isAdmin) {
+      var list = window.__ALL_BOOKINGS__ || [];
+      document.getElementById('bookingsTableBody').innerHTML = list.length ? list.map(function(b) {
+        var pnrHtml = (b.PNR && b.PNR !== 'PENDING') ? '<strong style="color:#15803d;font-size:14px;">PNR: '+b.PNR+'</strong>' + (b.TicketNo ? '<br><small>TKT: '+b.TicketNo+'</small>' : '') : '<span style="color:#d97706;font-weight:700;">Awaiting PNR</span>';
+        var timerHtml = '';
+        if (b.Status === 'PENDING' && b.HoldUntil) {
+          timerHtml = '<br><span class="live-timer" data-until="'+b.HoldUntil+'" style="color:#dc2626;font-weight:800;font-size:12px;">⏳ Calculating...</span>';
+        }
+        var adminBtn = (isAdmin && b.Status === 'PENDING') ? '<button class="btn btn-sm btn-green" style="margin-bottom:4px;" onclick="issueBookingPnr(\''+b.BookingID+'\')">🎫 Issue PNR</button><br>' : '';
+        var pdfBtn = '<button class="btn btn-sm btn-primary" onclick="printBookingPdf(\''+b.BookingID+'\')">🖨️ PDF</button>';
+        return '<tr><td><strong>'+b.BookingID+'</strong><br><small>'+b.AgencyName+'</small></td><td>'+b.CreatedAt+'</td><td><strong>'+b.PassengerName+'</strong><br><small>Passport No: '+b.PassportNo+' | DOB: '+(b.Dob||'-')+'</small><br><small>Exp: '+(b.PassportExpiry||'-')+' | '+(b.PaxMobile||'-')+'</small></td><td>'+b.ItemTitle+'</td><td>'+pnrHtml+'</td><td>PKR '+Number(b.FarePKR).toLocaleString()+'</td><td><span class="status-badge st-'+b.Status+'">'+b.Status+'</span>'+timerHtml+'</td><td>'+adminBtn+pdfBtn+'</td></tr>';
+      }).join('') : '<tr><td colspan="8" style="text-align:center;color:#64748b;">No bookings yet.</td></tr>';
     }
 
-    function manageAgent(targetEmail, subAction) {
-      if (!confirm('Are you sure you want to ' + subAction + ' ' + targetEmail + '?')) return;
-      callBackend({ action:'adminManageAgent', email:currentEmail, token:currentToken, targetEmail:targetEmail, subAction:subAction }).then(function(res) { alert(res.message); loadDashboardData(); });
+    setInterval(function() {
+      var timers = document.querySelectorAll('.live-timer');
+      var now = Date.now();
+      timers.forEach(function(el) {
+        var until = Number(el.getAttribute('data-until') || 0);
+        var diff = until - now;
+        if (diff <= 0) {
+          el.textContent = '⌛ TIME EXPIRED';
+        } else {
+          var mins = Math.floor(diff / 60000);
+          var secs = Math.floor((diff % 60000) / 1000);
+          el.textContent = '⏳ ' + (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs + ' left';
+        }
+      });
+    }, 1000);
+
+    function issueBookingPnr(bookingId) {
+      var pnr = prompt('Enter 6-Digit Airline PNR (or leave blank to keep current PNR):') || '';
+      var tkt = prompt('Enter 13-Digit E-Ticket Number (Optional):') || '';
+      callBackend({ action:'adminIssueBooking', email:currentEmail, token:currentToken, bookingId:bookingId, pnr:pnr, ticketNo:tkt }).then(function(res) { alert(res.message); loadDashboardData(); });
     }
 
-    function resetAgentPass(targetEmail) {
-      var newPass = prompt('Enter NEW password for ' + targetEmail + ':');
-      if (!newPass) return;
-      callBackend({ action:'adminManageAgent', email:currentEmail, token:currentToken, targetEmail:targetEmail, subAction:'RESET_PASSWORD', newPassword:newPass }).then(function(res) { alert(res.message); loadDashboardData(); });
+    function printBookingPdf(bookingId) {
+      var b = (window.__ALL_BOOKINGS__ || []).find(function(x) { return x.BookingID === bookingId; });
+      if (!b) return;
+      var w = window.open('', '_blank');
+      w.document.write('<html><head><title>Golan International - '+b.BookingID+'</title><style>body{font-family:Arial,sans-serif;padding:30px;color:#0f172a;} .box{border:2px solid #0b1f3a;border-radius:10px;padding:24px;max-width:750px;margin:auto;} .hdr{display:flex;justify-content:space-between;border-bottom:2px solid #d4af37;padding-bottom:14px;margin-bottom:18px;} table{width:100%;border-collapse:collapse;margin-top:12px;} td,th{border:1px solid #cbd5e1;padding:10px;text-align:left;font-size:13px;} th{background:#f1f5f9;}</style></head><body><div class="box"><div class="hdr"><div><h2 style="margin:0;color:#0b1f3a;">GOLAN INTERNATIONAL TRAVEL & TOURS</h2><p style="margin:4px 0 0;font-size:12px;color:#475569;">Toba Tek Singh | CEO Shan Chairman: 0345-3326318 | Manager M. Umer: 0331-6379110</p></div><div style="text-align:right;"><strong>Booking ID: '+b.BookingID+'</strong><br><span>Status: <b>'+b.Status+'</b></span><br><span>PNR: <b>'+(b.PNR||'PENDING')+'</b></span></div></div><table><tr><th>Agency Name</th><td>'+b.AgencyName+'</td><th>Booking Date</th><td>'+b.CreatedAt+'</td></tr><tr><th>Passenger Name</th><td><strong>'+b.PassengerName+'</strong></td><th>Passport Number</th><td><strong>'+b.PassportNo+'</strong></td></tr><tr><th>Date of Birth</th><td>'+(b.Dob||'-')+'</td><th>Passport Expiry</th><td>'+(b.PassportExpiry||'-')+'</td></tr><tr><th>Nationality</th><td>'+(b.Nationality||'Pakistani')+'</td><th>Mobile</th><td>'+(b.PaxMobile||'-')+'</td></tr><tr><th>Flight / Package</th><td colspan="3"><strong>'+b.ItemTitle+'</strong> ('+b.Category+')</td></tr><tr><th>E-Ticket Number</th><td>'+(b.TicketNo||'To be issued')+'</td><th>Total B2B Fare</th><td><strong>PKR '+Number(b.FarePKR).toLocaleString()+'</strong></td></tr></table><p style="margin-top:20px;font-size:11px;color:#64748b;text-align:center;">System Generated B2B Travel Voucher — Golan International Travel & Tours</p></div><script>window.onload=function(){window.print();}<\/script></body></html>');
+      w.document.close();
     }
 
-    function logout() {
-      localStorage.removeItem('golan_email'); localStorage.removeItem('golan_token'); localStorage.removeItem('golan_expiry');
-      document.getElementById('dashboardSection').classList.add('hidden'); document.getElementById('authSection').classList.remove('hidden'); backToLogin();
-    }
   </script>
 </body>
 </html>

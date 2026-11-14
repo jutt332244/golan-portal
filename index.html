@@ -230,16 +230,20 @@
       </div>
       <p id="modalItemTitle" style="color:var(--primary); font-weight:700; margin:6px 0 14px;"></p>
       <form onsubmit="submitBooking(event)">
-        <div class="form-group"><label>Passenger Full Name (As per Passport)</label><input type="text" id="paxName" placeholder="MUHAMMAD UMER" required /></div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div class="form-group"><label>First Name / Given Name</label><input type="text" id="paxFirstName" placeholder="Given Name" required /></div>
+          <div class="form-group"><label>Last Name / Surname</label><input type="text" id="paxLastName" placeholder="Surname" required /></div>
+        </div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-          <div class="form-group"><label>Passport Number</label><input type="text" id="paxPassport" placeholder="PF7225641" required /></div>
+          <div class="form-group"><label>PPT No</label><input type="text" id="paxPassport" placeholder="PPT No" required /></div>
           <div class="form-group"><label>Date of Birth (DOB)</label><input type="date" id="paxDob" required /></div>
         </div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
           <div class="form-group"><label>Passport Expiry Date</label><input type="date" id="paxExp" required /></div>
           <div class="form-group"><label>Nationality</label><input type="text" id="paxNat" value="Pakistani" required /></div>
         </div>
-        <div class="form-group"><label>Passenger Mobile / WhatsApp</label><input type="text" id="paxMobile" placeholder="0300-1234567" required /></div>
+        <div class="form-group"><label>Passenger Mobile / WhatsApp</label><input type="text" id="paxMobile" placeholder="03XX-XXXXXXX" required /></div>
+
         <div style="display:flex; gap:10px; margin-top:10px;"><button type="submit" class="btn btn-green">Hold Booking (PENDING)</button><button type="button" class="btn btn-red" onclick="closeBookingModal()">Cancel</button></div>
       </form>
     </div>
@@ -425,6 +429,20 @@
     function handleAdminAddFare(e) {
       e.preventDefault();
       callBackend({ action:'adminAddFare', email:currentEmail, token:currentToken, category:document.getElementById('admCat').value, title:document.getElementById('admTitle').value, details:document.getElementById('admDetails').value, travelDate:document.getElementById('admDate').value, seats:document.getElementById('admSeats').value, farePKR:document.getElementById('admFare').value }).then(function(res) { alert(res.message); e.target.reset(); loadDashboardData(); });
+    }
+    function submitBooking(e) {
+      e.preventDefault();
+      var fullName = (document.getElementById('paxFirstName').value.trim() + ' ' + document.getElementById('paxLastName').value.trim()).toUpperCase();
+      callBackend({
+        action:'addBooking', email:currentEmail, token:currentToken,
+        passengerName:fullName,
+        passportNo:document.getElementById('paxPassport').value.trim().toUpperCase(),
+        dob:document.getElementById('paxDob').value,
+        passportExpiry:document.getElementById('paxExp').value,
+        nationality:document.getElementById('paxNat').value,
+        paxMobile:document.getElementById('paxMobile').value,
+        category:selectedItem.Category, itemTitle:selectedItem.Title, farePKR:selectedItem.FarePKR
+      }).then(function(res) { alert(res.message); closeBookingModal(); loadDashboardData(); });
     }
 
     function handleAdminAddBank(e) {

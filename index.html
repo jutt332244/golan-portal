@@ -1,111 +1,77 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Golan International Travel & Tours | Official B2B Portal</title>
   <style>
-    :root {
-      --navy: #0b1f44;
-      --blue: #163b7a;
-      --gold: #d97706;
-      --gold-light: #fef3c7;
-      --bg: #f1f5f9;
-      --card: #ffffff;
-      --text: #0f172a;
-      --muted: #64748b;
-      --border: #e2e8f0;
-      --green: #15803d;
-      --red: #b91c1c;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
-    body { background: var(--bg); color: var(--text); min-height: 100vh; }
-    .hidden { display: none !important; }
-
-    /* Top Bar & Header */
-    .topbar { background: #061229; color: #cbd5e1; font-size: 12px; padding: 7px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
-    .topbar .badge { background: rgba(217,119,6,0.2); color: #fbbf24; padding: 2px 10px; border-radius: 99px; font-weight: 600; border: 1px solid rgba(251,191,36,0.4); }
-    .wa-btn { background: #16a34a; color: #fff; text-decoration: none; padding: 4px 12px; border-radius: 6px; font-weight: 600; font-size: 12px; }
-
-    header { background: linear-gradient(135deg, var(--navy), var(--blue)); color: #fff; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-    .brand { display: flex; align-items: center; gap: 14px; }
-    .logo-box { width: 62px; height: 62px; border-radius: 12px; background: #fff; overflow: hidden; flex-shrink: 0; border: 2px solid var(--gold); }
-    .logo-box img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .brand h1 { font-size: 20px; letter-spacing: 0.5px; font-weight: 800; }
-    .brand p { font-size: 11px; color: #fbbf24; font-weight: 600; letter-spacing: 1px; }
-    .ceo-box { text-align: right; font-size: 12px; }
-    .ceo-box strong { display: block; font-size: 14px; color: #fbbf24; }
-
-    /* Container & Auth Card */
-    .container { max-width: 1200px; margin: 24px auto; padding: 0 16px; }
-    .auth-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 28px; align-items: center; margin-top: 20px; }
-    @media (max-width: 850px) { .auth-grid { grid-template-columns: 1fr; } }
-
-    .hero-panel h2 { font-size: 32px; color: var(--navy); line-height: 1.2; margin: 12px 0; }
-    .hero-panel h2 span { color: var(--blue); }
-    .hero-panel p { color: var(--muted); font-size: 15px; line-height: 1.6; margin-bottom: 20px; }
-    .feature-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-    @media (max-width: 600px) { .feature-cards { grid-template-columns: 1fr; } }
-    .f-card { background: #fff; padding: 14px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
-    .f-card h4 { color: var(--navy); font-size: 14px; margin-bottom: 4px; }
-    .f-card p { font-size: 12px; color: var(--muted); margin: 0; }
-
-    .card { background: var(--card); border-radius: 16px; padding: 24px; border: 1px solid var(--border); box-shadow: 0 10px 25px rgba(15,23,42,0.08); }
-    .card h3 { font-size: 20px; color: var(--navy); margin-bottom: 4px; }
-    .sub-text { font-size: 13px; color: var(--muted); margin-bottom: 18px; }
-
-    .form-group { margin-bottom: 14px; }
-    label { display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 5px; }
-    input, select, textarea { width: 100%; padding: 11px 12px; border: 1.5px solid #cbd5e1; border-radius: 9px; font-size: 14px; outline: none; transition: 0.2s; }
-    input:focus, select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(22,59,122,0.12); }
-
-    .btn { width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; }
-    .btn-primary { background: var(--navy); color: #fff; }
-    .btn-primary:hover { background: var(--blue); }
-    .btn-gold { background: var(--gold); color: #fff; }
-    .btn-gold:hover { background: #b45309; }
-    .btn-sm { width: auto; padding: 6px 12px; font-size: 12px; border-radius: 7px; }
-    .btn-green { background: var(--green); color: #fff; }
-    .btn-red { background: var(--red); color: #fff; }
-
-    .alert { padding: 10px 12px; border-radius: 8px; font-size: 13px; margin-bottom: 14px; font-weight: 600; }
-    .alert-info { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
-    .alert-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
-    .alert-success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
-
-    /* QR Box */
-    .qr-box { text-align: center; background: #f8fafc; border: 2px dashed #94a3b8; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
-    .qr-box img { width: 180px; height: 180px; border-radius: 8px; border: 4px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-    .secret-pill { display: inline-block; background: #e2e8f0; padding: 4px 10px; border-radius: 6px; font-family: monospace; font-size: 13px; font-weight: 700; margin-top: 8px; color: var(--navy); }
-
-    /* Dashboard */
-    .dash-header { background: #fff; padding: 16px 20px; border-radius: 14px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
-    .session-pill { background: #fef3c7; color: #92400e; padding: 5px 12px; border-radius: 99px; font-size: 12px; font-weight: 700; border: 1px solid #fcd34d; }
-
-    .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
-    .tab-btn { background: #fff; border: 1px solid var(--border); padding: 10px 16px; border-radius: 10px; font-weight: 700; font-size: 13px; color: #334155; cursor: pointer; }
-    .tab-btn.active { background: var(--navy); color: #fff; border-color: var(--navy); }
-
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th { background: #f8fafc; text-align: left; padding: 11px; color: #475569; border-bottom: 2px solid var(--border); }
-    td { padding: 11px; border-bottom: 1px solid var(--border); }
-    .status-badge { padding: 3px 9px; border-radius: 99px; font-size: 11px; font-weight: 700; }
-    .st-APPROVED, .st-CONFIRMED, .st-ACTIVE { background: #dcfce7; color: #166534; }
-    .st-PENDING { background: #fef3c7; color: #92400e; }
-    .st-BLOCKED { background: #fee2e2; color: #991b1b; }
-
-    .bank-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
-    .bank-card { background: linear-gradient(135deg, #0f172a, #1e3a8a); color: #fff; padding: 18px; border-radius: 14px; position: relative; }
-    .bank-card h4 { color: #fbbf24; font-size: 15px; margin-bottom: 8px; }
-    .bank-card p { font-size: 13px; margin: 4px 0; color: #e2e8f0; }
-    .bank-card .mono { font-family: monospace; font-size: 15px; font-weight: 700; color: #fff; letter-spacing: 0.5px; }
-
-    .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
-    @media (max-width: 800px) { .admin-grid { grid-template-columns: 1fr; } }
+    :root { --navy:#0b1f44; --blue:#163b7a; --gold:#d97706; --bg:#f1f5f9; --text:#0f172a; --muted:#64748b; --border:#e2e8f0; --green:#15803d; --red:#b91c1c; }
+    * { box-sizing:border-box; margin:0; padding:0; font-family:'Segoe UI',system-ui,sans-serif; }
+    body { background:var(--bg); color:var(--text); min-height:100vh; }
+    .hidden { display:none !important; }
+    .topbar { background:#061229; color:#cbd5e1; font-size:12px; padding:7px 20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
+    .badge { background:rgba(217,119,6,0.2); color:#fbbf24; padding:2px 10px; border-radius:99px; font-weight:600; border:1px solid rgba(251,191,36,0.4); }
+    .wa-btn { background:#16a34a; color:#fff; text-decoration:none; padding:4px 12px; border-radius:6px; font-weight:600; font-size:12px; }
+    header { background:linear-gradient(135deg,var(--navy),var(--blue)); color:#fff; padding:14px 20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; }
+    .brand { display:flex; align-items:center; gap:14px; }
+    .logo-box { width:62px; height:62px; border-radius:12px; background:#fff; overflow:hidden; flex-shrink:0; border:2px solid var(--gold); }
+    .logo-box img { width:100%; height:100%; object-fit:cover; display:block; }
+    .brand h1 { font-size:20px; font-weight:800; }
+    .brand p { font-size:11px; color:#fbbf24; font-weight:600; }
+    .ceo-box { text-align:right; font-size:12px; }
+    .ceo-box strong { display:block; font-size:14px; color:#fbbf24; }
+    .container { max-width:1200px; margin:24px auto; padding:0 16px; }
+    .auth-grid { display:grid; grid-template-columns:1.1fr 0.9fr; gap:28px; align-items:center; }
+    @media (max-width:850px) { .auth-grid { grid-template-columns:1fr; } }
+    .hero-panel h2 { font-size:32px; color:var(--navy); line-height:1.2; margin:12px 0; }
+    .hero-panel h2 span { color:var(--blue); }
+    .hero-panel p { color:var(--muted); font-size:15px; line-height:1.6; margin-bottom:20px; }
+    .feature-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+    @media (max-width:600px) { .feature-cards { grid-template-columns:1fr; } }
+    .f-card { background:#fff; padding:14px; border-radius:12px; border:1px solid var(--border); }
+    .f-card h4 { color:var(--navy); font-size:14px; margin-bottom:4px; }
+    .f-card p { font-size:12px; color:var(--muted); margin:0; }
+    .card { background:#fff; border-radius:16px; padding:24px; border:1px solid var(--border); box-shadow:0 10px 25px rgba(15,23,42,0.08); }
+    .card h3 { font-size:20px; color:var(--navy); margin-bottom:4px; }
+    .sub-text { font-size:13px; color:var(--muted); margin-bottom:16px; }
+    .form-group { margin-bottom:12px; }
+    label { display:block; font-size:12px; font-weight:700; color:#334155; margin-bottom:4px; }
+    input, select { width:100%; padding:10px 12px; border:1.5px solid #cbd5e1; border-radius:9px; font-size:14px; }
+    .btn { width:100%; padding:12px; border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; }
+    .btn-primary { background:var(--navy); color:#fff; }
+    .btn-gold { background:var(--gold); color:#fff; }
+    .btn-sm { width:auto; padding:6px 12px; font-size:12px; border-radius:7px; }
+    .btn-green { background:var(--green); color:#fff; }
+    .btn-red { background:var(--red); color:#fff; }
+    .alert { padding:10px 12px; border-radius:8px; font-size:13px; margin-bottom:12px; font-weight:600; }
+    .alert-info { background:#eff6ff; color:#1e40af; border:1px solid #bfdbfe; }
+    .alert-error { background:#fef2f2; color:#991b1b; border:1px solid #fecaca; }
+    .alert-success { background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; }
+    .qr-box { text-align:center; background:#f8fafc; border:2px dashed #94a3b8; border-radius:12px; padding:14px; margin-bottom:12px; }
+    .qr-box img { width:180px; height:180px; border-radius:8px; border:4px solid #fff; }
+    .secret-pill { display:inline-block; background:#e2e8f0; padding:4px 10px; border-radius:6px; font-family:monospace; font-size:13px; font-weight:700; margin-top:6px; color:var(--navy); }
+    .dash-header { background:#fff; padding:16px 20px; border-radius:14px; border:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:18px; }
+    .session-pill { background:#fef3c7; color:#92400e; padding:5px 12px; border-radius:99px; font-size:12px; font-weight:700; border:1px solid #fcd34d; }
+    .tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
+    .tab-btn { background:#fff; border:1px solid var(--border); padding:10px 16px; border-radius:10px; font-weight:700; font-size:13px; color:#334155; cursor:pointer; }
+    .tab-btn.active { background:var(--navy); color:#fff; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th { background:#f8fafc; text-align:left; padding:10px; color:#475569; border-bottom:2px solid var(--border); }
+    td { padding:10px; border-bottom:1px solid var(--border); }
+    .status-badge { padding:3px 9px; border-radius:99px; font-size:11px; font-weight:700; }
+    .st-APPROVED, .st-CONFIRMED, .st-ACTIVE { background:#dcfce7; color:#166534; }
+    .st-PENDING { background:#fef3c7; color:#92400e; }
+    .st-BLOCKED { background:#fee2e2; color:#991b1b; }
+    .bank-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; }
+    .bank-card { background:linear-gradient(135deg,#0f172a,#1e3a8a); color:#fff; padding:18px; border-radius:14px; }
+    .bank-card h4 { color:#fbbf24; font-size:15px; margin-bottom:8px; }
+    .bank-card p { font-size:13px; margin:4px 0; color:#e2e8f0; }
+    .bank-card .mono { font-family:monospace; font-size:15px; font-weight:700; color:#fff; }
+    .admin-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:24px; }
+    @media (max-width:800px) { .admin-grid { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
-
   <div class="topbar">
     <div>OFFICIAL B2B TRAVEL, TICKETING & UMRAH PARTNER PORTAL</div>
     <div style="display:flex; gap:10px; align-items:center;">
@@ -113,27 +79,15 @@
       <a class="wa-btn" href="https://whatsapp.com" target="_blank">Join WhatsApp Channel</a>
     </div>
   </div>
-
   <header>
     <div class="brand">
-      <div class="logo-box">
-        <img src="logo.png.jpeg" alt="Golan Logo" onerror="this.style.display='none'" />
-      </div>
-      <div>
-        <h1>GOLAN INTERNATIONAL</h1>
-        <p>TRAVEL & TOURS • AIRLINE TICKETING & UMRAH SERVICES</p>
-      </div>
+      <div class="logo-box"><img src="logo.png.jpeg" alt="Golan Logo" onerror="this.style.display='none'" /></div>
+      <div><h1>GOLAN INTERNATIONAL</h1><p>TRAVEL & TOURS • AIRLINE TICKETING & UMRAH SERVICES</p></div>
     </div>
-    <div class="ceo-box">
-      <span>Chief Executive</span>
-      <strong>Shan Chairman</strong>
-      <span>📞 0345-3326318 | Toba Tek Singh</span>
-    </div>
+    <div class="ceo-box"><span>Chief Executive</span><strong>Shan Chairman</strong><span>📞 0345-3326318 | Toba Tek Singh</span></div>
   </header>
 
   <div class="container">
-
-    <!-- ==================== AUTH SECTION ==================== -->
     <div id="authSection" class="auth-grid">
       <div class="hero-panel">
         <span style="background:#dbeafe; color:#1e40af; padding:5px 12px; border-radius:99px; font-size:12px; font-weight:700;">B2B AGENT & SUB-AGENT PORTAL</span>
@@ -147,23 +101,36 @@
       </div>
 
       <div>
-        <!-- STEP 1: LOGIN FORM -->
         <div id="loginBox" class="card">
           <h3>B2B Partner Login</h3>
           <p class="sub-text">Protected with Google Authenticator 2FA & Midnight Lock.</p>
           <div id="loginAlert" class="alert alert-error hidden"></div>
           <form onsubmit="handleLoginStep1(event)">
-            <div class="form-group">
-              <label>Agent Email Address</label>
-              <input type="email" id="loginEmail" placeholder="agent@agency.com" required />
-            </div>
-            <div class="form-group">
-              <label>Password</label>
-              <input type="password" id="loginPassword" placeholder="••••••••" required />
-            </div>
+            <div class="form-group"><label>Agent Email Address</label><input type="email" id="loginEmail" placeholder="golaninternational322@gmail.com" required /></div>
+            <div class="form-group"><label>Password</label><input type="password" id="loginPassword" placeholder="••••••••" required /></div>
             <button type="submit" id="loginBtn" class="btn btn-primary">Verify Credentials →</button>
           </form>
-          <button class="btn" style="margin-top:8px; background:#e2e8f0; color:#334155;" onclick="backToLogin()">← Back to Login</button>
+          <div style="text-align:center; margin-top:16px; padding-top:14px; border-top:1px solid var(--border);">
+            <p style="font-size:12px; color:var(--muted); margin-bottom:8px;">Want to become an authorized sub-agent?</p>
+            <button type="button" class="btn btn-gold" onclick="showRegister()">Register New Travel Agency (Free)</button>
+          </div>
+        </div>
+
+        <div id="totpBox" class="card hidden">
+          <h3>🔐 Google Authenticator 2FA</h3>
+          <p class="sub-text">Session remains active until <strong>12:00 AM Midnight</strong>.</p>
+          <div id="totpAlert" class="alert alert-info">Enter the 6-digit code from your Google Authenticator app.</div>
+          <div id="qrSetupArea" class="qr-box hidden">
+            <p style="font-size:12px; font-weight:700; color:var(--navy); margin-bottom:8px;">📲 First-Time Setup: Scan QR in Google Authenticator App</p>
+            <img id="qrImage" src="" alt="2FA QR Code" />
+            <div style="font-size:11px; color:var(--muted); margin-top:6px;">Or enter manual setup key:</div>
+            <div id="manualSecret" class="secret-pill"></div>
+          </div>
+          <form onsubmit="handleVerifyTotp(event)">
+            <div class="form-group"><label>6-Digit Authenticator Code</label><input type="text" id="totpCode" maxlength="6" placeholder="123456" style="font-size:20px; text-align:center; letter-spacing:6px; font-weight:800;" required /></div>
+            <button type="submit" id="totpBtn" class="btn btn-primary">Unlock Portal Until 12:00 AM →</button>
+          </form>
+          <button type="button" class="btn" style="margin-top:8px; background:#e2e8f0; color:#334155;" onclick="backToLogin()">← Back to Login</button>
         </div>
 
         <div id="registerBox" class="card hidden">
@@ -178,238 +145,136 @@
             <div class="form-group"><label>Create Password</label><input type="password" id="regPass" minlength="6" required /></div>
             <button type="submit" id="regBtn" class="btn btn-gold">Submit Registration for Approval</button>
           </form>
-          <button class="btn" style="margin-top:8px; background:#e2e8f0; color:#334155;" onclick="backToLogin()">← Back to Login</button>
+          <button type="button" class="btn" style="margin-top:8px; background:#e2e8f0; color:#334155;" onclick="backToLogin()">← Back to Login</button>
         </div>
       </div>
     </div>
 
     <div id="dashboardSection" class="hidden">
       <div class="dash-header">
-        <div>
-          <h3 id="dashAgencyName" style="color:var(--navy);">Agency Dashboard</h3>
-          <span id="dashEmail" style="font-size:12px; color:var(--muted);"></span>
-        </div>
-        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-          <span id="sessionCountdown" class="session-pill">⏳ Auto-Lock at 12:00 AM</span>
-          <button class="btn btn-sm btn-red" onclick="logout()">Logout</button>
-        </div>
+        <div><h3 id="dashAgencyName" style="color:var(--navy);">Agency Dashboard</h3><span id="dashEmail" style="font-size:12px; color:var(--muted);"></span></div>
+        <div style="display:flex; gap:10px; align-items:center;"><span class="session-pill">⏳ Auto-Lock at 12:00 AM</span><button class="btn btn-sm btn-red" onclick="logout()">Logout</button></div>
       </div>
-
       <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('fares', this)">✈️ Group Fares, Umrah & Visas</button>
-        <button class="tab-btn" onclick="switchTab('bookings', this)">📋 My Bookings</button>
-        <button class="tab-btn" onclick="switchTab('banks', this)">🏦 Official Payment Accounts</button>
-        <button id="adminTabBtn" class="tab-btn hidden" onclick="switchTab('admin', this)">👑 Super Admin Control</button>
+        <button class="tab-btn active" onclick="switchTab('fares',this)">✈️ Group Fares, Umrah & Visas</button>
+        <button class="tab-btn" onclick="switchTab('bookings',this)">📋 My Bookings</button>
+        <button class="tab-btn" onclick="switchTab('banks',this)">🏦 Official Payment Accounts</button>
+        <button id="adminTabBtn" class="tab-btn hidden" onclick="switchTab('admin',this)">👑 Super Admin Control</button>
       </div>
-
       <div id="tab-fares" class="card">
         <h3>Live Group Flights, Umrah Packages & Visit Visas</h3>
-        <p class="sub-text">Click "Book Now" to submit an instant B2B reservation.</p>
-        <div style="overflow-x:auto;">
-          <table>
-            <thead>
-              <tr><th>Category</th><th>Route / Package</th><th>Details</th><th>Date</th><th>Seats</th><th>B2B Fare (PKR)</th><th>Action</th></tr>
-            </thead>
-            <tbody id="faresTableBody"></tbody>
-          </table>
-        </div>
+        <div style="overflow-x:auto; margin-top:12px;"><table><thead><tr><th>Category</th><th>Route / Package</th><th>Details</th><th>Date</th><th>Seats</th><th>B2B Fare (PKR)</th><th>Action</th></tr></thead><tbody id="faresTableBody"></tbody></table></div>
       </div>
-
       <div id="tab-bookings" class="card hidden">
         <h3>Confirmed B2B Bookings Ledger</h3>
-        <p class="sub-text">All bookings are permanently saved in Golan International database.</p>
-        <div style="overflow-x:auto;">
-          <table>
-            <thead>
-              <tr><th>Booking ID</th><th>Date</th><th>Agency</th><th>Passenger</th><th>Passport</th><th>Package / Flight</th><th>Fare (PKR)</th><th>Status</th></tr>
-            </thead>
-            <tbody id="bookingsTableBody"></tbody>
-          </table>
-        </div>
+        <div style="overflow-x:auto; margin-top:12px;"><table><thead><tr><th>Booking ID</th><th>Date</th><th>Agency</th><th>Passenger</th><th>Passport</th><th>Package / Flight</th><th>Fare (PKR)</th><th>Status</th></tr></thead><tbody id="bookingsTableBody"></tbody></table></div>
       </div>
-
       <div id="tab-banks" class="card hidden">
         <h3>🏦 Official Payment Deposit Accounts</h3>
-        <p class="sub-text">Deposit payments only in the official company accounts listed below.</p>
-        <div id="banksGrid" class="bank-grid"></div>
+        <div id="banksGrid" class="bank-grid" style="margin-top:12px;"></div>
       </div>
-
       <div id="tab-admin" class="hidden">
         <div class="admin-grid">
           <div class="card">
             <h3>➕ Add Live Fare / Package</h3>
             <form onsubmit="handleAdminAddFare(event)">
-              <div class="form-group">
-                <label>Category</label>
-                <select id="admCat"><option>Group Flight</option><option>Umrah Package</option><option>Visit Visa</option></select>
-              </div>
-              <div class="form-group"><label>Title / Sector (e.g. LHE - JED Saudi Airlines)</label><input type="text" id="admTitle" required /></div>
-              <div class="form-group"><label>Flight / Hotel Details</label><input type="text" id="admDetails" required /></div>
-              <div class="form-group"><label>Travel Date</label><input type="text" id="admDate" placeholder="25 Nov 2026" required /></div>
-              <div class="form-group"><label>Available Seats</label><input type="number" id="admSeats" value="15" required /></div>
+              <div class="form-group"><label>Category</label><select id="admCat"><option>Group Flight</option><option>Umrah Package</option><option>Visit Visa</option></select></div>
+              <div class="form-group"><label>Title / Sector</label><input type="text" id="admTitle" required /></div>
+              <div class="form-group"><label>Details</label><input type="text" id="admDetails" required /></div>
+              <div class="form-group"><label>Travel Date</label><input type="text" id="admDate" required /></div>
+              <div class="form-group"><label>Seats</label><input type="number" id="admSeats" value="15" required /></div>
               <div class="form-group"><label>B2B Fare (PKR)</label><input type="number" id="admFare" required /></div>
               <button type="submit" class="btn btn-primary">Publish to All Agents</button>
             </form>
           </div>
-
           <div class="card">
             <h3>🏦 Add Official Payment Account</h3>
             <form onsubmit="handleAdminAddBank(event)">
-              <div class="form-group"><label>Bank / Wallet Name</label><input type="text" id="bankName" placeholder="e.g. UBL / Meezan Bank / JazzCash" required /></div>
+              <div class="form-group"><label>Bank / Wallet Name</label><input type="text" id="bankName" required /></div>
               <div class="form-group"><label>Account Title</label><input type="text" id="bankTitle" value="Golan International Travel & Tourism" required /></div>
               <div class="form-group"><label>Account Number</label><input type="text" id="bankAcc" required /></div>
-              <div class="form-group"><label>IBAN (Optional)</label><input type="text" id="bankIban" /></div>
+              <div class="form-group"><label>IBAN</label><input type="text" id="bankIban" /></div>
               <button type="submit" class="btn btn-gold">Add Payment Account</button>
             </form>
           </div>
         </div>
-
         <div class="card">
           <h3>🛡️ Sub-Agent Security & Access Control</h3>
-          <p class="sub-text">Approve new agencies, block suspicious accounts, or reset password + 2FA QR code.</p>
-          <div style="overflow-x:auto;">
-            <table>
-              <thead>
-                <tr><th>Agency</th><th>Email</th><th>City / Mobile</th><th>2FA Setup</th><th>Status</th><th>Security Controls</th></tr>
-              </thead>
-              <tbody id="agentsTableBody"></tbody>
-            </table>
-          </div>
+          <div style="overflow-x:auto; margin-top:12px;"><table><thead><tr><th>Agency</th><th>Email</th><th>City / Mobile</th><th>2FA</th><th>Status</th><th>Controls</th></tr></thead><tbody id="agentsTableBody"></tbody></table></div>
         </div>
       </div>
     </div>
 
-    <div id="bookingModal" class="card hidden" style="position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:999; width:92%; max-width:440px; box-shadow:0 20px 50px rgba(0,0,0,0.4);">
+    <div id="bookingModal" class="card hidden" style="position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:999; width:92%; max-width:420px; box-shadow:0 20px 50px rgba(0,0,0,0.4);">
       <h3>Confirm B2B Booking</h3>
       <p id="modalItemTitle" class="sub-text" style="font-weight:700; color:var(--navy);"></p>
       <form onsubmit="submitBooking(event)">
-        <div class="form-group"><label>Passenger Full Name (As per Passport)</label><input type="text" id="paxName" required /></div>
+        <div class="form-group"><label>Passenger Full Name</label><input type="text" id="paxName" required /></div>
         <div class="form-group"><label>Passport Number</label><input type="text" id="paxPassport" required /></div>
-        <div style="display:flex; gap:10px;">
-          <button type="submit" class="btn btn-green">Confirm Booking</button>
-          <button type="button" class="btn" style="background:#e2e8f0;" onclick="closeBookingModal()">Cancel</button>
-        </div>
+        <div style="display:flex; gap:10px;"><button type="submit" class="btn btn-green">Confirm</button><button type="button" class="btn" style="background:#e2e8f0;" onclick="closeBookingModal()">Cancel</button></div>
       </form>
     </div>
   </div>
+
   <script>
-  var API_URL = 'https://google.com';
+    var API_URL = 'https://google.com';
+    var currentEmail = '', currentToken = '', selectedItem = null;
+    var DEFAULT_BANKS = [{ BankName:'UBL (United Bank Limited)', AccountTitle:'Golan International Travel & Tourism', AccountNumber:'384263615', IBAN:'PK30UNIL0109000384263615' }];
 
-     var currentEmail = '';
-    var currentToken = '';
-    var selectedItem = null;
-
-    var DEFAULT_BANKS = [
-      {
-        BankName: 'UBL (United Bank Limited)',
-        AccountTitle: 'Golan International Travel & Tourism',
-        AccountNumber: '384263615',
-        IBAN: 'PK30UNIL0109000384263615'
-      }
-    ];
-
-        function callBackend(payload) {
-      var qs = Object.keys(payload).map(function(k) {
-        return encodeURIComponent(k) + '=' + encodeURIComponent(payload[k]);
-      }).join('&');
+    function callBackend(payload) {
+      var qs = Object.keys(payload).map(function(k) { return encodeURIComponent(k) + '=' + encodeURIComponent(payload[k]); }).join('&');
       return fetch(API_URL + '?' + qs).then(function(r) { return r.json(); });
     }
 
-
     window.onload = function() {
-      var savedEmail = localStorage.getItem('golan_email');
-      var savedToken = localStorage.getItem('golan_token');
-      var savedExpiry = Number(localStorage.getItem('golan_expiry') || 0);
-
-      if (savedEmail && savedToken && Date.now() < savedExpiry) {
-        callBackend({ action: 'checkSession', email: savedEmail, token: savedToken }).then(function(res) {
-          if (res.ok) {
-            currentEmail = savedEmail;
-            currentToken = savedToken;
-            enterDashboard(res.agencyName, res.isAdmin, res.expiry);
-          } else {
-            logout();
-          }
+      var e = localStorage.getItem('golan_email'), t = localStorage.getItem('golan_token'), ex = Number(localStorage.getItem('golan_expiry') || 0);
+      if (e && t && Date.now() < ex) {
+        callBackend({ action:'checkSession', email:e, token:t }).then(function(res) {
+          if (res.ok) { currentEmail = e; currentToken = t; enterDashboard(res.agencyName, res.isAdmin, res.expiry); } else logout();
         });
-      function backToLogin() {
-   var r = document.getElementById('registerBox');
-   var t = document.getElementById('totpBox');
-   var l = document.getElementById('loginBox');
-   if (r) r.classList.add('hidden');
-   if (t) t.classList.add('hidden');
-   if (l) l.classList.remove('hidden');
- }
+      }
+    };
 
+    function showRegister() { document.getElementById('loginBox').classList.add('hidden'); document.getElementById('registerBox').classList.remove('hidden'); }
+    function backToLogin() { document.getElementById('registerBox').classList.add('hidden'); document.getElementById('totpBox').classList.add('hidden'); document.getElementById('loginBox').classList.remove('hidden'); }
 
     function handleRegister(e) {
       e.preventDefault();
-      var btn = document.getElementById('regBtn');
-      btn.textContent = 'Submitting...';
-      callBackend({
-        action: 'register',
-        agencyName: document.getElementById('regAgency').value,
-        city: document.getElementById('regCity').value,
-        mobile: document.getElementById('regMobile').value,
-        email: document.getElementById('regEmail').value,
-        password: document.getElementById('regPass').value
-      }).then(function(res) {
+      var btn = document.getElementById('regBtn'); btn.textContent = 'Submitting...';
+      callBackend({ action:'register', agencyName:document.getElementById('regAgency').value, city:document.getElementById('regCity').value, mobile:document.getElementById('regMobile').value, email:document.getElementById('regEmail').value, password:document.getElementById('regPass').value }).then(function(res) {
         btn.textContent = 'Submit Registration for Approval';
-        var box = document.getElementById('regAlert');
-        box.className = 'alert ' + (res.ok ? 'alert-success' : 'alert-error');
-        box.textContent = res.message;
-        box.classList.remove('hidden');
+        var box = document.getElementById('regAlert'); box.className = 'alert ' + (res.ok ? 'alert-success' : 'alert-error'); box.textContent = res.message; box.classList.remove('hidden');
       });
     }
 
     function handleLoginStep1(e) {
       e.preventDefault();
-      var btn = document.getElementById('loginBtn');
-      var alertBox = document.getElementById('loginAlert');
-      alertBox.classList.add('hidden');
-      btn.textContent = 'Checking Security...';
-
-      var email = document.getElementById('loginEmail').value.trim();
-      var password = document.getElementById('loginPassword').value;
-
-      callBackend({ action: 'loginStep1', email: email, password: password }).then(function(res) {
+      var btn = document.getElementById('loginBtn'), alertBox = document.getElementById('loginAlert');
+      alertBox.classList.add('hidden'); btn.textContent = 'Checking Security...';
+      var email = document.getElementById('loginEmail').value.trim(), password = document.getElementById('loginPassword').value;
+      callBackend({ action:'loginStep1', email:email, password:password }).then(function(res) {
         btn.textContent = 'Verify Credentials →';
-        if (!res.ok) {
-          alertBox.textContent = res.message;
-          alertBox.classList.remove('hidden');
-          return;
-        }
+        if (!res.ok) { alertBox.textContent = res.message; alertBox.classList.remove('hidden'); return; }
         currentEmail = email;
         document.getElementById('loginBox').classList.add('hidden');
         document.getElementById('totpBox').classList.remove('hidden');
-
         if (res.needQrSetup) {
           document.getElementById('qrSetupArea').classList.remove('hidden');
           document.getElementById('qrImage').src = res.qrUrl;
           document.getElementById('manualSecret').textContent = res.secret;
-        } else {
-          document.getElementById('qrSetupArea').classList.add('hidden');
-        }
-      });
+        } else { document.getElementById('qrSetupArea').classList.add('hidden'); }
+      }).catch(function(err) { btn.textContent = 'Verify Credentials →'; alertBox.textContent = 'Connection error: ' + err.message; alertBox.classList.remove('hidden'); });
     }
 
     function handleVerifyTotp(e) {
       e.preventDefault();
-      var btn = document.getElementById('totpBtn');
-      var alertBox = document.getElementById('totpAlert');
+      var btn = document.getElementById('totpBtn'), alertBox = document.getElementById('totpAlert');
       btn.textContent = 'Verifying 2FA...';
-
-      var code = document.getElementById('totpCode').value.trim();
-      callBackend({ action: 'verifyTotp', email: currentEmail, code: code }).then(function(res) {
+      callBackend({ action:'verifyTotp', email:currentEmail, code:document.getElementById('totpCode').value.trim() }).then(function(res) {
         btn.textContent = 'Unlock Portal Until 12:00 AM →';
-        if (!res.ok) {
-          alertBox.className = 'alert alert-error';
-          alertBox.textContent = res.message;
-          return;
-        }
+        if (!res.ok) { alertBox.className = 'alert alert-error'; alertBox.textContent = res.message; return; }
         currentToken = res.token;
-        localStorage.setItem('golan_email', currentEmail);
-        localStorage.setItem('golan_token', res.token);
-        localStorage.setItem('golan_expiry', res.expiry);
+        localStorage.setItem('golan_email', currentEmail); localStorage.setItem('golan_token', res.token); localStorage.setItem('golan_expiry', res.expiry);
         enterDashboard(res.agencyName, res.isAdmin, res.expiry);
       });
     }
@@ -419,183 +284,74 @@
       document.getElementById('dashboardSection').classList.remove('hidden');
       document.getElementById('dashAgencyName').textContent = agencyName;
       document.getElementById('dashEmail').textContent = currentEmail;
-
-      if (isAdmin) {
-        document.getElementById('adminTabBtn').classList.remove('hidden');
-      } else {
-        document.getElementById('adminTabBtn').classList.add('hidden');
-      }
-
-      setInterval(function() {
-        if (Date.now() >= expiry) {
-          alert('12:00 AM Midnight Security Lock: Your session has expired. Please verify Google Authenticator 2FA again.');
-          logout();
-        }
-      }, 15000);
-
+      document.getElementById('adminTabBtn').classList.toggle('hidden', !isAdmin);
+      setInterval(function() { if (Date.now() >= expiry) { alert('12:00 AM Midnight Lock: Please verify 2FA again.'); logout(); } }, 15000);
       loadDashboardData();
     }
 
     function loadDashboardData() {
-      callBackend({ action: 'getDashboardData', email: currentEmail, token: currentToken }).then(function(res) {
+      callBackend({ action:'getDashboardData', email:currentEmail, token:currentToken }).then(function(res) {
         if (!res.ok) { logout(); return; }
+        document.getElementById('faresTableBody').innerHTML = res.fares.length ? res.fares.map(function(f) {
+          return '<tr><td><strong>'+f.Category+'</strong></td><td>'+f.Title+'</td><td>'+f.Details+'</td><td>'+f.TravelDate+'</td><td>'+f.Seats+'</td><td><strong>PKR '+Number(f.FarePKR).toLocaleString()+'</strong></td><td><button class="btn btn-sm btn-primary" onclick="openBookingModal(\''+f.Category+'\',\''+f.Title.replace(/'/g,'')+'\','+f.FarePKR+')">Book Now</button></td></tr>';
+        }).join('') : '<tr><td colspan="7" style="text-align:center;color:#64748b;">No active fares posted yet.</td></tr>';
 
-        var fHtml = '';
-        if (res.fares.length === 0) {
-          fHtml = '<tr><td colspan="7" style="text-align:center; color:#64748b;">No active fares posted yet. Admin can add from Super Admin tab.</td></tr>';
-        } else {
-          res.fares.forEach(function(f) {
-            fHtml += '<tr><td><strong>' + f.Category + '</strong></td><td>' + f.Title + '</td><td>' + f.Details + '</td><td>' + f.TravelDate + '</td><td>' + f.Seats + '</td><td><strong>PKR ' + Number(f.FarePKR).toLocaleString() + '</strong></td><td><button class="btn btn-sm btn-primary" onclick="openBookingModal(\'' + f.Category + '\',\'' + f.Title.replace(/'/g, '') + '\',' + f.FarePKR + ')">Book Now</button></td></tr>';
-          });
-        }
-        document.getElementById('faresTableBody').innerHTML = fHtml;
-
-        var bHtml = '';
-        if (res.bookings.length === 0) {
-          bHtml = '<tr><td colspan="8" style="text-align:center; color:#64748b;">No bookings recorded yet.</td></tr>';
-        } else {
-          res.bookings.forEach(function(b) {
-            bHtml += '<tr><td><strong>' + b.BookingID + '</strong></td><td>' + b.CreatedAt + '</td><td>' + b.AgencyName + '</td><td>' + b.PassengerName + '</td><td>' + b.PassportNo + '</td><td>' + b.ItemTitle + '</td><td>PKR ' + Number(b.FarePKR).toLocaleString() + '</td><td><span class="status-badge st-' + b.Status + '">' + b.Status + '</span></td></tr>';
-          });
-        }
-        document.getElementById('bookingsTableBody').innerHTML = bHtml;
+        document.getElementById('bookingsTableBody').innerHTML = res.bookings.length ? res.bookings.map(function(b) {
+          return '<tr><td><strong>'+b.BookingID+'</strong></td><td>'+b.CreatedAt+'</td><td>'+b.AgencyName+'</td><td>'+b.PassengerName+'</td><td>'+b.PassportNo+'</td><td>'+b.ItemTitle+'</td><td>PKR '+Number(b.FarePKR).toLocaleString()+'</td><td><span class="status-badge st-'+b.Status+'">'+b.Status+'</span></td></tr>';
+        }).join('') : '<tr><td colspan="8" style="text-align:center;color:#64748b;">No bookings recorded yet.</td></tr>';
 
         var allBanks = DEFAULT_BANKS.concat(res.banks || []);
-        var bankHtml = '';
-        allBanks.forEach(function(bk) {
-          bankHtml += '<div class="bank-card"><h4>🏦 ' + bk.BankName + '</h4><p>Title: <strong>' + bk.AccountTitle + '</strong></p><p>Account #: <span class="mono">' + bk.AccountNumber + '</span></p>' + (bk.IBAN ? '<p>IBAN: <span class="mono">' + bk.IBAN + '</span></p>' : '') + '</div>';
-        });
-        document.getElementById('banksGrid').innerHTML = bankHtml;
+        document.getElementById('banksGrid').innerHTML = allBanks.map(function(bk) {
+          return '<div class="bank-card"><h4>🏦 '+bk.BankName+'</h4><p>Title: <strong>'+bk.AccountTitle+'</strong></p><p>Account #: <span class="mono">'+bk.AccountNumber+'</span></p>'+(bk.IBAN ? '<p>IBAN: <span class="mono">'+bk.IBAN+'</span></p>' : '')+'</div>';
+        }).join('');
 
         if (res.isAdmin && res.agents) {
-          var aHtml = '';
-          res.agents.forEach(function(a) {
-            aHtml += '<tr><td><strong>' + a.AgencyName + '</strong></td><td>' + a.Email + '</td><td>' + a.City + '<br><small>' + a.Mobile + '</small></td><td>' + a.TotpVerified + '</td><td><span class="status-badge st-' + a.Status + '">' + a.Status + '</span></td><td style="display:flex; gap:5px; flex-wrap:wrap;">' +
-              '<button class="btn btn-sm btn-green" onclick="manageAgent(\'' + a.Email + '\',\'APPROVE\')">Approve</button>' +
-              '<button class="btn btn-sm btn-red" onclick="manageAgent(\'' + a.Email + '\',\'BLOCK\')">Block</button>' +
-              '<button class="btn btn-sm btn-gold" onclick="resetAgentPass(\'' + a.Email + '\')">Reset Pass & QR</button>' +
-              '</td></tr>';
-          });
-          document.getElementById('agentsTableBody').innerHTML = aHtml;
+          document.getElementById('agentsTableBody').innerHTML = res.agents.map(function(a) {
+            return '<tr><td><strong>'+a.AgencyName+'</strong></td><td>'+a.Email+'</td><td>'+a.City+'<br><small>'+a.Mobile+'</small></td><td>'+a.TotpVerified+'</td><td><span class="status-badge st-'+a.Status+'">'+a.Status+'</span></td><td style="display:flex;gap:5px;flex-wrap:wrap;"><button class="btn btn-sm btn-green" onclick="manageAgent(\''+a.Email+'\',\'APPROVE\')">Approve</button><button class="btn btn-sm btn-red" onclick="manageAgent(\''+a.Email+'\',\'BLOCK\')">Block</button><button class="btn btn-sm btn-gold" onclick="resetAgentPass(\''+a.Email+'\')">Reset Pass & QR</button></td></tr>';
+          }).join('');
         }
       });
     }
 
     function switchTab(name, btn) {
-      ['fares', 'bookings', 'banks', 'admin'].forEach(function(t) {
-        document.getElementById('tab-' + t).classList.add('hidden');
-      });
+      ['fares','bookings','banks','admin'].forEach(function(t) { document.getElementById('tab-'+t).classList.add('hidden'); });
       document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
-      document.getElementById('tab-' + name).classList.remove('hidden');
-      btn.classList.add('active');
+      document.getElementById('tab-'+name).classList.remove('hidden'); btn.classList.add('active');
     }
 
-    function openBookingModal(cat, title, fare) {
-      selectedItem = { category: cat, itemTitle: title, farePKR: fare };
-      document.getElementById('modalItemTitle').textContent = title + ' — PKR ' + Number(fare).toLocaleString();
-      document.getElementById('bookingModal').classList.remove('hidden');
-    }
-
-    function closeBookingModal() {
-      document.getElementById('bookingModal').classList.add('hidden');
-    }
+    function openBookingModal(cat, title, fare) { selectedItem = { category:cat, itemTitle:title, farePKR:fare }; document.getElementById('modalItemTitle').textContent = title + ' — PKR ' + Number(fare).toLocaleString(); document.getElementById('bookingModal').classList.remove('hidden'); }
+    function closeBookingModal() { document.getElementById('bookingModal').classList.add('hidden'); }
 
     function submitBooking(e) {
       e.preventDefault();
-      callBackend({
-        action: 'addBooking',
-        email: currentEmail,
-        token: currentToken,
-        passengerName: document.getElementById('paxName').value,
-        passportNo: document.getElementById('paxPassport').value,
-        category: selectedItem.category,
-        itemTitle: selectedItem.itemTitle,
-        farePKR: selectedItem.farePKR
-      }).then(function(res) {
-        alert(res.message);
-        closeBookingModal();
-                loadDashboardData();
-      });
+      callBackend({ action:'addBooking', email:currentEmail, token:currentToken, passengerName:document.getElementById('paxName').value, passportNo:document.getElementById('paxPassport').value, category:selectedItem.category, itemTitle:selectedItem.itemTitle, farePKR:selectedItem.farePKR }).then(function(res) { alert(res.message); closeBookingModal(); loadDashboardData(); });
     }
 
     function handleAdminAddFare(e) {
       e.preventDefault();
-      callBackend({
-        action: 'adminAddFare',
-        email: currentEmail,
-        token: currentToken,
-        category: document.getElementById('admCat').value,
-        title: document.getElementById('admTitle').value,
-        details: document.getElementById('admDetails').value,
-        travelDate: document.getElementById('admDate').value,
-        seats: document.getElementById('admSeats').value,
-        farePKR: document.getElementById('admFare').value
-      }).then(function(res) {
-        alert(res.message);
-        e.target.reset();
-        loadDashboardData();
-      });
+      callBackend({ action:'adminAddFare', email:currentEmail, token:currentToken, category:document.getElementById('admCat').value, title:document.getElementById('admTitle').value, details:document.getElementById('admDetails').value, travelDate:document.getElementById('admDate').value, seats:document.getElementById('admSeats').value, farePKR:document.getElementById('admFare').value }).then(function(res) { alert(res.message); e.target.reset(); loadDashboardData(); });
     }
 
     function handleAdminAddBank(e) {
       e.preventDefault();
-      callBackend({
-        action: 'adminAddBank',
-        email: currentEmail,
-        token: currentToken,
-        bankName: document.getElementById('bankName').value,
-        accountTitle: document.getElementById('bankTitle').value,
-        accountNumber: document.getElementById('bankAcc').value,
-        iban: document.getElementById('bankIban').value
-      }).then(function(res) {
-        alert(res.message);
-        e.target.reset();
-        loadDashboardData();
-      });
+      callBackend({ action:'adminAddBank', email:currentEmail, token:currentToken, bankName:document.getElementById('bankName').value, accountTitle:document.getElementById('bankTitle').value, accountNumber:document.getElementById('bankAcc').value, iban:document.getElementById('bankIban').value }).then(function(res) { alert(res.message); e.target.reset(); loadDashboardData(); });
     }
 
     function manageAgent(targetEmail, subAction) {
       if (!confirm('Are you sure you want to ' + subAction + ' ' + targetEmail + '?')) return;
-      callBackend({
-        action: 'adminManageAgent',
-        email: currentEmail,
-        token: currentToken,
-        targetEmail: targetEmail,
-        subAction: subAction
-      }).then(function(res) {
-        alert(res.message);
-        loadDashboardData();
-      });
+      callBackend({ action:'adminManageAgent', email:currentEmail, token:currentToken, targetEmail:targetEmail, subAction:subAction }).then(function(res) { alert(res.message); loadDashboardData(); });
     }
 
     function resetAgentPass(targetEmail) {
-      var newPass = prompt('Enter NEW password for ' + targetEmail + ' (This will also reset their 2FA QR code):');
+      var newPass = prompt('Enter NEW password for ' + targetEmail + ':');
       if (!newPass) return;
-      callBackend({
-        action: 'adminManageAgent',
-        email: currentEmail,
-        token: currentToken,
-        targetEmail: targetEmail,
-        subAction: 'RESET_PASSWORD',
-        newPassword: newPass
-      }).then(function(res) {
-        alert(res.message);
-        loadDashboardData();
-      });
+      callBackend({ action:'adminManageAgent', email:currentEmail, token:currentToken, targetEmail:targetEmail, subAction:'RESET_PASSWORD', newPassword:newPass }).then(function(res) { alert(res.message); loadDashboardData(); });
     }
 
     function logout() {
-      localStorage.removeItem('golan_email');
-      localStorage.removeItem('golan_token');
-      localStorage.removeItem('golan_expiry');
-      document.getElementById('dashboardSection').classList.add('hidden');
-      document.getElementById('authSection').classList.remove('hidden');
-      backToLogin();
-       backToLogin();
-    }
-    }
+      localStorage.removeItem('golan_email'); localStorage.removeItem('golan_token'); localStorage.removeItem('golan_expiry');
+      document.getElementById('dashboardSection').classList.add('hidden'); document.getElementById('authSection').classList.remove('hidden'); backToLogin();
     }
   </script>
 </body>
 </html>
-

@@ -361,8 +361,15 @@
     function loadDashboardData() {
       callBackend({ action:'getDashboardData', email:currentEmail, token:currentToken }).then(function(res) {
         if (!res.ok) { logout(); return; }
-        document.getElementById('faresTableBody').innerHTML = res.fares.length ? res.fares.map(function(f) {
-          return '<tr><td><strong>'+f.Category+'</strong></td><td>'+f.Title+'</td><td>'+f.Details+'</td><td>'+f.TravelDate+'</td><td>'+f.Seats+'</td><td><strong>PKR '+Number(f.FarePKR).toLocaleString()+'</strong></td><td><button class="btn btn-sm btn-primary" onclick="openBookingModal(\''+f.Category+'\',\''+f.Title.replace(/'/g,'')+'\','+f.FarePKR+')">Book Now</button></td></tr>';
+            document.getElementById('faresTableBody').innerHTML = res.fares.length ? res.fares.map(function(f) {
+          var metaHtml = '<div style="margin-top:5px;font-size:12px;line-height:1.6;color:#334155;">'
+            + (f.Timing ? '<div>✈️ <strong>Timing:</strong> ' + f.Timing + '</div>' : '')
+            + (f.Luggage ? '<div>🧳 <strong>Luggage:</strong> ' + f.Luggage + '</div>' : '')
+            + (f.Meal ? '<div>🍽️ <strong>Meal:</strong> ' + f.Meal + '</div>' : '')
+            + (f.Stay ? '<div>🏨 <strong>Stay / Transit:</strong> ' + f.Stay + '</div>' : '')
+            + (f.Details ? '<div style="color:#475569;">📝 ' + f.Details + '</div>' : '')
+            + '</div>';
+          return '<tr><td><span class="status-badge st-APPROVED">'+f.Category+'</span></td><td><strong style="font-size:14px;color:#0b1f3a;">'+f.Title+'</strong></td><td>'+metaHtml+'</td><td><strong>'+f.TravelDate+'</strong></td><td><strong>'+f.Seats+'</strong></td><td><strong style="color:#15803d;">PKR '+Number(f.FarePKR).toLocaleString()+'</strong></td><td><button class="btn btn-sm btn-primary" onclick="openBookingModal(\''+f.Category+'\',\''+f.Title.replace(/'/g,"")+'\','+f.FarePKR+')">Book Now</button></td></tr>';
         }).join('') : '<tr><td colspan="7" style="text-align:center;color:#64748b;">No active fares posted yet.</td></tr>';
 
                window.__ALL_BOOKINGS__ = res.bookings || [];
@@ -438,8 +445,21 @@
 
     function handleAdminAddFare(e) {
       e.preventDefault();
-      callBackend({ action:'adminAddFare', email:currentEmail, token:currentToken, category:document.getElementById('admCat').value, title:document.getElementById('admTitle').value, details:document.getElementById('admDetails').value, travelDate:document.getElementById('admDate').value, seats:document.getElementById('admSeats').value, farePKR:document.getElementById('admFare').value }).then(function(res) { alert(res.message); e.target.reset(); loadDashboardData(); });
+      callBackend({
+        action:'adminAddFare', email:currentEmail, token:currentToken,
+        category:document.getElementById('admCat').value,
+        title:document.getElementById('admTitle').value,
+        timing:document.getElementById('admTiming').value,
+        luggage:document.getElementById('admLuggage').value,
+        meal:document.getElementById('admMeal').value,
+        stay:document.getElementById('admStay').value,
+        details:document.getElementById('admDetails').value,
+        travelDate:document.getElementById('admDate').value,
+        seats:document.getElementById('admSeats').value,
+        farePKR:document.getElementById('admFare').value
+      }).then(function(res) { alert(res.message); e.target.reset(); loadDashboardData(); });
     }
+
         function handleAdminAddBank(e) {
       e.preventDefault();
       callBackend({ action:'adminAddBank', email:currentEmail, token:currentToken, bankName:document.getElementById('bankName').value, accountTitle:document.getElementById('bankTitle').value, accountNumber:document.getElementById('bankAcc').value, iban:document.getElementById('bankIban').value }).then(function(res) { alert(res.message); e.target.reset(); loadDashboardData(); });

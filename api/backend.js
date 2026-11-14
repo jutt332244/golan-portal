@@ -111,6 +111,7 @@ export default async function handler(req, res) {
   const email = String(p.email || '').trim().toLowerCase();
   const DB = await loadDB();
 
+
   if (action === 'register') {
     if (!email || !p.password || !p.agencyName) return res.json({ ok: false, message: 'All fields required.' });
     if (DB.agents[email]) return res.json({ ok: false, message: 'Email already registered.' });

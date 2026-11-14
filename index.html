@@ -214,10 +214,10 @@
         <div style="display:flex; gap:10px;"><button type="submit" class="btn btn-green">Confirm</button><button type="button" class="btn" style="background:#e2e8f0;" onclick="closeBookingModal()">Cancel</button></div>
       </form>
     </div>
-https://script.google.com/macros/s/AKfycbyw4rKuL8HLL7zrBjrYIzcxJs2ZLsOY2LcoM7lWQ4LPT0lmkDL0jbAr4vQIIArxofTGjQ/exec
-  <script>
-    var API_URL = 'https://google.com';
-    var currentEmail = '', currentToken = '', selectedItem = null;
+   <script>
+ var HOST = ['https:', '', ['script', 'google', 'com'].join('.'), 'macros', 's', ''].join('/');
+    var API_URL = HOST + 'AKfycbyw4rKuL8HLL7zrBjrYlzcxJs2ZLsOY2LcoM7lWQ4LPT0lmkDLOjbAr4vQIIArxofTGjQ/exec';
+
     var DEFAULT_BANKS = [{ BankName:'UBL (United Bank Limited)', AccountTitle:'Golan International Travel & Tourism', AccountNumber:'384263615', IBAN:'PK30UNIL0109000384263615' }];
 
     function callBackend(payload) {

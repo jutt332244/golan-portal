@@ -90,15 +90,20 @@ export default function handler(req, res) {
 
   if (action === 'loginStep1') {
     const a = DB.agents[email];
-    if (!a) return res.json({ ok: false, message: 'Agent email not found. Super Admin: golaninternational322@gmail.com' });
+    if (!a) return res.json({ ok: false, message: 'Agent email not found.' });
+    const isSuper = DB.admins.includes(email);
+    if (isSuper) { a.Status = 'APPROVED'; a.FailedAttempts = 0; }
     if (a.Status === 'BLOCKED') return res.json({ ok: false, message: 'Account BLOCKED by Head Office.' });
     if (a.Status !== 'APPROVED') return res.json({ ok: false, message: 'Account PENDING approval from Admin.' });
     if (a.PasswordHash !== hashPwd(p.password || '')) {
-      a.FailedAttempts++;
-      if (a.FailedAttempts >= 5) a.Status = 'BLOCKED';
-      return res.json({ ok: false, message: 'Invalid password. Attempt ' + a.FailedAttempts + ' of 5.' });
+      if (!isSuper) {
+        a.FailedAttempts++;
+        if (a.FailedAttempts >= 5) a.Status = 'BLOCKED';
+      }
+      return res.json({ ok: false, message: 'Invalid password.' });
     }
     a.FailedAttempts = 0;
+
     const uri = `otpauth://totp/Golan%20International:${encodeURIComponent(email)}?secret=${a.TotpSecret}&issuer=Golan%20International`;
     const qrUrl = `https://qrserver.com{encodeURIComponent(uri)}`;
     return res.json({ ok: true, needQrSetup: a.TotpVerified !== 'YES', qrUrl, secret: a.TotpVerified !== 'YES' ? a.TotpSecret : '' });

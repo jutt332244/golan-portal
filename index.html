@@ -249,14 +249,32 @@
     function showRegister() { document.getElementById('loginBox').classList.add('hidden'); document.getElementById('registerBox').classList.remove('hidden'); }
     function backToLogin() { document.getElementById('registerBox').classList.add('hidden'); document.getElementById('totpBox').classList.add('hidden'); document.getElementById('loginBox').classList.remove('hidden'); }
 
-    function handleRegister(e) {
+       function handleRegister(e) {
       e.preventDefault();
-      var btn = document.getElementById('regBtn'); btn.textContent = 'Submitting...';
-      callBackend({ action:'register', agencyName:document.getElementById('regAgency').value, city:document.getElementById('regCity').value, mobile:document.getElementById('regMobile').value, email:document.getElementById('regEmail').value, password:document.getElementById('regPass').value }).then(function(res) {
+      var btn = document.getElementById('regBtn');
+      var box = document.getElementById('regAlert');
+      box.classList.add('hidden');
+      btn.textContent = 'Submitting...';
+      callBackend({
+        action: 'register',
+        agencyName: document.getElementById('regAgency').value,
+        city: document.getElementById('regCity').value,
+        mobile: document.getElementById('regMobile').value,
+        email: document.getElementById('regEmail').value,
+        password: document.getElementById('regPass').value
+      }).then(function(res) {
         btn.textContent = 'Submit Registration for Approval';
-        var box = document.getElementById('regAlert'); box.className = 'alert ' + (res.ok ? 'alert-success' : 'alert-error'); box.textContent = res.message; box.classList.remove('hidden');
+        box.className = 'alert ' + (res.ok ? 'alert-success' : 'alert-error');
+        box.textContent = res.message;
+        box.classList.remove('hidden');
+      }).catch(function(err) {
+        btn.textContent = 'Submit Registration for Approval';
+        box.className = 'alert alert-error';
+        box.textContent = 'Error: ' + err.message;
+        box.classList.remove('hidden');
       });
     }
+
 
     function handleLoginStep1(e) {
       e.preventDefault();

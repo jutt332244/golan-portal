@@ -219,15 +219,32 @@
           <h3>🛡️ Sub-Agent Wallet Limit & Security Control</h3>
           <div style="overflow-x:auto; margin-top:12px;"><table><thead><tr><th>Agency</th><th>Email</th><th>City / Mobile</th><th>Wallet Limit (PKR)</th><th>Status</th><th>Controls</th></tr></thead><tbody id="agentsTableBody"></tbody></table></div>
         </div>
+          </div>
+  </div>
+
+  <div id="bookingModal" class="hidden" style="position:fixed; inset:0; background:rgba(15,23,42,0.75); display:flex; align-items:center; justify-content:center; z-index:999; padding:16px; overflow-y:auto;">
+    <div class="card" style="width:100%; max-width:500px; margin:auto;">
+      <h3>✈️ Confirm B2B Booking (Passport Details)</h3>
+      <div id="modalSessionBanner" style="background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; padding:8px 12px; border-radius:8px; font-weight:800; font-size:13px; margin:8px 0; text-align:center;">
+        ⏳ Booking Session Time Left: <span id="modalSessionClock">15:00</span>
       </div>
-      <h3>Confirm B2B Booking</h3>
-      <p id="modalItemTitle" class="sub-text" style="font-weight:700; color:var(--navy);"></p>
+      <p id="modalItemTitle" style="color:var(--primary); font-weight:700; margin:6px 0 14px;"></p>
       <form onsubmit="submitBooking(event)">
-        <div class="form-group"><label>Passenger Full Name</label><input type="text" id="paxName" required /></div>
-        <div class="form-group"><label>Passport Number</label><input type="text" id="paxPassport" required /></div>
-        <div style="display:flex; gap:10px;"><button type="submit" class="btn btn-green">Confirm</button><button type="button" class="btn" style="background:#e2e8f0;" onclick="closeBookingModal()">Cancel</button></div>
+        <div class="form-group"><label>Passenger Full Name (As per Passport)</label><input type="text" id="paxName" placeholder="MUHAMMAD UMER" required /></div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div class="form-group"><label>Passport Number</label><input type="text" id="paxPassport" placeholder="PF7225641" required /></div>
+          <div class="form-group"><label>Date of Birth (DOB)</label><input type="date" id="paxDob" required /></div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div class="form-group"><label>Passport Expiry Date</label><input type="date" id="paxExp" required /></div>
+          <div class="form-group"><label>Nationality</label><input type="text" id="paxNat" value="Pakistani" required /></div>
+        </div>
+        <div class="form-group"><label>Passenger Mobile / WhatsApp</label><input type="text" id="paxMobile" placeholder="0300-1234567" required /></div>
+        <div style="display:flex; gap:10px; margin-top:10px;"><button type="submit" class="btn btn-green">Hold Booking (PENDING)</button><button type="button" class="btn btn-red" onclick="closeBookingModal()">Cancel</button></div>
       </form>
     </div>
+  </div>
+
    <script>
     var API_URL = '/api/backend';
     var currentEmail = '', currentToken = '', selectedItem = null;
@@ -334,9 +351,9 @@
           return '<tr><td><strong>'+f.Category+'</strong></td><td>'+f.Title+'</td><td>'+f.Details+'</td><td>'+f.TravelDate+'</td><td>'+f.Seats+'</td><td><strong>PKR '+Number(f.FarePKR).toLocaleString()+'</strong></td><td><button class="btn btn-sm btn-primary" onclick="openBookingModal(\''+f.Category+'\',\''+f.Title.replace(/'/g,'')+'\','+f.FarePKR+')">Book Now</button></td></tr>';
         }).join('') : '<tr><td colspan="7" style="text-align:center;color:#64748b;">No active fares posted yet.</td></tr>';
 
-        document.getElementById('bookingsTableBody').innerHTML = res.bookings.length ? res.bookings.map(function(b) {
-          return '<tr><td><strong>'+b.BookingID+'</strong></td><td>'+b.CreatedAt+'</td><td>'+b.AgencyName+'</td><td>'+b.PassengerName+'</td><td>'+b.PassportNo+'</td><td>'+b.ItemTitle+'</td><td>PKR '+Number(b.FarePKR).toLocaleString()+'</td><td><span class="status-badge st-'+b.Status+'">'+b.Status+'</span></td></tr>';
-        }).join('') : '<tr><td colspan="8" style="text-align:center;color:#64748b;">No bookings recorded yet.</td></tr>';
+               window.__ALL_BOOKINGS__ = res.bookings || [];
+        renderBookingsTable(res.isAdmin);
+
 
         var allBanks = DEFAULT_BANKS.concat(res.banks || []);
         document.getElementById('banksGrid').innerHTML = allBanks.map(function(bk) {
@@ -357,13 +374,37 @@
       document.getElementById('tab-'+name).classList.remove('hidden'); btn.classList.add('active');
     }
 
-    function openBookingModal(cat, title, fare) { selectedItem = { category:cat, itemTitle:title, farePKR:fare }; document.getElementById('modalItemTitle').textContent = title + ' — PKR ' + Number(fare).toLocaleString(); document.getElementById('bookingModal').classList.remove('hidden'); }
-    function closeBookingModal() { document.getElementById('bookingModal').classList.add('hidden'); }
+      var modalTimerInterval = null;
 
-    function submitBooking(e) {
-      e.preventDefault();
-      callBackend({ action:'addBooking', email:currentEmail, token:currentToken, passengerName:document.getElementById('paxName').value, passportNo:document.getElementById('paxPassport').value, category:selectedItem.category, itemTitle:selectedItem.itemTitle, farePKR:selectedItem.farePKR }).then(function(res) { alert(res.message); closeBookingModal(); loadDashboardData(); });
+    function openBookingModal(cat, title, fare) {
+      selectedItem = { Category: cat, Title: title, FarePKR: fare };
+      document.getElementById('modalItemTitle').textContent = title + ' — PKR ' + Number(fare).toLocaleString();
+      document.getElementById('bookingModal').classList.remove('hidden');
+
+      if (modalTimerInterval) clearInterval(modalTimerInterval);
+      var secondsLeft = 15 * 60;
+      var clockEl = document.getElementById('modalSessionClock');
+      if (clockEl) clockEl.textContent = '15:00';
+
+      modalTimerInterval = setInterval(function() {
+        secondsLeft--;
+        if (secondsLeft <= 0) {
+          clearInterval(modalTimerInterval);
+          document.getElementById('bookingModal').classList.add('hidden');
+          alert('⌛ Booking Session Expired (15 Minutes)! Please select flight/package again.');
+        } else if (clockEl) {
+          var m = Math.floor(secondsLeft / 60);
+          var s = secondsLeft % 60;
+          clockEl.textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+        }
+      }, 1000);
     }
+
+    function closeBookingModal() {
+      if (modalTimerInterval) clearInterval(modalTimerInterval);
+      document.getElementById('bookingModal').classList.add('hidden');
+    }
+
     function toggleVisaFields() {
       var isVisa = document.getElementById('admCat').value === 'Visit Visa';
       document.getElementById('grpSeats').style.display = isVisa ? 'none' : 'block';

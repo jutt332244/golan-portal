@@ -194,14 +194,12 @@ export default async function handler(req, res) {
       return res.json({ ok: true, message: 'Deposit request submitted! Admin will upgrade your limit shortly.' });
     }
 
-    if (action === 'addBooking') {
+        if (action === 'addBooking') {
       const fare = Number(p.farePKR || 0);
-      const bal = Number(a.BalancePKR || 0);
-      if (!isAdmin && bal < fare) {
-        return res.json({ ok: false, message: 'Insufficient Wallet Balance (PKR ' + bal.toLocaleString() + '). Please deposit funds to upgrade limit.' });
-      }
-      if (!isAdmin) a.BalancePKR = bal - fare;
       const bId = 'GI-' + Math.floor(100000 + Math.random() * 900000);
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let autoPnr = '';
+      for (let i = 0; i < 6; i++) autoPnr += chars[Math.floor(Math.random() * chars.length)];
       const holdUntil = Date.now() + (30 * 60 * 1000);
       DB.bookings.unshift({
         BookingID: bId,
@@ -218,22 +216,31 @@ export default async function handler(req, res) {
         Category: p.category || '',
         ItemTitle: p.itemTitle || '',
         FarePKR: fare,
-        PNR: 'PENDING',
+        PNR: autoPnr,
         TicketNo: '',
         Status: 'PENDING'
       });
       await saveDB(DB);
-      return res.json({ ok: true, bookingId: bId, message: 'Booking Held (PENDING): ' + bId + ' — Complete issuance within 30 minutes.' });
+      return res.json({ ok: true, bookingId: bId, pnr: autoPnr, message: 'Booking Held (PENDING)! PNR: ' + autoPnr + ' — Please issue within 30 minutes.' });
     }
 
     if (action === 'adminIssueBooking' && isAdmin) {
       const bk = DB.bookings.find(b => b.BookingID === p.bookingId);
       if (!bk) return res.json({ ok: false, message: 'Booking not found.' });
-      bk.PNR = String(p.pnr || '').trim().toUpperCase();
+      const agentAcc = DB.agents[bk.AgentEmail];
+      const fare = Number(bk.FarePKR || 0);
+      if (agentAcc && !DB.admins.includes(bk.AgentEmail)) {
+        const bal = Number(agentAcc.BalancePKR || 0);
+        if (bal < fare) {
+          return res.json({ ok: false, message: 'Cannot Issue: Agent wallet balance (PKR ' + bal.toLocaleString() + ') is less than Fare (PKR ' + fare.toLocaleString() + ').' });
+        }
+        agentAcc.BalancePKR = bal - fare;
+      }
+      if (p.pnr && String(p.pnr).trim()) bk.PNR = String(p.pnr).trim().toUpperCase();
       bk.TicketNo = String(p.ticketNo || '').trim();
       bk.Status = 'CONFIRMED';
       await saveDB(DB);
-      return res.json({ ok: true, message: 'Booking Confirmed & PNR (' + bk.PNR + ') Issued!' });
+      return res.json({ ok: true, message: 'Ticket Issued & CONFIRMED! PNR: ' + bk.PNR });
     }
 
     if (action === 'adminAddFare' && isAdmin) {

@@ -120,7 +120,7 @@ export default async function handler(req, res) {
       Status: 'PENDING', BalancePKR: 0, SessionToken: '', SessionExpiry: 0, FailedAttempts: 0
     };
     await saveDB(DB);
-    return res.json({ ok: true, message: 'Registration saved permanently! Contact Chief Executive (Shan Chairman) for approval.' });
+    return res.json({ ok: true, message: 'Please contact the Head Quarters to activate your registered account: CEO Shan Chairman (0345-3326318) | Manager Muhammad Umer (0331-6379110).' });
   }
 
   if (action === 'loginStep1') {

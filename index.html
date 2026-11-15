@@ -498,22 +498,57 @@
       document.getElementById('bookingModal').classList.add('hidden');
     }
 
-    function toggleVisaFields() {
-      var isVisa = document.getElementById('admCat').value === 'Visit Visa';
+        function toggleVisaFields() {
+      var cat = document.getElementById('admCat').value;
+      var isVisa = cat === 'Visit Visa';
+      var isUmrah = cat === 'Umrah Package';
       document.getElementById('grpSeats').style.display = isVisa ? 'none' : 'block';
       document.getElementById('grpDate').style.display = isVisa ? 'none' : 'block';
       document.getElementById('admSeats').required = !isVisa;
       document.getElementById('admDate').required = !isVisa;
+      var lblTiming = document.querySelector('#grpTiming label');
+      var lblLuggage = document.querySelector('#grpLuggage label');
+      var lblMeal = document.querySelector('#grpMeal label');
+      var lblStay = document.querySelector('#grpStay label');
       if (isVisa) {
         document.getElementById('admSeats').value = '999';
         document.getElementById('admDate').value = 'Open Validity';
         document.getElementById('lblTitle').textContent = 'Country / Visa Type (e.g. UAE 30 Days Visit Visa)';
+        if (lblTiming) lblTiming.textContent = '⏱️ Processing Time';
+        document.getElementById('admTiming').placeholder = 'e.g. 24 to 48 Hours / 3 Working Days';
+        if (lblLuggage) lblLuggage.textContent = '📅 Visa Validity & Stay';
+        document.getElementById('admLuggage').placeholder = 'e.g. 60 Days Validity • 30 Days Stay';
+        if (lblMeal) lblMeal.textContent = '🛂 Entry Type';
+        document.getElementById('admMeal').placeholder = 'e.g. Single Entry / Multiple Entry';
+        if (lblStay) lblStay.textContent = '📄 Required Documents';
+        document.getElementById('admStay').placeholder = 'e.g. Passport Scan + White BG Photo';
+      } else if (isUmrah) {
+        document.getElementById('admSeats').value = '15';
+        document.getElementById('admDate').value = '';
+        document.getElementById('lblTitle').textContent = 'Umrah Package Title (e.g. 14 Days Economy Umrah)';
+        if (lblTiming) lblTiming.textContent = '🗓️ Package Duration';
+        document.getElementById('admTiming').placeholder = 'e.g. 14 Days / 21 Days';
+        if (lblLuggage) lblLuggage.textContent = '🕋 Makkah Hotel & Distance';
+        document.getElementById('admLuggage').placeholder = 'e.g. 7 Nights • 400m Haram';
+        if (lblMeal) lblMeal.textContent = '🕌 Madinah Hotel & Distance';
+        document.getElementById('admMeal').placeholder = 'e.g. 7 Nights • 200m Markazia';
+        if (lblStay) lblStay.textContent = '🚌 Transport & Visa';
+        document.getElementById('admStay').placeholder = 'e.g. Umrah Visa + Full GMC/Bus Transport';
       } else {
         document.getElementById('admSeats').value = '15';
         document.getElementById('admDate').value = '';
-        document.getElementById('lblTitle').textContent = 'Title / Sector';
+        document.getElementById('lblTitle').textContent = 'Route & Airline / Package Title';
+        if (lblTiming) lblTiming.textContent = '🛫 Flight Timing / Duration';
+        document.getElementById('admTiming').placeholder = 'Dep 04:15 AM - Arr 07:45 AM';
+        if (lblLuggage) lblLuggage.textContent = '🧳 Luggage / Baggage';
+        document.getElementById('admLuggage').placeholder = '30 KG + 7 KG Hand Carry';
+        if (lblMeal) lblMeal.textContent = '🍽️ Meal / In-Flight Service';
+        document.getElementById('admMeal').placeholder = 'Hot Halal Meal Included';
+        if (lblStay) lblStay.textContent = '🏨 Hotel Stay / Transit';
+        document.getElementById('admStay').placeholder = 'Direct Flight / Layover Details';
       }
     }
+
 
        function handleAdminAddFare(e) {
       e.preventDefault();

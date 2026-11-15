@@ -356,6 +356,13 @@ export default async function handler(req, res) {
       await saveDB(DB);
       return res.json({ ok: true, message: 'Deposit Approved & PKR ' + Number(dep.AmountPKR).toLocaleString() + ' added to agent limit!' });
     }
+    if (action === 'adminDeleteBooking' && isAdmin) {
+      const before = DB.bookings.length;
+      DB.bookings = DB.bookings.filter(b => b.BookingID !== p.bookingId);
+      if (DB.bookings.length === before) return res.json({ ok: false, message: 'Booking not found.' });
+      await saveDB(DB);
+      return res.json({ ok: true, message: 'Booking deleted permanently!' });
+    }
 
     return res.json({ ok: false, message: 'Invalid request' });
   } catch (err) {

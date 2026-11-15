@@ -337,16 +337,7 @@
       var qs = Object.keys(payload).map(function(k) { return encodeURIComponent(k) + '=' + encodeURIComponent(payload[k]); }).join('&');
       return fetch(API_URL + '?' + qs).then(function(r) { return r.json(); });
     }
-
-       window.onload = function() {
-      var e = localStorage.getItem('golan_email'), t = localStorage.getItem('golan_token'), ex = Number(localStorage.getItem('golan_expiry') || 0);
-      if (e && t && Date.now() < ex) {
-        callBackend({ action:'checkSession', email:e, token:t }).then(function(res) {
-          if (res && res.ok) { currentEmail = e; currentToken = t; enterDashboard(res.agencyName, res.isAdmin, res.expiry); }
-          else { localStorage.removeItem('golan_email'); localStorage.removeItem('golan_token'); localStorage.removeItem('golan_expiry'); }
-        }).catch(function() {});
-      }
-    };
+ 
 
 
     function showRegister() { document.getElementById('loginBox').classList.add('hidden'); document.getElementById('registerBox').classList.remove('hidden'); }
@@ -728,7 +719,7 @@
       callBackend({ action:'adminManageAgent', email:currentEmail, token:currentToken, targetEmail:targetEmail, subAction:'RESET_PASSWORD', newPassword:np }).then(function(res) { alert(res.message); loadDashboardData(); });
     }
 
-    function logout() { localStorage.removeItem('golan_sess'); location.reload(); }
+    function logout() { localStorage.removeItem('golan_email'); localStorage.removeItem('golan_token'); localStorage.removeItem('golan_expiry'); location.reload(); }
 
     function submitBooking(e) {
       e.preventDefault();

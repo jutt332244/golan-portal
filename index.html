@@ -378,9 +378,20 @@
       callBackend({ action:'loginStep1', email:email, password:password }).then(function(res) {
         btn.textContent = 'Verify Credentials →';
         if (!res.ok) { alertBox.textContent = res.message; alertBox.classList.remove('hidden'); return; }
-        currentEmail = email;
+               currentEmail = email.toLowerCase();
+        var savedE = (localStorage.getItem('golan_email') || '').toLowerCase();
+        var savedT = localStorage.getItem('golan_token') || '';
+        var savedEx = Number(localStorage.getItem('golan_expiry') || 0);
+        if (savedE === currentEmail && savedT && Date.now() < savedEx) {
+          callBackend({ action:'checkSession', email:savedE, token:savedT }).then(function(sRes) {
+            if (sRes && sRes.ok) { currentToken = savedT; enterDashboard(sRes.agencyName, sRes.isAdmin, sRes.expiry); }
+            else { document.getElementById('loginBox').classList.add('hidden'); document.getElementById('totpBox').classList.remove('hidden'); }
+          });
+          return;
+        }
         document.getElementById('loginBox').classList.add('hidden');
         document.getElementById('totpBox').classList.remove('hidden');
+
               if (res.needQrSetup) {
           document.getElementById('qrSetupArea').classList.remove('hidden');
           document.getElementById('manualSecret').textContent = res.secret;

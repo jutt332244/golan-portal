@@ -45,7 +45,7 @@ async function loadDB() {
       headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` }
     });
     const rows = await r.json();
-    if (Array.isArray(rows) && rows.length > 0 && rows.data) return rows.data;
+    if (Array.isArray(rows) && rows.length > 0 && rows[0].data) return rows[0].data;
   } catch (e) {}
   const init = defaultState();
   await saveDB(init);

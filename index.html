@@ -617,10 +617,15 @@
           document.getElementById('liveFlightsBody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:#dc2626;font-weight:700;">❌ ' + res.message + '</td></tr>';
           return;
         }
-        document.getElementById('liveFlightsBody').innerHTML = res.offers.map(function(o) {
+            document.getElementById('liveFlightsBody').innerHTML = res.offers.map(function(o) {
+          var dParts = (o.DepTime || '').split(' ');
+          var aParts = (o.ArrTime || '').split(' ');
+          var depHtml = '📅 ' + (dParts.at(0) || '-') + ' | 🕒 <strong style="color:#0b1f3a;">' + (dParts.at(1) || '-') + '</strong>';
+          var arrHtml = '📅 ' + (aParts.at(0) || '-') + ' | 🕒 <strong style="color:#0b1f3a;">' + (aParts.at(1) || '-') + '</strong>';
           var title = o.Airline + ' (' + o.FlightNo + ') ' + o.Route + ' [' + o.DepTime + ']';
-          return '<tr><td><strong>' + o.Airline + '</strong><br><small style="color:#0b1f3a;font-weight:700;">' + o.FlightNo + '</small></td><td><strong>' + o.Route + '</strong><br><span class="status-badge st-APPROVED">' + o.Stops + '</span></td><td>✈️ Dep: <strong>' + o.DepTime + '</strong><br>🛬 Arr: <strong>' + o.ArrTime + '</strong></td><td>🧳 ' + o.Luggage + '</td><td><strong style="color:#15803d;font-size:14px;">PKR ' + Number(o.FarePKR).toLocaleString() + '</strong></td><td><button class="btn btn-sm btn-primary" onclick="openBookingModal(\'Live Airline\',\'' + title.replace(/'/g,"") + '\',' + o.FarePKR + ')">Hold / Book</button></td></tr>';
+          return '<tr><td><strong>' + o.Airline + '</strong><br><small style="color:#0b1f3a;font-weight:700;">' + o.FlightNo + '</small></td><td><strong>' + o.Route + '</strong><br><span class="status-badge st-APPROVED">' + o.Stops + '</span></td><td>✈️ <strong>Dep:</strong> ' + depHtml + '<br>🛬 <strong>Arr:</strong> ' + arrHtml + '</td><td>🧳 ' + o.Luggage + '</td><td><strong style="color:#15803d;font-size:14px;">PKR ' + Number(o.FarePKR).toLocaleString() + '</strong></td><td><button class="btn btn-sm btn-primary" onclick="openBookingModal(\'Live Airline\',\'' + title.replace(/'/g,"") + '\',' + o.FarePKR + ')">Hold / Book</button></td></tr>';
         }).join('');
+
       });
     }
 

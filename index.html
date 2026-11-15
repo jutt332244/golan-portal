@@ -552,8 +552,10 @@
           timerHtml = '<br><span class="live-timer" data-until="'+b.HoldUntil+'" style="color:#dc2626;font-weight:800;font-size:12px;">⏳ Calculating...</span>';
         }
         var adminBtn = (isAdmin && b.Status === 'PENDING') ? '<button class="btn btn-sm btn-green" style="margin-bottom:4px;" onclick="issueBookingPnr(\''+b.BookingID+'\')">🎫 Issue PNR</button><br>' : '';
-        var pdfBtn = '<button class="btn btn-sm btn-primary" onclick="printBookingPdf(\''+b.BookingID+'\')">🖨️ PDF</button>';
-        return '<tr><td><strong>'+b.BookingID+'</strong><br><small>'+b.AgencyName+'</small></td><td>'+b.CreatedAt+'</td><td><strong>'+b.PassengerName+'</strong><br><small>Passport No: '+b.PassportNo+' | DOB: '+(b.Dob||'-')+'</small><br><small>Exp: '+(b.PassportExpiry||'-')+' | '+(b.PaxMobile||'-')+'</small></td><td>'+b.ItemTitle+'</td><td>'+pnrHtml+'</td><td>PKR '+Number(b.FarePKR).toLocaleString()+'</td><td><span class="status-badge st-'+b.Status+'">'+b.Status+'</span>'+timerHtml+'</td><td>'+adminBtn+pdfBtn+'</td></tr>';
+            var pdfBtn = '<button class="btn btn-sm btn-primary" onclick="printBookingPdf(\''+b.BookingID+'\')">🖨️ PDF</button>';
+        var delBtn = isAdmin ? '<br><button class="btn btn-sm btn-red" style="margin-top:4px;" onclick="deleteBookingAdmin(\''+b.BookingID+'\')">🗑️ Delete</button>' : '';
+        return '<tr><td><strong>'+b.BookingID+'</strong><br><small>'+b.AgencyName+'</small></td><td>'+b.CreatedAt+'</td><td><strong>'+b.PassengerName+'</strong><br><small>Passport No: '+b.PassportNo+' | DOB: '+(b.Dob||'-')+'</small><br><small>Exp: '+(b.PassportExpiry||'-')+' | '+(b.PaxMobile||'-')+'</small></td><td>'+b.ItemTitle+'</td><td>'+pnrHtml+'</td><td>PKR '+Number(b.FarePKR).toLocaleString()+'</td><td><span class="status-badge st-'+b.Status+'">'+b.Status+'</span>'+timerHtml+'</td><td>'+adminBtn+pdfBtn+delBtn+'</td></tr>';
+
       }).join('') : '<tr><td colspan="8" style="text-align:center;color:#64748b;">No bookings yet.</td></tr>';
     }
 
@@ -589,6 +591,10 @@
     function openCeoWhatsApp() {
       var num = '92' + '345' + '3326318';
       window.open(['https:', '', ['api', 'whatsapp', 'com'].join('.'), 'send?phone=' + num].join('/'), '_blank');
+    }
+    function deleteBookingAdmin(bookingId) {
+      if (!confirm('Are you sure you want to permanently delete Booking ' + bookingId + '?')) return;
+      callBackend({ action:'adminDeleteBooking', email:currentEmail, token:currentToken, bookingId:bookingId }).then(function(res) { alert(res.message); loadDashboardData(); });
     }
 
   </script>

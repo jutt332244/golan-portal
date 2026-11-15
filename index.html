@@ -806,9 +806,10 @@
       callBackend({ action:'adminDeleteBooking', email:currentEmail, token:currentToken, bookingId:bookingId }).then(function(res) { alert(res.message); loadDashboardData(); });
       }
   </script>
-  <button type="button" onclick="openCeoWhatsApp()" title="Chat with CEO Shan Chairman on WhatsApp" style="position:fixed; bottom:24px; right:24px; width:56px; height:56px; background:#25D366; color:#fff; border:none; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 8px 20px rgba(37,211,102,0.5); z-index:99999; cursor:pointer; font-size:28px;">
-    <svg width="30" height="30" viewBox="0 0 32 32" fill="#ffffff"><path d="M16 3C8.82 3 3 8.82 3 16c0 2.29.6 4.53 1.74 6.51L3 29l6.67-1.71A12.93 12.93 0 0 0 16 29c7.18 0 13-5.82 13-13S23.18 3 16 3zm0 23.6c-2.02 0-4-.54-5.73-1.57l-.41-.24-3.96 1.01 1.06-3.86-.27-.42A10.56 10.56 0 0 1 5.4 16C5.4 10.16 10.16 5.4 16 5.4S26.6 10.16 26.6 16 21.84 26.6 16 26.6zm5.81-7.92c-.32-.16-1.88-.93-2.17-1.03-.29-.11-.5-.16-.71.16-.21.32-.82 1.03-1.01 1.24-.19.21-.37.24-.69.08-.32-.16-1.34-.49-2.56-1.58-.95-.84-1.58-1.89-1.77-2.2-.19-.32-.02-.49.14-.65.14-.14.32-.37.48-.56.16-.19.21-.32.32-.53.11-.21.05-.4-.03-.56-.08-.16-.71-1.72-.98-2.35-.26-.62-.52-.53-.71-.54h-.61c-.21 0-.56.08-.85.4-.29.32-1.11 1.09-1.11 2.65s1.14 3.07 1.3 3.28c.16.21 2.24 3.42 5.43 4.8.76.33 1.35.52 1.81.67.76.24 1.45.21 2 .13.61-.09 1.88-.77 2.15-1.51.26-.74.26-1.38.19-1.51-.08-.13-.29-.21-.61-.37z"/></svg>
-  </button>
+  <div onclick="openCeoWhatsApp()" title="WhatsApp CEO Shan Chairman" style="position:fixed; bottom:25px; right:25px; width:60px; height:60px; background-color:#25D366; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(0,0,0,0.28); z-index:2147483647; cursor:pointer;">
+    <svg xmlns="http://w3.org" width="34" height="34" viewBox="0 0 24 24" fill="#ffffff"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824z"/></svg>
+  </div>
+
 </body>
 </html>
 

@@ -187,8 +187,9 @@
 
       <div class="dash-header">
         <div><h3 id="dashAgencyName" style="color:var(--navy);">Agency Dashboard</h3><span id="dashEmail" style="font-size:12px; color:var(--muted);"></span></div>
-        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;"><span id="walletBadge" class="session-pill" style="background:#dcfce7; color:#166534; border-color:#86efac;">💰 Wallet: PKR 0</span><span class="session-pill">⏳ Auto-Lock at 12:00 AM</span><button class="btn btn-sm btn-red" onclick="logout()">Logout</button></div>
-      </div>
+               <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;"><span id="walletBadge" class="session-pill" style="background:#dcfce7; color:#166534; border-color:#86efac;">💰 Wallet: PKR 0</span><span class="session-pill">⏳ Auto-Lock at 12:00 AM</span></div>
+
+       </div>
       <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:18px;">
 
         <div style="background:#fff; padding:16px 18px; border-radius:14px; border:1px solid #e2e8f0; border-left:5px solid #0284c7; box-shadow:0 4px 12px rgba(15,23,42,0.04);">
@@ -905,9 +906,26 @@
         category:selectedItem.Category, itemTitle:selectedItem.Title, farePKR:selectedItem.FarePKR
       }).then(function(res) { alert(res.message); closeBookingModal(); loadDashboardData(); });
     }
+    function openFareCategoryTab(catName, btnEl) {
+      switchTab('fares', btnEl);
+      var rows = document.querySelectorAll('#faresTableBody tr');
+      rows.forEach(function(r) {
+        if (!catName || catName === 'ALL') { r.style.display = ''; return; }
+        r.style.display = r.textContent.indexOf(catName) !== -1 ? '' : 'none';
+      });
+    }
 
     function renderBookingsTable(isAdmin) {
-      var list = window.__ALL_BOOKINGS__ || [];
+      var list = window.__ALL_BOOKINGS__ || []
+           var elTot = document.getElementById('statTotalBookings');
+      var elSold = document.getElementById('statSoldTickets');
+      var elHold = document.getElementById('statHoldTickets');
+      var elCanc = document.getElementById('statCanceledTickets');
+      if (elTot) elTot.textContent = list.length;
+      if (elSold) elSold.textContent = list.filter(function(x) { return x.Status === 'CONFIRMED' || x.Status === 'APPROVED'; }).length;
+      if (elHold) elHold.textContent = list.filter(function(x) { return x.Status === 'PENDING'; }).length;
+      if (elCanc) elCanc.textContent = list.filter(function(x) { return x.Status === 'CANCELED' || x.Status === 'EXPIRED' || x.Status === 'BLOCKED'; }).length;
+
       document.getElementById('bookingsTableBody').innerHTML = list.length ? list.map(function(b) {
         var pnrHtml = (b.PNR && b.PNR !== 'PENDING') ? '<strong style="color:#15803d;font-size:14px;">PNR: '+b.PNR+'</strong>' + (b.TicketNo ? '<br><small>TKT: '+b.TicketNo+'</small>' : '') : '<span style="color:#d97706;font-weight:700;">Awaiting PNR</span>';
         var timerHtml = '';

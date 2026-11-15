@@ -185,78 +185,111 @@
         </div>
       </div>
 
-      <div class="dash-header">
-        <div><h3 id="dashAgencyName" style="color:var(--navy);">Agency Dashboard</h3><span id="dashEmail" style="font-size:12px; color:var(--muted);"></span></div>
-               <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;"><span id="walletBadge" class="session-pill" style="background:#dcfce7; color:#166534; border-color:#86efac;">💰 Wallet: PKR 0</span><span class="session-pill">⏳ Auto-Lock at 12:00 AM</span></div>
+      <div style="background:linear-gradient(115deg,#0f4c5c 0%,#136f82 55%,#1b8a99 100%); color:#fff; padding:22px 26px; border-radius:16px; margin-bottom:18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; box-shadow:0 8px 24px rgba(15,76,92,0.18);">
+        <div style="max-width:560px;">
+          <div style="font-size:11px; font-weight:700; letter-spacing:1px; color:#bae6fd; text-transform:uppercase; margin-bottom:6px;">📅 SUNDAY, 15 NOVEMBER 2026 • GOLAN B2B PORTAL</div>
+          <h2 style="font-size:24px; font-weight:800; margin:0 0 6px 0; color:#fff;">Good evening, <span id="dashAgencyName">Partner</span></h2>
+          <p style="font-size:12.5px; color:#e0f2fe; margin:0 0 14px 0; line-height:1.5;">Here is a clear snapshot of your booking activity. Search available flights, manage bookings, and follow up on payments from one place.</p>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+            <button type="button" onclick="switchTab('liveair',this)" style="background:#fff; color:#0f4c5c; border:none; padding:8px 15px; border-radius:9px; font-size:12px; font-weight:800; cursor:pointer;">✈️ Find available flights</button>
+            <button type="button" onclick="switchTab('bookings',this)" style="background:rgba(255,255,255,0.14); color:#fff; border:1px solid rgba(255,255,255,0.3); padding:8px 15px; border-radius:9px; font-size:12px; font-weight:700; cursor:pointer;">📋 View bookings</button>
+            <span id="walletBadge" style="background:rgba(16,185,129,0.22); color:#ecfdf5; border:1px solid rgba(167,243,208,0.4); padding:7px 12px; border-radius:9px; font-size:12px; font-weight:800;">💰 Wallet: PKR 0</span>
+          </div>
+          <span id="dashEmail" style="display:none;"></span>
+        </div>
+        <div style="display:flex; gap:12px;">
+          <div style="background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.22); padding:14px 18px; border-radius:12px; min-width:125px;">
+            <div id="statTodayBookings" style="font-size:22px; font-weight:900; color:#fff;">0</div>
+            <div style="font-size:10px; font-weight:700; letter-spacing:0.6px; color:#bae6fd; margin-top:2px;">BOOKINGS<br>TODAY</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.22); padding:14px 18px; border-radius:12px; min-width:125px;">
+            <div id="statAvailGroups" style="font-size:22px; font-weight:900; color:#fff;">320</div>
+            <div style="font-size:10px; font-weight:700; letter-spacing:0.6px; color:#bae6fd; margin-top:2px;">AVAILABLE<br>GROUPS</div>
+          </div>
+        </div>
+      </div>
 
-       </div>
-      <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:18px;">
-
-        <div style="background:#fff; padding:16px 18px; border-radius:14px; border:1px solid #e2e8f0; border-left:5px solid #0284c7; box-shadow:0 4px 12px rgba(15,23,42,0.04);">
-          <div style="font-size:11px; font-weight:800; color:#64748b; letter-spacing:0.5px;">📊 TOTAL BOOKINGS</div>
-          <div id="statTotalBookings" style="font-size:28px; font-weight:900; color:#0f172a; margin:4px 0;">0</div>
-          <div style="font-size:11px; color:#64748b;">All active booking records</div>
+      <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-bottom:18px;">
+        <div style="background:#fff; padding:16px 20px; border-radius:14px; border:1px solid #e2e8f0; border-left:4px solid #0284c7; display:flex; align-items:center; gap:14px;">
+          <div style="width:40px; height:40px; border-radius:10px; background:#e0f2fe; color:#0284c7; display:flex; align-items:center; justify-content:center; font-size:18px;">📊</div>
+          <div>
+            <div style="font-size:10.5px; font-weight:800; color:#64748b; letter-spacing:0.5px;">TOTAL BOOKINGS</div>
+            <div id="statTotalBookings" style="font-size:24px; font-weight:900; color:#0f172a; line-height:1.2;">0</div>
+            <div style="font-size:11px; color:#64748b;">All active booking records</div>
+          </div>
         </div>
-        <div style="background:#fff; padding:16px 18px; border-radius:14px; border:1px solid #e2e8f0; border-left:5px solid #16a34a; box-shadow:0 4px 12px rgba(15,23,42,0.04);">
-          <div style="font-size:11px; font-weight:800; color:#64748b; letter-spacing:0.5px;">✅ SOLD / CONFIRMED</div>
-          <div id="statSoldTickets" style="font-size:28px; font-weight:900; color:#15803d; margin:4px 0;">0</div>
-          <div style="font-size:11px; color:#64748b;">Confirmed &amp; issued tickets</div>
+        <div style="background:#fff; padding:16px 20px; border-radius:14px; border:1px solid #e2e8f0; border-left:4px solid #16a34a; display:flex; align-items:center; gap:14px;">
+          <div style="width:40px; height:40px; border-radius:10px; background:#dcfce7; color:#16a34a; display:flex; align-items:center; justify-content:center; font-size:18px;">✅</div>
+          <div>
+            <div style="font-size:10.5px; font-weight:800; color:#64748b; letter-spacing:0.5px;">SOLD TICKETS</div>
+            <div id="statSoldTickets" style="font-size:24px; font-weight:900; color:#0f172a; line-height:1.2;">0</div>
+            <div style="font-size:11px; color:#64748b;">Confirmed adult and child seats</div>
+          </div>
         </div>
-        <div style="background:#fff; padding:16px 18px; border-radius:14px; border:1px solid #e2e8f0; border-left:5px solid #d97706; box-shadow:0 4px 12px rgba(15,23,42,0.04);">
-          <div style="font-size:11px; font-weight:800; color:#64748b; letter-spacing:0.5px;">⏳ TICKETS ON HOLD</div>
-          <div id="statHoldTickets" style="font-size:28px; font-weight:900; color:#b45309; margin:4px 0;">0</div>
-          <div style="font-size:11px; color:#64748b;">Seats waiting for confirmation</div>
+        <div style="background:#fff; padding:16px 20px; border-radius:14px; border:1px solid #e2e8f0; border-left:4px solid #d97706; display:flex; align-items:center; gap:14px;">
+          <div style="width:40px; height:40px; border-radius:10px; background:#fef3c7; color:#d97706; display:flex; align-items:center; justify-content:center; font-size:18px;">⏳</div>
+          <div>
+            <div style="font-size:10.5px; font-weight:800; color:#64748b; letter-spacing:0.5px;">TICKETS ON HOLD</div>
+            <div id="statHoldTickets" style="font-size:24px; font-weight:900; color:#0f172a; line-height:1.2;">0</div>
+            <div style="font-size:11px; color:#64748b;">Seats waiting for confirmation</div>
+          </div>
         </div>
-        <div style="background:#fff; padding:16px 18px; border-radius:14px; border:1px solid #e2e8f0; border-left:5px solid #dc2626; box-shadow:0 4px 12px rgba(15,23,42,0.04);">
-          <div style="font-size:11px; font-weight:800; color:#64748b; letter-spacing:0.5px;">❌ EXPIRED / CANCELED</div>
-          <div id="statCanceledTickets" style="font-size:28px; font-weight:900; color:#b91c1c; margin:4px 0;">0</div>
-          <div style="font-size:11px; color:#64748b;">Time expired or canceled seats</div>
+        <div style="background:#fff; padding:16px 20px; border-radius:14px; border:1px solid #e2e8f0; border-left:4px solid #dc2626; display:flex; align-items:center; gap:14px;">
+          <div style="width:40px; height:40px; border-radius:10px; background:#fee2e2; color:#dc2626; display:flex; align-items:center; justify-content:center; font-size:18px;">❌</div>
+          <div>
+            <div style="font-size:10.5px; font-weight:800; color:#64748b; letter-spacing:0.5px;">CANCELED TICKETS</div>
+            <div id="statCanceledTickets" style="font-size:24px; font-weight:900; color:#0f172a; line-height:1.2;">0</div>
+            <div style="font-size:11px; color:#64748b;">Canceled adult and child seats</div>
+          </div>
         </div>
       </div>
 
       <div style="background:#fff; padding:18px; border-radius:16px; border:1px solid #e2e8f0; margin-bottom:18px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <div><h4 style="color:#0b1f44; font-size:15px; margin:0;">Browse Flights &amp; Packages by Journey</h4><span style="font-size:12px; color:#64748b;">Choose a popular category or open live group &amp; GDS inventory</span></div>
-          <a href="javascript:void(0)" onclick="quickBrowseJourney('ALL')" style="font-size:12px; font-weight:700; color:#0284c7; text-decoration:none;">All available fares →</a>
+          <div><h4 style="color:#0f172a; font-size:14.5px; margin:0;">Browse flights by journey</h4><span style="font-size:11.5px; color:#64748b;">Choose a popular category or open the complete live inventory</span></div>
+          <a href="javascript:void(0)" onclick="openFareCategoryTab('ALL',this)" style="font-size:12px; font-weight:700; color:#0f4c5c; text-decoration:none;">All available flights →</a>
         </div>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px;">
-          <div onclick="quickBrowseJourney('ALL')" style="background:linear-gradient(135deg,#f8fafc,#eff6ff); padding:16px; border-radius:12px; border:1px solid #dbeafe; cursor:pointer;">
-            <div style="font-size:18px; margin-bottom:6px;">🌐</div>
-            <div style="font-weight:800; color:#0b1f44; font-size:14px;">All Groups &amp; Fares</div>
-            <div style="font-size:12px; color:#64748b;">See every available flight &amp; visa option</div>
+        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px;">
+          <div onclick="openFareCategoryTab('ALL',this)" style="background:linear-gradient(135deg,#f8fafc,#e0f2fe); padding:16px; border-radius:12px; border:1px solid #bae6fd; cursor:pointer;">
+            <div style="font-size:16px; margin-bottom:8px;">🌐</div>
+            <div style="font-weight:800; color:#0f172a; font-size:13.5px;">All groups</div>
+            <div style="font-size:11.5px; color:#64748b;">See every available flight option</div>
           </div>
-          <div onclick="quickBrowseJourney('DXB')" style="background:linear-gradient(135deg,#f8fafc,#f0fdf4); padding:16px; border-radius:12px; border:1px solid #dcfce7; cursor:pointer;">
-            <div style="font-size:18px; margin-bottom:6px;">🇦🇪</div>
-            <div style="font-weight:800; color:#0b1f44; font-size:14px;">UAE &amp; Dubai</div>
-            <div style="font-size:12px; color:#64748b;">Dubai and UAE group flights &amp; visas</div>
+          <div onclick="quickBrowseJourney('DXB')" style="background:linear-gradient(135deg,#f8fafc,#eef2ff); padding:16px; border-radius:12px; border:1px solid #e0e7ff; cursor:pointer;">
+            <div style="font-size:16px; margin-bottom:8px;">🇦🇪</div>
+            <div style="font-weight:800; color:#0f172a; font-size:13.5px;">UAE</div>
+            <div style="font-size:11.5px; color:#64748b;">Dubai and UAE group inventory</div>
           </div>
-          <div onclick="quickBrowseJourney('JED')" style="background:linear-gradient(135deg,#f8fafc,#fefce8); padding:16px; border-radius:12px; border:1px solid #fef08a; cursor:pointer;">
-            <div style="font-size:18px; margin-bottom:6px;">🇸🇦</div>
-            <div style="font-weight:800; color:#0b1f44; font-size:14px;">KSA One Way</div>
-            <div style="font-size:12px; color:#64748b;">Saudi Arabia JED &amp; RUH one-way options</div>
+          <div onclick="quickBrowseJourney('JED')" style="background:linear-gradient(135deg,#f8fafc,#f0fdf4); padding:16px; border-radius:12px; border:1px solid #dcfce7; cursor:pointer;">
+            <div style="font-size:16px; margin-bottom:8px;">🇸🇦</div>
+            <div style="font-weight:800; color:#0f172a; font-size:13.5px;">KSA one way</div>
+            <div style="font-size:11.5px; color:#64748b;">Saudi Arabia one-way options</div>
           </div>
-          <div onclick="quickBrowseJourney('UMRAH')" style="background:linear-gradient(135deg,#f8fafc,#faf5ff); padding:16px; border-radius:12px; border:1px solid #f3e8ff; cursor:pointer;">
-            <div style="font-size:18px; margin-bottom:6px;">🕋</div>
-            <div style="font-weight:800; color:#0b1f44; font-size:14px;">Umrah Packages</div>
-            <div style="font-size:12px; color:#64748b;">Makkah and Madinah complete journeys</div>
+          <div onclick="openFareCategoryTab('Umrah Package',this)" style="background:linear-gradient(135deg,#f8fafc,#fefce8); padding:16px; border-radius:12px; border:1px solid #fef08a; cursor:pointer;">
+            <div style="font-size:16px; margin-bottom:8px;">🕋</div>
+            <div style="font-weight:800; color:#0f172a; font-size:13.5px;">Umrah</div>
+            <div style="font-size:11.5px; color:#64748b;">Makkah and Madinah journeys</div>
           </div>
           <div onclick="quickBrowseJourney('MCT')" style="background:linear-gradient(135deg,#f8fafc,#fff7ed); padding:16px; border-radius:12px; border:1px solid #ffedd5; cursor:pointer;">
-            <div style="font-size:18px; margin-bottom:6px;">🇴🇲</div>
-            <div style="font-weight:800; color:#0b1f44; font-size:14px;">Muscat / Oman</div>
-            <div style="font-size:12px; color:#64748b;">Current Muscat group fares &amp; visas</div>
+            <div style="font-size:16px; margin-bottom:8px;">🇴🇲</div>
+            <div style="font-weight:800; color:#0f172a; font-size:13.5px;">Muscat</div>
+            <div style="font-size:11.5px; color:#64748b;">Current Muscat group fares</div>
           </div>
           <div onclick="quickBrowseJourney('BAH')" style="background:linear-gradient(135deg,#f8fafc,#fdf2f8); padding:16px; border-radius:12px; border:1px solid #fce7f3; cursor:pointer;">
-            <div style="font-size:18px; margin-bottom:6px;">🇧🇭</div>
-            <div style="font-weight:800; color:#0b1f44; font-size:14px;">Bahrain &amp; Gulf</div>
-            <div style="font-size:12px; color:#64748b;">Available Bahrain &amp; Gulf group flights</div>
+            <div style="font-size:16px; margin-bottom:8px;">🇧🇭</div>
+            <div style="font-weight:800; color:#0f172a; font-size:13.5px;">Bahrain</div>
+            <div style="font-size:11.5px; color:#64748b;">Available Bahrain group flights</div>
           </div>
-          <div onclick="quickBrowseJourney('LHR')" style="background:linear-gradient(135deg,#f8fafc,#eef2ff); padding:16px; border-radius:12px; border:1px solid #e0e7ff; cursor:pointer;">
-            <div style="font-size:18px; margin-bottom:6px;">🇬🇧</div>
-            <div style="font-weight:800; color:#0b1f44; font-size:14px;">UK &amp; London</div>
-            <div style="font-size:12px; color:#64748b;">London LHR &amp; Manchester MAN flights &amp; visas</div
-               </div>
+          <div onclick="quickBrowseJourney('LHR')" style="background:linear-gradient(135deg,#f8fafc,#f5f3ff); padding:16px; border-radius:12px; border:1px solid #ede9fe; cursor:pointer;">
+            <div style="font-size:16px; margin-bottom:8px;">🇬🇧</div>
+            <div style="font-weight:800; color:#0f172a; font-size:13.5px;">UK &amp; London</div>
+            <div style="font-size:11.5px; color:#64748b;">London &amp; Manchester flights &amp; visas</div>
+          </div>
         </div>
       </div>
+
+      <div style="display:grid; grid-template-columns:1fr 310px; gap:16px; margin-bottom:18px; align-items:start;">
+
       <div class="tabs">
 
         <button class="tab-btn active" onclick="switchTab('liveair',this)">✈️ Live Airline Search (GDS)</button>

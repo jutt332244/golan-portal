@@ -628,20 +628,87 @@
         cabin:document.getElementById('srchCabin').value
       }).then(function(res) {
         btn.disabled = false; btn.textContent = '🔍 Search Flights';
-        if (!res.ok) {
-          document.getElementById('liveFlightsBody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:#dc2626;font-weight:700;">❌ ' + res.message + '</td></tr>';
+                if (!res.ok) {
+          document.getElementById('liveFlightsBody').innerHTML = '<div style="text-align:center;color:#dc2626;font-weight:700;padding:16px;">❌ ' + res.message + '</div>';
           return;
         }
-            document.getElementById('liveFlightsBody').innerHTML = res.offers.map(function(o) {
+        window.__GDS_OFFERS__ = res.offers;
+        document.getElementById('liveFlightsBody').innerHTML = res.offers.map(function(o, idx) {
           var dParts = (o.DepTime || '').split(' ');
           var aParts = (o.ArrTime || '').split(' ');
-          var depHtml = '📅 ' + (dParts.at(0) || '-') + ' | 🕒 <strong style="color:#0b1f3a;">' + (dParts.at(1) || '-') + '</strong>';
-          var arrHtml = '📅 ' + (aParts.at(0) || '-') + ' | 🕒 <strong style="color:#0b1f3a;">' + (aParts.at(1) || '-') + '</strong>';
-          var title = o.Airline + ' (' + o.FlightNo + ') ' + o.Route + ' [' + o.DepTime + ']';
-          return '<tr><td><strong>' + o.Airline + '</strong><br><small style="color:#0b1f3a;font-weight:700;">' + o.FlightNo + '</small></td><td><strong>' + o.Route + '</strong><br><span class="status-badge st-APPROVED">' + o.Stops + '</span></td><td>✈️ <strong>Dep:</strong> ' + depHtml + '<br>🛬 <strong>Arr:</strong> ' + arrHtml + '</td><td>🧳 ' + o.Luggage + '</td><td><strong style="color:#15803d;font-size:14px;">PKR ' + Number(o.FarePKR).toLocaleString() + '</strong></td><td><button class="btn btn-sm btn-primary" onclick="openBookingModal(\'Live Airline\',\'' + title.replace(/'/g,"") + '\',' + o.FarePKR + ')">Hold / Book</button></td></tr>';
+          var depDate = dParts.at(0) || '-';
+          var depClock = dParts.at(1) || '08:30';
+          var arrDate = aParts.at(0) || depDate;
+          var arrClock = aParts.at(1) || '10:33';
+          var rParts = (o.Route || 'LYP → DXB').split('→');
+          var origCode = (rParts.at(0) || 'LYP').trim();
+          var destCode = (rParts.at(1) || 'DXB').trim();
+          var title = o.Airline + ' (' + o.FlightNo + ') ' + o.Route + ' [' + depDate + ' ' + depClock + ']';
+          return '<div style="background:#fff; border:1px solid #cbd5e1; border-radius:10px; margin-bottom:14px; overflow:hidden; box-shadow:0 2px 8px rgba(15,23,42,0.06); text-align:left;">' +
+            '<div style="background:#f1f5f9; padding:8px 16px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; font-size:13px;">' +
+              '<span>✈️ <strong>Onward Date:</strong> <span style="color:#0b1f3a;font-weight:800;">' + depDate + '</span></span>' +
+              '<span style="color:#64748b;font-weight:600;">Arrival Date: ' + arrDate + '</span>' +
+            '</div>' +
+            '<div style="padding:16px; display:grid; grid-template-columns:1.2fr 2fr 1.3fr; gap:16px; align-items:center;">' +
+              '<div><div style="font-size:16px; font-weight:800; color:#0b1f3a;">' + o.Airline + '</div><div style="font-size:13px; color:#0284c7; font-weight:700; margin-top:2px;">' + o.FlightNo + ' • ECONOMY</div></div>' +
+              '<div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">' +
+                '<div style="text-align:center;"><div style="font-size:20px; font-weight:900; color:#0f172a;">' + depClock + '</div><div style="font-size:13px; font-weight:700; color:#475569;">' + origCode + '</div></div>' +
+                '<div style="flex:1; text-align:center;"><div style="font-size:11px; color:#64748b; margin-bottom:4px;">' + o.Stops + '</div><div style="border-top:2px dashed #94a3b8; position:relative;"><span style="position:relative; top:-11px; background:#fff; padding:0 6px; font-size:14px;">✈️</span></div><div style="font-size:11px; color:#15803d; font-weight:700;">🧳 30 KG + 7 KG</div></div>' +
+                '<div style="text-align:center;"><div style="font-size:20px; font-weight:900; color:#0f172a;">' + arrClock + '</div><div style="font-size:13px; font-weight:700; color:#475569;">' + destCode + '</div></div>' +
+              '</div>' +
+              '<div style="text-align:right; border-left:1px solid #e2e8f0; padding-left:14px;">' +
+                '<div style="font-size:19px; font-weight:900; color:#15803d;">PKR ' + Number(o.FarePKR).toLocaleString() + '</div>' +
+                '<div style="display:flex; gap:6px; justify-content:flex-end; margin-top:8px; flex-wrap:wrap;">' +
+                  '<button type="button" class="btn btn-sm" style="background:#0b1f3a; color:#fff;" onclick="openGdsModal(' + idx + ',\'itin\')">Flight Details</button>' +
+                  '<button type="button" class="btn btn-sm" style="background:#0284c7; color:#fff;" onclick="openGdsModal(' + idx + ',\'fares\')">More Price</button>' +
+                  '<button type="button" class="btn btn-sm btn-primary" onclick="openBookingModal(\'Live Airline\',\'' + title.replace(/'/g,"") + '\',' + o.FarePKR + ')">Hold / Book</button>' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
         }).join('');
-
       });
+    }
+
+    var ACTIVE_GDS_IDX = 0;
+    function openGdsModal(idx, tab) {
+      ACTIVE_GDS_IDX = idx;
+      document.getElementById('gdsDetailsModal').classList.remove('hidden');
+      switchGdsModalTab(tab);
+    }
+
+    function switchGdsModalTab(tab) {
+      ['fares','itin','bag'].forEach(function(t) {
+        var el = document.getElementById('mTab-' + t);
+        if (el) el.className = (t === tab) ? 'tab-btn active' : 'tab-btn';
+      });
+      var o = (window.__GDS_OFFERS__ || []).at(ACTIVE_GDS_IDX);
+      if (!o) return;
+      var dParts = (o.DepTime || '').split(' ');
+      var aParts = (o.ArrTime || '').split(' ');
+      var depDate = dParts.at(0) || '-', depClock = dParts.at(1) || '08:30';
+      var arrDate = aParts.at(0) || depDate, arrClock = aParts.at(1) || '10:33';
+      var baseFare = Number(o.FarePKR || 0);
+      var valFare = baseFare + 4500;
+      var flexFare = baseFare + 11500;
+      var box = document.getElementById('gdsModalContent');
+      if (tab === 'fares') {
+        box.innerHTML = '<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:12px;">' +
+          '<div style="border:2px solid #0b1f3a; border-radius:10px; padding:14px;"><div style="display:flex;justify-content:space-between;font-weight:800;color:#0b1f3a;"><span>ECONOMY LITE</span><span>PKR ' + baseFare.toLocaleString() + '</span></div><ul style="font-size:12px;margin:10px 0 14px 16px;color:#334155;"><li>7 KG Hand Carry Only</li><li>Standard Meal Included</li><li>Paid Seat Selection</li></ul><button class="btn btn-sm btn-primary" style="width:100%;" onclick="document.getElementById(\'gdsDetailsModal\').classList.add(\'hidden\');openBookingModal(\'Live Airline\',\'' + (o.Airline + ' (' + o.FlightNo + ') ECONOMY LITE ' + o.Route).replace(/'/g,"") + '\',' + baseFare + ')">Book Lite</button></div>' +
+          '<div style="border:1px solid #cbd5e1; border-radius:10px; padding:14px;"><div style="display:flex;justify-content:space-between;font-weight:800;color:#0284c7;"><span>ECONOMY VALUE</span><span>PKR ' + valFare.toLocaleString() + '</span></div><ul style="font-size:12px;margin:10px 0 14px 16px;color:#334155;"><li>30 KG Checked Bag + 7 KG</li><li>Hot Halal Meal Included</li><li>Low Change Fee</li></ul><button class="btn btn-sm" style="width:100%;background:#0284c7;color:#fff;" onclick="document.getElementById(\'gdsDetailsModal\').classList.add(\'hidden\');openBookingModal(\'Live Airline\',\'' + (o.Airline + ' (' + o.FlightNo + ') ECONOMY VALUE ' + o.Route).replace(/'/g,"") + '\',' + valFare + ')">Book Value</button></div>' +
+          '<div style="border:1px solid #cbd5e1; border-radius:10px; padding:14px;"><div style="display:flex;justify-content:space-between;font-weight:800;color:#15803d;"><span>ECONOMY FLEX</span><span>PKR ' + flexFare.toLocaleString() + '</span></div><ul style="font-size:12px;margin:10px 0 14px 16px;color:#334155;"><li>40 KG Checked Bag + 7 KG</li><li>Free Seat Selection Included</li><li>Free Date Change</li></ul><button class="btn btn-sm" style="width:100%;background:#15803d;color:#fff;" onclick="document.getElementById(\'gdsDetailsModal\').classList.add(\'hidden\');openBookingModal(\'Live Airline\',\'' + (o.Airline + ' (' + o.FlightNo + ') ECONOMY FLEX ' + o.Route).replace(/'/g,"") + '\',' + flexFare + ')">Book Flex</button></div>' +
+        '</div>';
+      } else if (tab === 'itin') {
+        box.innerHTML = '<div style="background:#0b1f3a;color:#fff;padding:10px 14px;border-radius:8px;font-weight:700;margin-bottom:14px;">' + depDate + ' • ' + o.Route + '</div>' +
+          '<div style="display:grid;grid-template-columns:100px 1fr;gap:12px;border-left:3px solid #0284c7;padding-left:14px;">' +
+            '<div><div style="font-size:12px;color:#64748b;">' + depDate + '</div><div style="font-size:18px;font-weight:900;">' + depClock + '</div></div><div><strong>Departure Airport</strong><br><small>' + o.Airline + ' • ' + o.FlightNo + ' • ECONOMY</small></div>' +
+            '<div><div style="font-size:12px;color:#64748b;">' + arrDate + '</div><div style="font-size:18px;font-weight:900;">' + arrClock + '</div></div><div><strong>Arrival Airport</strong><br><small>' + o.Stops + '</small></div>' +
+          '</div>';
+      } else {
+        box.innerHTML = '<div style="font-size:14px;line-height:1.7;"><strong>🧳 Baggage Allowance:</strong> 30 KG Checked Baggage + 7 KG Cabin Baggage.<br><strong>🔄 Cancellation & Reissue:</strong> Airline penalty + Golan International service charges apply before departure.</div>';
+      }
+    }
+
     }
 
 

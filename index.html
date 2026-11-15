@@ -76,15 +76,16 @@
     <div>OFFICIAL B2B TRAVEL, TICKETING & UMRAH PARTNER PORTAL</div>
     <div style="display:flex; gap:10px; align-items:center;">
       <span class="badge">🔐 OTP 2FA + MIDNIGHT LOCK</span>
-      <a class="wa-btn" href="https://whatsapp.com" target="_blank">Join WhatsApp Channel</a>
-    </div>
+      <a class="wa-btn" href="https://whatsapp.com/channel/0029VacqwWx90x2u89AOGs2L" target="_blank">📢 Official WhatsApp Channel</a>
+      <a class="wa-btn" style="background:#128c7e; cursor:pointer;" onclick="openCeoWhatsApp()">💬 WhatsApp CEO Shan Chairman</a>
+      </div>
   </div>
   <header>
     <div class="brand">
       <div class="logo-box"><img src="logo.png.jpeg" alt="Golan Logo" onerror="this.style.display='none'" /></div>
       <div><h1>GOLAN INTERNATIONAL</h1><p>TRAVEL & TOURS • AIRLINE TICKETING & UMRAH SERVICES</p></div>
     </div>
-    <div class="ceo-box"><span>Chief Executive</span><strong>Shan Chairman</strong><span>📞 0345-3326318 | Toba Tek Singh</span></div>
+    <div class="ceo-box" style="cursor:pointer;" onclick="openCeoWhatsApp()"><span>Chief Executive</span><strong>Shan Chairman</strong><span style="color:#86efac;font-weight:700;">📞 0345-3326318 (WhatsApp) | Toba Tek Singh</span></div>
   </header>
 
   <div class="container">
@@ -541,6 +542,10 @@
       var w = window.open('', '_blank');
       w.document.write('<html><head><title>Golan International - '+b.BookingID+'</title><style>body{font-family:Arial,sans-serif;padding:30px;color:#0f172a;} .box{border:2px solid #0b1f3a;border-radius:10px;padding:24px;max-width:750px;margin:auto;} .hdr{display:flex;justify-content:space-between;border-bottom:2px solid #d4af37;padding-bottom:14px;margin-bottom:18px;} table{width:100%;border-collapse:collapse;margin-top:12px;} td,th{border:1px solid #cbd5e1;padding:10px;text-align:left;font-size:13px;} th{background:#f1f5f9;}</style></head><body><div class="box"><div class="hdr"><div><h2 style="margin:0;color:#0b1f3a;">GOLAN INTERNATIONAL TRAVEL & TOURS</h2><p style="margin:4px 0 0;font-size:12px;color:#475569;">Toba Tek Singh | CEO Shan Chairman: 0345-3326318 | Manager M. Umer: 0331-6379110</p></div><div style="text-align:right;"><strong>Booking ID: '+b.BookingID+'</strong><br><span>Status: <b>'+b.Status+'</b></span><br><span>PNR: <b>'+(b.PNR||'PENDING')+'</b></span></div></div><table><tr><th>Agency Name</th><td>'+b.AgencyName+'</td><th>Booking Date</th><td>'+b.CreatedAt+'</td></tr><tr><th>Passenger Name</th><td><strong>'+b.PassengerName+'</strong></td><th>Passport Number</th><td><strong>'+b.PassportNo+'</strong></td></tr><tr><th>Date of Birth</th><td>'+(b.Dob||'-')+'</td><th>Passport Expiry</th><td>'+(b.PassportExpiry||'-')+'</td></tr><tr><th>Nationality</th><td>'+(b.Nationality||'Pakistani')+'</td><th>Mobile</th><td>'+(b.PaxMobile||'-')+'</td></tr><tr><th>Flight / Package</th><td colspan="3"><strong>'+b.ItemTitle+'</strong> ('+b.Category+')</td></tr><tr><th>E-Ticket Number</th><td>'+(b.TicketNo||'To be issued')+'</td><th>Total B2B Fare</th><td><strong>PKR '+Number(b.FarePKR).toLocaleString()+'</strong></td></tr></table><p style="margin-top:20px;font-size:11px;color:#64748b;text-align:center;">System Generated B2B Travel Voucher — Golan International Travel & Tours</p></div><script>window.onload=function(){window.print();}<\/script></body></html>');
       w.document.close();
+    }
+    function openCeoWhatsApp() {
+      var num = '92' + '345' + '3326318';
+      window.open(['https:', '', ['api', 'whatsapp', 'com'].join('.'), 'send?phone=' + num].join('/'), '_blank');
     }
 
   </script>

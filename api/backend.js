@@ -1,4 +1,4 @@
- import crypto from 'crypto';
+   const crypto = require('crypto');
 
 const SB_HOST = ['https:', '', ['yxnygfbamkvzgskgoxoy', 'supabase', 'co'].join('.')].join('/');
 const SB_URL = process.env.SUPABASE_URL || process.env.STORAGE_SUPABASE_URL || SB_HOST;
@@ -45,7 +45,7 @@ async function loadDB() {
       headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` }
     });
     const rows = await r.json();
-    if (Array.isArray(rows) && rows.length > 0 && rows[0].data) return rows[0].data;
+    if (Array.isArray(rows) && rows.length > 0 && rows.data) return rows.data;
   } catch (e) {}
   const init = defaultState();
   await saveDB(init);
@@ -110,9 +110,9 @@ function verifyTotp(secret, code) {
   return false;
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   try {
-    const p = req.query || {};
+    const p = Object.assign({}, req.query || {}, typeof req.body === 'object' && req.body ? req.body : {});
     const action = p.action || '';
     const email = String(p.email || '').trim().toLowerCase();
     const DB = await loadDB();
@@ -183,38 +183,55 @@ export default async function handler(req, res) {
     }
 
     if (action === 'searchLiveFlights') {
-      if (!DUFFEL_KEY) return res.json({ ok: false, message: 'Flight API Key not configured on server.' });
-      const origin = String(p.origin || 'LHE').trim().toUpperCase();
-      const dest = String(p.dest || 'JED').trim().toUpperCase();
+      if (!DUFFEL_KEY) return res.json({ ok: false, message: 'Flight API Key not configured on Vercel.' });
+      const origin = String(p.origin || 'LHE').trim().toUpperCase().slice(0, 3);
+      const dest = String(p.dest || 'JED').trim().toUpperCase().slice(0, 3);
       const date = String(p.date || '').trim();
+      const returnDate = String(p.returnDate || '').trim();
+      const tripType = String(p.tripType || 'oneway').trim();
+      const origin2 = String(p.origin2 || '').trim().toUpperCase().slice(0, 3);
+      const dest2 = String(p.dest2 || '').trim().toUpperCase().slice(0, 3);
+      const date2 = String(p.date2 || '').trim();
       const cabin = String(p.cabin || 'economy').trim().toLowerCase();
       if (!date) return res.json({ ok: false, message: 'Please select departure date.' });
 
-      const r = await fetch('https://duffel.com', {
+      const slices = [{ origin: origin, destination: dest, departure_date: date }];
+      if (tripType === 'roundtrip' && returnDate) {
+        slices.push({ origin: dest, destination: origin, departure_date: returnDate });
+      } else if (tripType === 'multicity' && origin2 && dest2 && date2) {
+        slices.push({ origin: origin2, destination: dest2, departure_date: date2 });
+      }
+
+      const duffelUrl = ['https:', '', ['api', 'duffel', 'com'].join('.'), 'air', 'offer_requests?return_offers=true'].join('/');
+      const r = await fetch(duffelUrl, {
         method: 'POST',
         headers: {
           'Authorization': 'Bearer ' + DUFFEL_KEY,
           'Duffel-Version': 'v2',
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
+                    'Accept': 'application/json'
         },
         body: JSON.stringify({
           data: {
-            slices: [{ origin: origin, destination: dest, departure_date: date }],
+            slices: slices,
             passengers: [{ type: 'adult' }],
             cabin_class: cabin
           }
         })
       });
-      const json = await r.json();
-      if (!r.ok || !json.data || !Array.isArray(json.data.offers)) {
-        const errMsg = (json.errors && json.errors[0] && json.errors[0].message) || 'No live flights found for this route/date.';
+      const rawTxt = await r.text();
+      let json = {};
+      try { json = JSON.parse(rawTxt); } catch (e) {
+        return res.json({ ok: false, message: 'GDS Response Error (' + r.status + '): ' + rawTxt.slice(0, 100) });
+      }
+      if (!r.ok || !json.data || !Array.isArray(json.data.offers) || json.data.offers.length === 0) {
+        const errMsg = (json.errors && json.errors && json.errors.message) || 'No live flights found for ' + origin + ' → ' + dest + ' on ' + date + '.';
         return res.json({ ok: false, message: errMsg });
       }
       const USD_TO_PKR = 280;
       const offers = json.data.offers.slice(0, 15).map(o => {
-        const slice = o.slices && o.slices[0];
-        const seg0 = slice && slice.segments && slice.segments[0];
+        const slice = o.slices && o.slices;
+        const seg0 = slice && slice.segments && slice.segments;
         const segLast = slice && slice.segments && slice.segments[slice.segments.length - 1];
         const stops = slice && slice.segments ? slice.segments.length - 1 : 0;
         const airline = (o.owner && o.owner.name) || (seg0 && seg0.marketing_carrier && seg0.marketing_carrier.name) || 'Airline';
@@ -227,7 +244,7 @@ export default async function handler(req, res) {
           OfferID: o.id,
           Airline: airline,
           FlightNo: flightNo,
-          Route: origin + ' → ' + dest,
+          Route: tripType === 'roundtrip' ? (origin + ' ⇄ ' + dest) : (tripType === 'multicity' ? (origin + '→' + dest + ' / ' + origin2 + '→' + dest2) : (origin + ' → ' + dest)),
           Stops: stops === 0 ? 'Non-Stop Direct' : stops + ' Stop(s)',
           DepTime: depTime,
           ArrTime: arrTime,
@@ -302,6 +319,14 @@ export default async function handler(req, res) {
       return res.json({ ok: true, message: 'Ticket Issued & CONFIRMED! PNR: ' + bk.PNR });
     }
 
+    if (action === 'adminDeleteBooking' && isAdmin) {
+      const before = DB.bookings.length;
+      DB.bookings = DB.bookings.filter(b => b.BookingID !== p.bookingId);
+      if (DB.bookings.length === before) return res.json({ ok: false, message: 'Booking not found.' });
+      await saveDB(DB);
+      return res.json({ ok: true, message: 'Booking deleted permanently!' });
+    }
+
     if (action === 'adminAddFare' && isAdmin) {
       DB.fares.unshift({
         ID: 'FARE-' + Date.now(),
@@ -356,16 +381,10 @@ export default async function handler(req, res) {
       await saveDB(DB);
       return res.json({ ok: true, message: 'Deposit Approved & PKR ' + Number(dep.AmountPKR).toLocaleString() + ' added to agent limit!' });
     }
-    if (action === 'adminDeleteBooking' && isAdmin) {
-      const before = DB.bookings.length;
-      DB.bookings = DB.bookings.filter(b => b.BookingID !== p.bookingId);
-      if (DB.bookings.length === before) return res.json({ ok: false, message: 'Booking not found.' });
-      await saveDB(DB);
-      return res.json({ ok: true, message: 'Booking deleted permanently!' });
-    }
 
     return res.json({ ok: false, message: 'Invalid request' });
   } catch (err) {
     return res.status(200).json({ ok: false, message: 'Backend Error: ' + err.message });
   }
-}
+};
+

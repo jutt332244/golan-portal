@@ -163,17 +163,53 @@
         <button class="tab-btn" onclick="switchTab('banks',this)">🏦 Official Payment Accounts</button>
         <button id="adminTabBtn" class="tab-btn hidden" onclick="switchTab('admin',this)">👑 Super Admin Control</button>
       </div>
-      <div id="tab-liveair" class="card">
-        <h3>✈️ Live International & Domestic Airline Search</h3>
-        <form onsubmit="handleLiveFlightSearch(event)" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; margin-top:12px; background:#f8fafc; padding:14px; border-radius:10px; border:1px solid #cbd5e1;">
-          <div class="form-group" style="margin:0;"><label>From (Airport Code)</label><input type="text" id="srchOrigin" value="LHE" placeholder="LHE / ISB / KHI" maxlength="3" required style="text-transform:uppercase;" /></div>
-          <div class="form-group" style="margin:0;"><label>To (Airport Code)</label><input type="text" id="srchDest" value="JED" placeholder="JED / DXB / LHR" maxlength="3" required style="text-transform:uppercase;" /></div>
-          <div class="form-group" style="margin:0;"><label>Departure Date</label><input type="date" id="srchDate" required /></div>
-          <div class="form-group" style="margin:0;"><label>Cabin Class</label><select id="srchCabin"><option value="economy">Economy</option><option value="business">Business</option></select></div>
-          <div style="display:flex; align-items:flex-end;"><button type="submit" id="srchBtn" class="btn btn-primary" style="height:42px;">🔍 Search Live Flights</button></div>
+         <div id="tab-liveair" class="card">
+        <div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
+          <button type="button" id="pill-oneway" class="tab-btn active" style="border-radius:999px; padding:8px 20px;" onclick="setTripType('oneway')">One Way</button>
+          <button type="button" id="pill-roundtrip" class="tab-btn" style="border-radius:999px; padding:8px 20px;" onclick="setTripType('roundtrip')">Round Trip</button>
+          <button type="button" id="pill-multicity" class="tab-btn" style="border-radius:999px; padding:8px 20px;" onclick="setTripType('multicity')">Multi City</button>
+        </div>
+        <form onsubmit="handleLiveFlightSearch(event)" style="background:#f8fafc; padding:16px; border-radius:12px; border:1px solid #cbd5e1;">
+          <div style="display:grid; grid-template-columns:1fr auto 1fr 1fr 1fr; gap:10px; align-items:end;">
+            <div class="form-group" style="margin:0; position:relative;">
+              <label>From</label>
+              <input type="text" id="srchOriginText" value="Faisalabad, PK - Faisalabad (LYP)" placeholder="Type City or Code (e.g. LYP)" autocomplete="off" onfocus="filterAirports('origin')" oninput="filterAirports('origin')" required />
+              <input type="hidden" id="srchOrigin" value="LYP" />
+              <div id="drop-origin" style="display:none; position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #cbd5e1; border-radius:8px; max-height:230px; overflow-y:auto; z-index:999; box-shadow:0 10px 25px rgba(0,0,0,0.15);"></div>
+            </div>
+            <button type="button" onclick="swapAirports()" title="Swap Airports" style="height:42px; width:42px; border-radius:8px; border:1px solid #cbd5e1; background:#fff; cursor:pointer; font-size:18px; font-weight:700; color:#0b1f3a;">⇄</button>
+            <div class="form-group" style="margin:0; position:relative;">
+              <label>To</label>
+              <input type="text" id="srchDestText" value="Dubai, AE - Dubai Intl (DXB)" placeholder="Type City or Code (e.g. DXB, JED)" autocomplete="off" onfocus="filterAirports('dest')" oninput="filterAirports('dest')" required />
+              <input type="hidden" id="srchDest" value="DXB" />
+              <div id="drop-dest" style="display:none; position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #cbd5e1; border-radius:8px; max-height:230px; overflow-y:auto; z-index:999; box-shadow:0 10px 25px rgba(0,0,0,0.15);"></div>
+            </div>
+            <div class="form-group" style="margin:0;"><label>Departure Date</label><input type="date" id="srchDate" required /></div>
+            <div class="form-group" id="boxReturnDate" style="margin:0; display:none;"><label>Return Date</label><input type="date" id="srchReturnDate" /></div>
+            <div class="form-group" id="boxCabin" style="margin:0;"><label>Cabin Class</label><select id="srchCabin"><option value="economy">Economy</option><option value="business">Business</option></select></div>
+          </div>
+          <div id="boxMultiCity" style="display:none; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:12px; padding-top:12px; border-top:1px dashed #cbd5e1;">
+            <div class="form-group" style="margin:0; position:relative;">
+              <label>Flight 2 From</label>
+              <input type="text" id="srchOrigin2Text" placeholder="e.g. Jeddah (JED)" autocomplete="off" onfocus="filterAirports('origin2')" oninput="filterAirports('origin2')" />
+              <input type="hidden" id="srchOrigin2" value="" />
+              <div id="drop-origin2" style="display:none; position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #cbd5e1; border-radius:8px; max-height:200px; overflow-y:auto; z-index:999; box-shadow:0 10px 25px rgba(0,0,0,0.15);"></div>
+            </div>
+            <div class="form-group" style="margin:0; position:relative;">
+              <label>Flight 2 To</label>
+              <input type="text" id="srchDest2Text" placeholder="e.g. Lahore (LHE)" autocomplete="off" onfocus="filterAirports('dest2')" oninput="filterAirports('dest2')" />
+              <input type="hidden" id="srchDest2" value="" />
+              <div id="drop-dest2" style="display:none; position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #cbd5e1; border-radius:8px; max-height:200px; overflow-y:auto; z-index:999; box-shadow:0 10px 25px rgba(0,0,0,0.15);"></div>
+            </div>
+            <div class="form-group" style="margin:0;"><label>Flight 2 Date</label><input type="date" id="srchDate2" /></div>
+          </div>
+          <div style="margin-top:14px; text-align:right;">
+            <button type="submit" id="srchBtn" class="btn btn-primary" style="width:auto; padding:11px 28px; font-size:15px;">🔍 Search Flights</button>
+          </div>
         </form>
-        <div id="liveFlightsBox" style="overflow-x:auto; margin-top:14px;"><table><thead><tr><th>Airline & Flight</th><th>Route & Stops</th><th>Departure & Arrival</th><th>Baggage</th><th>B2B Fare (PKR)</th><th>Action</th></tr></thead><tbody id="liveFlightsBody"><tr><td colspan="6" style="text-align:center;color:#64748b;">Enter route (e.g. LHE to JED) & date above, then click Search Live Flights.</td></tr></tbody></table></div>
+        <div id="liveFlightsBox" style="overflow-x:auto; margin-top:14px;"><table><thead><tr><th>Airline & Flight</th><th>Route & Stops</th><th>Departure & Arrival</th><th>Baggage</th><th>B2B Fare (PKR)</th><th>Action</th></tr></thead><tbody id="liveFlightsBody"><tr><td colspan="6" style="text-align:center;color:#64748b;">Select From & To airports above, pick date, and click Search Flights.</td></tr></tbody></table></div>
       </div>
+
       <div id="tab-fares" class="card hidden">
         <h3>🕌 Live Group Flights, Umrah Packages & Visit Visas</h3>
         <div style="overflow-x:auto; margin-top:12px;"><table><thead><tr><th>Category</th><th>Route / Package</th><th>Details</th><th>Date</th><th>Availability</th><th>Fare (PKR)</th><th>Action</th></tr></thead><tbody id="faresTableBody"></tbody></table></div>
@@ -479,19 +515,102 @@
       }).then(function(res) { alert(res.message); e.target.reset(); loadDashboardData(); });
     }
 
+      var CURRENT_TRIP_TYPE = 'oneway';
+    var AIRPORTS_LIST = [
+      { code:'LYP', label:'Faisalabad, PK - Faisalabad (LYP)' },
+      { code:'LHE', label:'Lahore, PK - Allama Iqbal Intl (LHE)' },
+      { code:'ISB', label:'Islamabad, PK - Islamabad Intl (ISB)' },
+      { code:'KHI', label:'Karachi, PK - Jinnah Intl (KHI)' },
+      { code:'MUX', label:'Multan, PK - Multan Intl (MUX)' },
+      { code:'SKT', label:'Sialkot, PK - Sialkot Intl (SKT)' },
+      { code:'PEW', label:'Peshawar, PK - Bacha Khan Intl (PEW)' },
+      { code:'UET', label:'Quetta, PK - Quetta Intl (UET)' },
+      { code:'JED', label:'Jeddah, SA - King Abdulaziz Intl (JED)' },
+      { code:'MED', label:'Madinah, SA - Prince Mohammad Bin Abdulaziz (MED)' },
+      { code:'RUH', label:'Riyadh, SA - King Khalid Intl (RUH)' },
+      { code:'DMM', label:'Dammam, SA - King Fahd Intl (DMM)' },
+      { code:'DXB', label:'Dubai, AE - Dubai Intl (DXB)' },
+      { code:'SHJ', label:'Sharjah, AE - Sharjah Intl (SHJ)' },
+      { code:'AUH', label:'Abu Dhabi, AE - Zayed Intl (AUH)' },
+      { code:'DOH', label:'Doha, QA - Hamad Intl (DOH)' },
+      { code:'MCT', label:'Muscat, OM - Muscat Intl (MCT)' },
+      { code:'KWI', label:'Kuwait, KW - Kuwait Intl (KWI)' },
+      { code:'BAH', label:'Bahrain, BH - Bahrain Intl (BAH)' },
+      { code:'IST', label:'Istanbul, TR - Istanbul Airport (IST)' },
+      { code:'LHR', label:'London, GB - Heathrow (LHR)' },
+      { code:'MAN', label:'Manchester, GB - Manchester (MAN)' },
+      { code:'BHX', label:'Birmingham, GB - Birmingham (BHX)' },
+      { code:'JFK', label:'New York, US - John F. Kennedy (JFK)' },
+      { code:'YYZ', label:'Toronto, CA - Pearson Intl (YYZ)' },
+      { code:'KUL', label:'Kuala Lumpur, MY - KLIA (KUL)' },
+      { code:'BKK', label:'Bangkok, TH - Suvarnabhumi (BKK)' },
+      { code:'GYD', label:'Baku, AZ - Heydar Aliyev Intl (GYD)' }
+    ];
+
+    function setTripType(t) {
+      CURRENT_TRIP_TYPE = t;
+      ['oneway','roundtrip','multicity'].forEach(function(id) {
+        var el = document.getElementById('pill-' + id);
+        if (el) el.className = (id === t) ? 'tab-btn active' : 'tab-btn';
+      });
+      document.getElementById('boxReturnDate').style.display = (t === 'roundtrip') ? 'block' : 'none';
+      document.getElementById('boxMultiCity').style.display = (t === 'multicity') ? 'grid' : 'none';
+    }
+
+    function filterAirports(which) {
+      var cap = which.charAt(0).toUpperCase() + which.slice(1);
+      var txtEl = document.getElementById('srch' + cap + 'Text');
+      var dropEl = document.getElementById('drop-' + which);
+      var q = (txtEl.value || '').toLowerCase();
+      var matches = AIRPORTS_LIST.filter(function(a) { return a.label.toLowerCase().indexOf(q) !== -1 || a.code.toLowerCase().indexOf(q) !== -1; });
+      if (!matches.length) matches = AIRPORTS_LIST;
+      dropEl.innerHTML = matches.map(function(a) {
+        return '<div onmousedown="selectAirport(\'' + which + '\',\'' + a.code + '\',\'' + a.label.replace(/'/g,"") + '\')" style="padding:10px 12px; cursor:pointer; border-bottom:1px solid #f1f5f9; font-size:13px; color:#0f172a;" onmouseover="this.style.background=\'#1e293b\';this.style.color=\'#fff\'" onmouseout="this.style.background=\'#fff\';this.style.color=\'#0f172a\'">' + a.label + '</div>';
+      }).join('');
+      dropEl.style.display = 'block';
+    }
+
+    function selectAirport(which, code, label) {
+      var cap = which.charAt(0).toUpperCase() + which.slice(1);
+      document.getElementById('srch' + cap).value = code;
+      document.getElementById('srch' + cap + 'Text').value = label;
+      document.getElementById('drop-' + which).style.display = 'none';
+    }
+
+    document.addEventListener('click', function(e) {
+      ['origin','dest','origin2','dest2'].forEach(function(w) {
+        var d = document.getElementById('drop-' + w);
+        if (d && !e.target.closest('#drop-' + w) && e.target.id !== 'srch' + w.charAt(0).toUpperCase() + w.slice(1) + 'Text') d.style.display = 'none';
+      });
+    });
+
+    function swapAirports() {
+      var c1 = document.getElementById('srchOrigin').value, t1 = document.getElementById('srchOriginText').value;
+      document.getElementById('srchOrigin').value = document.getElementById('srchDest').value;
+      document.getElementById('srchOriginText').value = document.getElementById('srchDestText').value;
+      document.getElementById('srchDest').value = c1;
+      document.getElementById('srchDestText').value = t1;
+    }
+
     function handleLiveFlightSearch(e) {
       e.preventDefault();
       var btn = document.getElementById('srchBtn');
       btn.disabled = true; btn.textContent = 'Searching GDS...';
       document.getElementById('liveFlightsBody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:#0b1f3a;font-weight:700;">⏳ Fetching live airline schedules & fares...</td></tr>';
+      var o1 = document.getElementById('srchOrigin').value || document.getElementById('srchOriginText').value.trim().toUpperCase().slice(0,3);
+      var d1 = document.getElementById('srchDest').value || document.getElementById('srchDestText').value.trim().toUpperCase().slice(0,3);
       callBackend({
         action:'searchLiveFlights', email:currentEmail, token:currentToken,
-        origin:document.getElementById('srchOrigin').value.trim().toUpperCase(),
-        dest:document.getElementById('srchDest').value.trim().toUpperCase(),
+        tripType:CURRENT_TRIP_TYPE,
+        origin:o1, dest:d1,
         date:document.getElementById('srchDate').value,
+        returnDate:document.getElementById('srchReturnDate').value,
+        origin2:document.getElementById('srchOrigin2').value,
+        dest2:document.getElementById('srchDest2').value,
+        date2:document.getElementById('srchDate2').value,
         cabin:document.getElementById('srchCabin').value
       }).then(function(res) {
-        btn.disabled = false; btn.textContent = '🔍 Search Live Flights';
+        btn.disabled = false; btn.textContent = '🔍 Search Flights';
         if (!res.ok) {
           document.getElementById('liveFlightsBody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:#dc2626;font-weight:700;">❌ ' + res.message + '</td></tr>';
           return;
@@ -502,6 +621,7 @@
         }).join('');
       });
     }
+
 
 
         function handleAdminAddBank(e) {

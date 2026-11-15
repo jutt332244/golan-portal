@@ -708,11 +708,7 @@
         box.innerHTML = '<div style="font-size:14px;line-height:1.7;"><strong>🧳 Baggage Allowance:</strong> 30 KG Checked Baggage + 7 KG Cabin Baggage.<br><strong>🔄 Cancellation & Reissue:</strong> Airline penalty + Golan International service charges apply before departure.</div>';
       }
     }
-
-    }
-
-
-
+}
         function handleAdminAddBank(e) {
       e.preventDefault();
       callBackend({ action:'adminAddBank', email:currentEmail, token:currentToken, bankName:document.getElementById('bankName').value, accountTitle:document.getElementById('bankTitle').value, accountNumber:document.getElementById('bankAcc').value, iban:document.getElementById('bankIban').value }).then(function(res) { alert(res.message); e.target.reset(); loadDashboardData(); });

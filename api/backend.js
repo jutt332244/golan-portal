@@ -110,7 +110,7 @@ function verifyTotp(secret, code) {
   return false;
 }
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   try {
     const p = Object.assign({}, req.query || {}, typeof req.body === 'object' && req.body ? req.body : {});
     const action = p.action || '';

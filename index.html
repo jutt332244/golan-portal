@@ -154,24 +154,20 @@
         <div style="text-align:center; padding-bottom:12px; border-bottom:1px solid #e2e8f0; margin-bottom:12px;">
           <div style="font-size:15px; font-weight:900; color:#0b1f44; letter-spacing:0.3px;">GOLAN INTERNATIONAL</div>
           <div id="sideSubAgentName" style="font-size:11px; font-weight:800; color:#d97706; margin-top:3px; text-transform:uppercase;">SUB-AGENT PORTAL</div>
-        </div>
-        <div style="display:flex; flex-direction:column; gap:4px;">
+        </div>        <div style="display:flex; flex-direction:column; gap:4px;">
           <button type="button" class="tab-btn active" style="text-align:left; width:100%; font-size:12px; padding:8px 10px;" onclick="switchTab('liveair',this)">🏠 Dashboard</button>
-          <button type="button" class="tab-btn" style="text-align:left; width:100%; font-size:12px; padding:8px 10px;" onclick="openFareCategoryTab('Group Flight',this)">🛫 Group Flights</button>
-          <button type="button" class="tab-btn" style="text-align:left; width:100%; font-size:12px; padding:8px 10px;" onclick="openFareCategoryTab('Umrah Package',this)">🕋 Umrah Packages</button>
-          <button type="button" class="tab-btn" style="text-align:left; width:100%; font-size:12px; padding:8px 10px;" onclick="openFareCategoryTab('Visit Visa',this)">🛂 Visit Visas</button>
-          <button type="button" class="tab-btn" style="text-align:left; width:100%; font-size:12px; padding:8px 10px;" onclick="switchTab('bookings',this)">📋 Bookings &amp; Receipts</button>
-          <button type="button" class="tab-btn" style="text-align:left; width:100%; font-size:12px; padding:8px 10px;" onclick="openLedgerTab(this)">📒 My Ledger (Hisab)</button>
-          <button type="button" class="tab-btn" style="text-align:left; width:100%; font-size:12px; padding:8px 10px;" onclick="switchTab('banks',this)">🏦 Banks &amp; Deposit</button>
+          <button type="button" class="tab-btn" style="text-align:left; width:100%; font-size:12px; padding:8px 10px;" onclick="switchTab('bookings',this)">📋 Bookings</button>
+          <button type="button" class="tab-btn" style="text-align:left; width:100%; font-size:12px; padding:8px 10px;" onclick="openLedgerTab(this)">📒 My Ledger</button>
+          <button type="button" class="tab-btn" style="text-align:left; width:100%; font-size:12px; padding:8px 10px;" onclick="switchTab('bookings',this)">🧾 Booking Receipts</button>
+          <button type="button" class="tab-btn" style="text-align:left; width:100%; font-size:12px; padding:8px 10px;" onclick="switchTab('banks',this)">🏦 Banks</button>
           <button type="button" id="sideAdminBtn" class="tab-btn hidden" style="text-align:left; width:100%; font-size:12px; padding:8px 10px;" onclick="switchTab('admin',this)">👑 Super Admin</button>
           <button type="button" class="tab-btn" style="text-align:left; width:100%; font-size:12px; padding:8px 10px;" onclick="openCeoWhatsApp()">💬 Give Feedback!</button>
         </div>
+
         <div style="margin-top:14px; padding-top:10px; border-top:1px solid #e2e8f0;">
           <div style="font-size:9.5px; font-weight:800; color:#94a3b8; padding-left:8px; margin-bottom:5px;">MANAGEMENT</div>
           <button type="button" class="tab-btn" style="text-align:left; width:100%; font-size:12px; padding:8px 10px; color:#b91c1c; background:#fef2f2; border-color:#fecaca;" onclick="logout()">⏻ Logout</button>
         </div>
-      </aside>
-
       </aside>
       <div style="min-width:0;">
       <div style="background:linear-gradient(90deg,#0b1f44,#1e3a8a); color:#fff; padding:9px 16px; border-radius:12px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; border:1px solid #d97706;">
@@ -993,12 +989,9 @@
         if (!catName || catName === 'ALL') { r.style.display = ''; return; }
         r.style.display = r.textContent.indexOf(catName) !== -1 ? '' : 'none';
       });
-    }
-    function openLedgerTab(btnEl) {
-      switchTab('ledger', btnEl);
+    }    function refreshLedgerAuto() {
       var bookings = window.__ALL_BOOKINGS__ || [];
-      var debit = 0, refund = 0;
-      var rowsHtml = '';
+      var debit = 0, refund = 0, rowsHtml = '';
       bookings.forEach(function(b) {
         var amt = Number(b.TotalFare || 0);
         var isRef = (b.Status === 'CANCELED' || b.Status === 'REFUNDED');
@@ -1014,25 +1007,35 @@
       var walletBal = Number(walletText || 0);
       var credit = walletBal + debit - refund;
       if (credit < 0) credit = 0;
-      document.getElementById('ldgTotalCredit').textContent = 'PKR ' + credit.toLocaleString();
-      document.getElementById('ldgTotalDebit').textContent = 'PKR ' + debit.toLocaleString();
-      document.getElementById('ldgTotalRefund').textContent = 'PKR ' + refund.toLocaleString();
+      var elC = document.getElementById('ldgTotalCredit');
+      var elD = document.getElementById('ldgTotalDebit');
+      var elR = document.getElementById('ldgTotalRefund');
       var netEl = document.getElementById('ldgNetBalance');
       var noteEl = document.getElementById('ldgBalanceNote');
-      if (walletBal >= 0) {
-        netEl.textContent = 'PKR ' + walletBal.toLocaleString();
-        netEl.style.color = '#15803d';
-        noteEl.textContent = 'Aap ka Jama Balance (Leni / Available)';
-      } else {
-        netEl.textContent = 'PKR ' + Math.abs(walletBal).toLocaleString();
-        netEl.style.color = '#b91c1c';
-        noteEl.textContent = 'Golan Ko Deni Payment (Payable)';
+      if (elC) elC.textContent = 'PKR ' + credit.toLocaleString();
+      if (elD) elD.textContent = 'PKR ' + debit.toLocaleString();
+      if (elR) elR.textContent = 'PKR ' + refund.toLocaleString();
+      if (netEl && noteEl) {
+        if (walletBal >= 0) {
+          netEl.textContent = 'PKR ' + walletBal.toLocaleString();
+          netEl.style.color = '#15803d';
+          noteEl.textContent = 'Available Credit / Leni Payment';
+        } else {
+          netEl.textContent = 'PKR ' + Math.abs(walletBal).toLocaleString();
+          netEl.style.color = '#b91c1c';
+          noteEl.textContent = 'Payable to Golan International';
+        }
       }
-      document.getElementById('ledgerTableBody').innerHTML = rowsHtml || '<tr><td colspan="7" style="text-align:center;color:#64748b;padding:16px;">Abhi tak koi transaction record nahi hai.</td></tr>';
+      var tb = document.getElementById('ledgerTableBody');
+      if (tb) tb.innerHTML = rowsHtml || '<tr><td colspan="7" style="text-align:center;color:#64748b;padding:16px;">No ledger transactions recorded yet.</td></tr>';
     }
+    function openLedgerTab(btnEl) { switchTab('ledger', btnEl); refreshLedgerAuto(); }
+ 
 
     function renderBookingsTable(isAdmin) {
       var list = window.__ALL_BOOKINGS__ || []
+           setTimeout(refreshLedgerAuto, 50);
+
            var elTot = document.getElementById('statTotalBookings');
       var elSold = document.getElementById('statSoldTickets');
       var elHold = document.getElementById('statHoldTickets');

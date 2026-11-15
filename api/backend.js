@@ -1,8 +1,9 @@
-import crypto from 'crypto';
+ import crypto from 'crypto';
 
 const SB_HOST = ['https:', '', ['yxnygfbamkvzgskgoxoy', 'supabase', 'co'].join('.')].join('/');
 const SB_URL = process.env.SUPABASE_URL || process.env.STORAGE_SUPABASE_URL || SB_HOST;
 const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.STORAGE_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.STORAGE_SUPABASE_ANON_KEY;
+const DUFFEL_KEY = process.env.DUFFEL_API_KEY || '';
 
 function hashPwd(pwd) {
   return crypto.createHash('sha256').update('GOLAN_SALT_2026_' + pwd).digest('hex');
@@ -27,11 +28,10 @@ function defaultState() {
         FailedAttempts: 0
       }
     },
-      fares: [
-      { ID: 'F1', Category: 'Group Flight', Title: 'LHE - JED (Saudi Airlines SV-737)', Timing: 'Dep: 04:15 AM | Arr: 07:45 AM (Direct)', Luggage: '30 KG Check-in + 7 KG Hand Carry', Meal: 'Hot Halal Meal Included', Stay: 'Non-Stop Direct Flight', Details: 'Refundable Before 72 Hrs • Free Seat Selection', TravelDate: '25 Nov 2026', Seats: 18, FarePKR: 138500, Status: 'ACTIVE' },
-      { ID: 'F2', Category: 'Umrah Package', Title: '15 Days Economy Umrah Package', Timing: 'LHE-JED-LHE Return Flights Included', Luggage: '30 KG + 7 KG + 5L Zamzam', Meal: 'Breakfast Optional / Room Only', Stay: 'Makkah 7N (Shuttle) + Madinah 7N (Markazia)', Details: 'Umrah Visa + Full Ziyarat & AC Transport Included', TravelDate: '01 Dec 2026', Seats: 25, FarePKR: 215000, Status: 'ACTIVE' }
+    fares: [
+      { ID: 'F1', Category: 'Group Flight', Title: 'LHE - JED (Saudi Airlines SV-737)', Timing: 'Dep: 04:15 AM | Arr: 07:45 AM (Direct)', Luggage: '30 KG Check-in + 7 KG Hand Carry', Meal: 'Hot Halal Meal Included', Stay: 'Non-Stop Direct Flight', Details: 'Refundable Before 72 Hrs • Free Seat Selection', TravelDate: '25 Nov 2026', Seats: 18, HoldMins: 30, FarePKR: 138500, Status: 'ACTIVE' },
+      { ID: 'F2', Category: 'Umrah Package', Title: '15 Days Economy Umrah Package', Timing: 'LHE-JED-LHE Return Flights Included', Luggage: '30 KG + 7 KG + 5L Zamzam', Meal: 'Breakfast Optional / Room Only', Stay: 'Makkah 7N (Shuttle) + Madinah 7N (Markazia)', Details: 'Umrah Visa + Full Ziyarat & AC Transport Included', TravelDate: '01 Dec 2026', Seats: 25, HoldMins: 60, FarePKR: 215000, Status: 'ACTIVE' }
     ],
-
     bookings: [],
     banks: [],
     deposits: []
@@ -178,7 +178,64 @@ export default async function handler(req, res) {
         Email: x.Email, AgencyName: x.AgencyName, City: x.City, Mobile: x.Mobile,
         Status: x.Status, TotpVerified: x.TotpVerified, BalancePKR: Number(x.BalancePKR || 0)
       })) : [];
-      return res.json({ ok: true, isAdmin, balancePKR: Number(a.BalancePKR || 0), fares: DB.fares, banks: DB.banks, bookings, deposits, agents });
+      const safeFares = isAdmin ? DB.fares : DB.fares.map(f => ({ ...f, Seats: 'Available' }));
+      return res.json({ ok: true, isAdmin, balancePKR: Number(a.BalancePKR || 0), fares: safeFares, banks: DB.banks, bookings, deposits, agents });
+    }
+
+    if (action === 'searchLiveFlights') {
+      if (!DUFFEL_KEY) return res.json({ ok: false, message: 'Flight API Key not configured on server.' });
+      const origin = String(p.origin || 'LHE').trim().toUpperCase();
+      const dest = String(p.dest || 'JED').trim().toUpperCase();
+      const date = String(p.date || '').trim();
+      const cabin = String(p.cabin || 'economy').trim().toLowerCase();
+      if (!date) return res.json({ ok: false, message: 'Please select departure date.' });
+
+      const r = await fetch('https://duffel.com', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + DUFFEL_KEY,
+          'Duffel-Version': 'v2',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          data: {
+            slices: [{ origin: origin, destination: dest, departure_date: date }],
+            passengers: [{ type: 'adult' }],
+            cabin_class: cabin
+          }
+        })
+      });
+      const json = await r.json();
+      if (!r.ok || !json.data || !Array.isArray(json.data.offers)) {
+        const errMsg = (json.errors && json.errors[0] && json.errors[0].message) || 'No live flights found for this route/date.';
+        return res.json({ ok: false, message: errMsg });
+      }
+      const USD_TO_PKR = 280;
+      const offers = json.data.offers.slice(0, 15).map(o => {
+        const slice = o.slices && o.slices[0];
+        const seg0 = slice && slice.segments && slice.segments[0];
+        const segLast = slice && slice.segments && slice.segments[slice.segments.length - 1];
+        const stops = slice && slice.segments ? slice.segments.length - 1 : 0;
+        const airline = (o.owner && o.owner.name) || (seg0 && seg0.marketing_carrier && seg0.marketing_carrier.name) || 'Airline';
+        const flightNo = seg0 && seg0.marketing_carrier ? (seg0.marketing_carrier.iata_code + '-' + seg0.marketing_carrier_flight_number) : '';
+        const depTime = seg0 && seg0.departing_at ? seg0.departing_at.replace('T', ' ').slice(0, 16) : date;
+        const arrTime = segLast && segLast.arriving_at ? segLast.arriving_at.replace('T', ' ').slice(0, 16) : '';
+        const rawAmt = Number(o.total_amount || 0);
+        const farePKR = o.total_currency === 'PKR' ? Math.round(rawAmt) : Math.round(rawAmt * USD_TO_PKR);
+        return {
+          OfferID: o.id,
+          Airline: airline,
+          FlightNo: flightNo,
+          Route: origin + ' → ' + dest,
+          Stops: stops === 0 ? 'Non-Stop Direct' : stops + ' Stop(s)',
+          DepTime: depTime,
+          ArrTime: arrTime,
+          Luggage: '23-30 KG Checked + 7 KG Hand Carry',
+          FarePKR: farePKR
+        };
+      });
+      return res.json({ ok: true, offers });
     }
 
     if (action === 'requestDeposit') {
@@ -195,13 +252,14 @@ export default async function handler(req, res) {
       return res.json({ ok: true, message: 'Deposit request submitted! Admin will upgrade your limit shortly.' });
     }
 
-        if (action === 'addBooking') {
+    if (action === 'addBooking') {
       const fare = Number(p.farePKR || 0);
+      const holdMins = Number(p.holdMins || 30);
       const bId = 'GI-' + Math.floor(100000 + Math.random() * 900000);
       const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
       let autoPnr = '';
       for (let i = 0; i < 6; i++) autoPnr += chars[Math.floor(Math.random() * chars.length)];
-      const holdUntil = Date.now() + (30 * 60 * 1000);
+      const holdUntil = Date.now() + (holdMins * 60 * 1000);
       DB.bookings.unshift({
         BookingID: bId,
         CreatedAt: new Date().toLocaleString('en-PK'),
@@ -222,7 +280,7 @@ export default async function handler(req, res) {
         Status: 'PENDING'
       });
       await saveDB(DB);
-      return res.json({ ok: true, bookingId: bId, pnr: autoPnr, message: 'Booking Held (PENDING)! PNR: ' + autoPnr + ' — Please issue within 30 minutes.' });
+      return res.json({ ok: true, bookingId: bId, pnr: autoPnr, message: 'Booking Held (PENDING)! PNR: ' + autoPnr + ' — Issue within ' + holdMins + ' minutes.' });
     }
 
     if (action === 'adminIssueBooking' && isAdmin) {
@@ -245,9 +303,23 @@ export default async function handler(req, res) {
     }
 
     if (action === 'adminAddFare' && isAdmin) {
-      DB.fares.unshift({ ID: 'FARE-' + Date.now(), Category: p.category, Title: p.title, Details: p.details, TravelDate: p.travelDate, Seats: p.seats, FarePKR: Number(p.farePKR), Status: 'ACTIVE' });
+      DB.fares.unshift({
+        ID: 'FARE-' + Date.now(),
+        Category: p.category || 'Group Flight',
+        Title: p.title || '',
+        Timing: p.timing || 'As per Airline Schedule',
+        Luggage: p.luggage || '30 KG + 7 KG',
+        Meal: p.meal || 'Meal Included',
+        Stay: p.stay || 'Direct / N/A',
+        Details: p.details || '',
+        TravelDate: p.travelDate || '',
+        Seats: p.seats || '15',
+        HoldMins: Number(p.holdMins || 30),
+        FarePKR: Number(p.farePKR || 0),
+        Status: 'ACTIVE'
+      });
       await saveDB(DB);
-      return res.json({ ok: true, message: 'Fare/Package published!' });
+      return res.json({ ok: true, message: 'Fare/Package published with ' + (p.holdMins || 30) + ' mins hold timer!' });
     }
 
     if (action === 'adminAddBank' && isAdmin) {

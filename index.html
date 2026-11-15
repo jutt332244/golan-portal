@@ -521,14 +521,31 @@
       });
     }
 
-    function enterDashboard(agencyName, isAdmin, expiry) {
+      function enterDashboard(agencyName, isAdmin, expiry) {
       document.getElementById('authSection').classList.add('hidden');
-      document.getElementById('dashboardSection').classList.remove('hidden');
+      var ds = document.getElementById('dashboardSection');
+      ds.classList.remove('hidden');
+      if (ds.parentElement) { ds.parentElement.style.maxWidth = '100%'; ds.parentElement.style.padding = '0 16px'; }
       document.getElementById('dashAgencyName').textContent = agencyName;
+      var sideSub = document.getElementById('sideSubAgentName');
+      if (sideSub) sideSub.textContent = agencyName;
       document.getElementById('dashEmail').textContent = currentEmail;
       document.getElementById('adminTabBtn').classList.toggle('hidden', !isAdmin);
+      var sideAdm = document.getElementById('sideAdminBtn');
+      if (sideAdm) sideAdm.classList.toggle('hidden', !isAdmin);
       setInterval(function() { if (Date.now() >= expiry) { alert('12:00 AM Midnight Lock: Please verify 2FA again.'); logout(); } }, 15000);
       loadDashboardData();
+    }
+
+    function quickBrowseJourney(code) {
+      if (code === 'ALL' || code === 'UMRAH') {
+        switchTab('fares', document.querySelectorAll('.tab-btn')[1]);
+        return;
+      }
+      switchTab('liveair', document.querySelectorAll('.tab-btn')[0]);
+      var toSel = document.getElementById('toAirport');
+      if (toSel) { toSel.value = code; }
+      window.scrollTo({ top: 320, behavior: 'smooth' });
     }
 
     function loadDashboardData() {

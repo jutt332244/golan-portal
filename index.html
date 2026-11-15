@@ -156,16 +156,29 @@
         <div><h3 id="dashAgencyName" style="color:var(--navy);">Agency Dashboard</h3><span id="dashEmail" style="font-size:12px; color:var(--muted);"></span></div>
       <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;"><span id="walletBadge" class="session-pill" style="background:#dcfce7; color:#166534; border-color:#86efac;">💰 Wallet: PKR 0</span><span class="session-pill">⏳ Auto-Lock at 12:00 AM</span><button class="btn btn-sm btn-red" onclick="logout()">Logout</button></div>
       </div>
-      <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('fares',this)">✈️ Group Fares, Umrah & Visas</button>
+         <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('liveair',this)">✈️ Live Airline Search (GDS)</button>
+        <button class="tab-btn" onclick="switchTab('fares',this)">🕌 Group Fares, Umrah & Visas</button>
         <button class="tab-btn" onclick="switchTab('bookings',this)">📋 My Bookings</button>
         <button class="tab-btn" onclick="switchTab('banks',this)">🏦 Official Payment Accounts</button>
         <button id="adminTabBtn" class="tab-btn hidden" onclick="switchTab('admin',this)">👑 Super Admin Control</button>
       </div>
-      <div id="tab-fares" class="card">
-        <h3>Live Group Flights, Umrah Packages & Visit Visas</h3>
-        <div style="overflow-x:auto; margin-top:12px;"><table><thead><tr><th>Category</th><th>Route / Package</th><th>Details</th><th>Date</th><th>Seats</th><th>B2B Fare (PKR)</th><th>Action</th></tr></thead><tbody id="faresTableBody"></tbody></table></div>
+      <div id="tab-liveair" class="card">
+        <h3>✈️ Live International & Domestic Airline Search</h3>
+        <form onsubmit="handleLiveFlightSearch(event)" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; margin-top:12px; background:#f8fafc; padding:14px; border-radius:10px; border:1px solid #cbd5e1;">
+          <div class="form-group" style="margin:0;"><label>From (Airport Code)</label><input type="text" id="srchOrigin" value="LHE" placeholder="LHE / ISB / KHI" maxlength="3" required style="text-transform:uppercase;" /></div>
+          <div class="form-group" style="margin:0;"><label>To (Airport Code)</label><input type="text" id="srchDest" value="JED" placeholder="JED / DXB / LHR" maxlength="3" required style="text-transform:uppercase;" /></div>
+          <div class="form-group" style="margin:0;"><label>Departure Date</label><input type="date" id="srchDate" required /></div>
+          <div class="form-group" style="margin:0;"><label>Cabin Class</label><select id="srchCabin"><option value="economy">Economy</option><option value="business">Business</option></select></div>
+          <div style="display:flex; align-items:flex-end;"><button type="submit" id="srchBtn" class="btn btn-primary" style="height:42px;">🔍 Search Live Flights</button></div>
+        </form>
+        <div id="liveFlightsBox" style="overflow-x:auto; margin-top:14px;"><table><thead><tr><th>Airline & Flight</th><th>Route & Stops</th><th>Departure & Arrival</th><th>Baggage</th><th>B2B Fare (PKR)</th><th>Action</th></tr></thead><tbody id="liveFlightsBody"><tr><td colspan="6" style="text-align:center;color:#64748b;">Enter route (e.g. LHE to JED) & date above, then click Search Live Flights.</td></tr></tbody></table></div>
       </div>
+      <div id="tab-fares" class="card hidden">
+        <h3>🕌 Live Group Flights, Umrah Packages & Visit Visas</h3>
+        <div style="overflow-x:auto; margin-top:12px;"><table><thead><tr><th>Category</th><th>Route / Package</th><th>Details</th><th>Date</th><th>Availability</th><th>Fare (PKR)</th><th>Action</th></tr></thead><tbody id="faresTableBody"></tbody></table></div>
+      </div>
+
            <div id="tab-bookings" class="card hidden">
         <h3>📋 B2B Bookings Ledger & Live PNR Status</h3>
         <div style="overflow-x:auto; margin-top:12px;"><table><thead><tr><th>Booking ID</th><th>Date</th><th>Passenger & Passport Details</th><th>Package / Flight</th><th>PNR / Ticket</th><th>Fare (PKR)</th><th>Status & Hold Timer</th><th>PDF / Action</th></tr></thead><tbody id="bookingsTableBody"></tbody></table></div>
@@ -201,9 +214,13 @@
                 <div class="form-group" id="grpStay"><label>🏨 Hotel Stay / Transit</label><input type="text" id="admStay" placeholder="Direct Flight / Makkah 7N + Madinah 7N" /></div>
               </div>
               <div class="form-group"><label>📝 Additional Notes / Visa / Rules</label><input type="text" id="admDetails" placeholder="e.g. Refundable • Visa + Transport Included" required /></div>
-              <div class="form-group" id="grpDate"><label>Travel Date</label><input type="text" id="admDate" placeholder="25 Nov 2026" required /></div>
-              <div class="form-group" id="grpSeats"><label>Seats</label><input type="number" id="admSeats" value="15" required /></div>
+                          <div class="form-group" id="grpDate"><label>Travel Date</label><input type="text" id="admDate" placeholder="25 Nov 2026" required /></div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <div class="form-group" id="grpSeats"><label>Total Seats (Admin Only)</label><input type="number" id="admSeats" value="15" required /></div>
+                <div class="form-group"><label>⏳ Hold Time Limit (Minutes)</label><input type="number" id="admHoldMins" value="30" min="5" required /></div>
+              </div>
               <div class="form-group"><label>B2B Fare (PKR)</label><input type="number" id="admFare" required /></div>
+
 
 
               <button type="submit" class="btn btn-primary">Publish to All Agents</button>
@@ -444,7 +461,7 @@
       }
     }
 
-    function handleAdminAddFare(e) {
+       function handleAdminAddFare(e) {
       e.preventDefault();
       callBackend({
         action:'adminAddFare', email:currentEmail, token:currentToken,
@@ -457,9 +474,35 @@
         details:document.getElementById('admDetails').value,
         travelDate:document.getElementById('admDate').value,
         seats:document.getElementById('admSeats').value,
+        holdMins:document.getElementById('admHoldMins').value,
         farePKR:document.getElementById('admFare').value
       }).then(function(res) { alert(res.message); e.target.reset(); loadDashboardData(); });
     }
+
+    function handleLiveFlightSearch(e) {
+      e.preventDefault();
+      var btn = document.getElementById('srchBtn');
+      btn.disabled = true; btn.textContent = 'Searching GDS...';
+      document.getElementById('liveFlightsBody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:#0b1f3a;font-weight:700;">⏳ Fetching live airline schedules & fares...</td></tr>';
+      callBackend({
+        action:'searchLiveFlights', email:currentEmail, token:currentToken,
+        origin:document.getElementById('srchOrigin').value.trim().toUpperCase(),
+        dest:document.getElementById('srchDest').value.trim().toUpperCase(),
+        date:document.getElementById('srchDate').value,
+        cabin:document.getElementById('srchCabin').value
+      }).then(function(res) {
+        btn.disabled = false; btn.textContent = '🔍 Search Live Flights';
+        if (!res.ok) {
+          document.getElementById('liveFlightsBody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:#dc2626;font-weight:700;">❌ ' + res.message + '</td></tr>';
+          return;
+        }
+        document.getElementById('liveFlightsBody').innerHTML = res.offers.map(function(o) {
+          var title = o.Airline + ' (' + o.FlightNo + ') ' + o.Route + ' [' + o.DepTime + ']';
+          return '<tr><td><strong>' + o.Airline + '</strong><br><small style="color:#0b1f3a;font-weight:700;">' + o.FlightNo + '</small></td><td><strong>' + o.Route + '</strong><br><span class="status-badge st-APPROVED">' + o.Stops + '</span></td><td>✈️ Dep: <strong>' + o.DepTime + '</strong><br>🛬 Arr: <strong>' + o.ArrTime + '</strong></td><td>🧳 ' + o.Luggage + '</td><td><strong style="color:#15803d;font-size:14px;">PKR ' + Number(o.FarePKR).toLocaleString() + '</strong></td><td><button class="btn btn-sm btn-primary" onclick="openBookingModal(\'Live Airline\',\'' + title.replace(/'/g,"") + '\',' + o.FarePKR + ')">Hold / Book</button></td></tr>';
+        }).join('');
+      });
+    }
+
 
         function handleAdminAddBank(e) {
       e.preventDefault();

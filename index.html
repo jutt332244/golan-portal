@@ -502,28 +502,45 @@
 
   <div id="bookingModal" class="hidden" style="position:fixed; inset:0; background:rgba(15,23,42,0.75); display:flex; align-items:center; justify-content:center; z-index:999; padding:16px; overflow-y:auto;">
     <div class="card" style="width:100%; max-width:500px; margin:auto;">
-      <h3>✈️ Confirm B2B Booking (Passport Details)</h3>
-      <div id="modalSessionBanner" style="background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; padding:8px 12px; border-radius:8px; font-weight:800; font-size:13px; margin:8px 0; text-align:center;">
-        ⏳ Booking Session Time Left: <span id="modalSessionClock">15:00</span>
-      </div>
-      <p id="modalItemTitle" style="color:var(--primary); font-weight:700; margin:6px 0 14px;"></p>
-      <form onsubmit="submitBooking(event)">
-              <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-          <div class="form-group"><label>First Name / Given Name</label><input type="text" id="paxFirstName" placeholder="Given Name" required /></div>
-          <div class="form-group"><label>Last Name / Surname</label><input type="text" id="paxLastName" placeholder="Surname" required /></div>
+            <h3 id="modalHeaderTitle">✈️ Confirm B2B Booking (Passport Details)</h3>
+        <div id="modalSessionBanner" style="background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; padding:8px 12px; border-radius:8px; margin-top:8px; font-size:12px; font-weight:800; text-align:center;">
+          ⏳ Booking Session Time Left: <span id="modalSessionClock">15:00</span>
         </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-          <div class="form-group"><label>Passport Number</label><input type="text" id="paxPassport" placeholder="Enter Passport Number" required /></div>
-          <div class="form-group"><label>Date of Birth (DOB)</label><input type="date" id="paxDob" required /></div>
-        </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-          <div class="form-group"><label>Passport Expiry Date</label><input type="date" id="paxExp" required /></div>
-          <div class="form-group"><label>Nationality</label><input type="text" id="paxNat" value="Pakistani" required /></div>
-        </div>
-        <div class="form-group"><label>Passenger Mobile / WhatsApp</label><input type="text" id="paxMobile" placeholder="03XX-XXXXXXX" required /></div>
+        <p id="modalItemTitle" style="color:var(--primary); font-weight:700; margin:6px 0 12px;"></p>
+        <form onsubmit="submitBooking(event)">
+          <div id="flightFieldsWrap">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+              <div class="form-group"><label>First Name / Given Name</label><input type="text" id="paxFirstName" placeholder="Given Name" /></div>
+              <div class="form-group"><label>Last Name / Surname</label><input type="text" id="paxLastName" placeholder="Surname" /></div>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+              <div class="form-group"><label>Passport Number</label><input type="text" id="paxPassport" placeholder="Enter Passport Number" /></div>
+              <div class="form-group"><label>Date of Birth (DOB)</label><input type="date" id="paxDob" /></div>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+              <div class="form-group"><label>Passport Expiry Date</label><input type="date" id="paxExp" /></div>
+              <div class="form-group"><label>Nationality</label><input type="text" id="paxNat" value="Pakistani" /></div>
+            </div>
+            <div class="form-group"><label>Passenger Mobile / WhatsApp</label><input type="text" id="paxMobile" placeholder="03XX-XXXXXXX" /></div>
+          </div>
 
-        <div style="display:flex; gap:10px; margin-top:10px;"><button type="submit" class="btn btn-green">Hold Booking (PENDING)</button><button type="button" class="btn btn-red" onclick="closeBookingModal()">Cancel</button></div>
-      </form>
+          <div id="visaFieldsWrap" style="display:none;">
+            <div class="form-group"><label>Applicant Full Name (As per Passport)</label><input type="text" id="visaFullName" placeholder="Full Name" /></div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+              <div class="form-group"><label>Passport Number</label><input type="text" id="visaPassport" placeholder="e.g. AB1234567" /></div>
+              <div class="form-group"><label>Applicant Mobile / WhatsApp</label><input type="text" id="visaMobile" placeholder="03XX-XXXXXXX" /></div>
+            </div>
+            <div class="form-group"><label>📎 Upload Passport Front Page Scan (Required)</label><input type="file" id="visaDocPassport" accept="image/*,.pdf" style="padding:7px;border:1px dashed #94a3b8;border-radius:8px;width:100%;background:#f8fafc;" /></div>
+            <div class="form-group"><label>📎 Upload White Background Photo (Required)</label><input type="file" id="visaDocPhoto" accept="image/*" style="padding:7px;border:1px dashed #94a3b8;border-radius:8px;width:100%;background:#f8fafc;" /></div>
+            <div class="form-group"><label>📎 CNIC / Additional Document (Optional)</label><input type="file" id="visaDocExtra" accept="image/*,.pdf" style="padding:7px;border:1px dashed #cbd5e1;border-radius:8px;width:100%;background:#f8fafc;" /></div>
+          </div>
+
+          <div style="display:flex; gap:10px; margin-top:10px;">
+            <button type="submit" id="modalSubmitBtn" class="btn btn-green">Hold Booking (PENDING)</button>
+            <button type="button" class="btn btn-red" onclick="closeBookingModal()">Cancel</button>
+          </div>
+        </form>
+
     </div>
   </div>
 
@@ -1117,6 +1134,41 @@
       alert('✅ Slip Uploaded! PKR ' + amt.toLocaleString() + ' has been added to your Wallet & B2B Ledger.');
       e.target.reset();
     }
+    var _origOpenBookingModal = openBookingModal;
+    openBookingModal = function(cat, title, fare) {
+      _origOpenBookingModal(cat, title, fare);
+      var isVisa = (cat === 'Visit Visa');
+      var hdr = document.getElementById('modalHeaderTitle');
+      var fw = document.getElementById('flightFieldsWrap');
+      var vw = document.getElementById('visaFieldsWrap');
+      var btn = document.getElementById('modalSubmitBtn');
+      if (hdr) hdr.textContent = isVisa ? '🛂 Submit Visit Visa Application & Documents' : '✈️ Confirm B2B Booking (Passport Details)';
+      if (fw) fw.style.display = isVisa ? 'none' : 'block';
+      if (vw) vw.style.display = isVisa ? 'block' : 'none';
+      if (btn) btn.textContent = isVisa ? 'Submit Visa Application' : 'Hold Booking (PENDING)';
+    };
+
+    var _origSubmitBooking = submitBooking;
+    submitBooking = function(e) {
+      if (selectedItem && selectedItem.category === 'Visit Visa') {
+        var vName = (document.getElementById('visaFullName').value || '').trim();
+        var vPass = (document.getElementById('visaPassport').value || '').trim();
+        var vMob = (document.getElementById('visaMobile').value || '').trim();
+        var f1 = document.getElementById('visaDocPassport');
+        var f2 = document.getElementById('visaDocPhoto');
+        if (!vName || !vPass || !vMob) { e.preventDefault(); alert('Please enter Applicant Name, Passport Number, and Mobile.'); return; }
+        if (!f1 || !f1.files || !f1.files.length || !f2 || !f2.files || !f2.files.length) { e.preventDefault(); alert('Please attach both Passport Scan and White Background Photo.'); return; }
+        var parts = vName.split(' ');
+        document.getElementById('paxFirstName').value = parts[0] || vName;
+        document.getElementById('paxLastName').value = parts.slice(1).join(' ') || 'Applicant';
+        document.getElementById('paxPassport').value = vPass;
+        document.getElementById('paxDob').value = '1995-01-01';
+        document.getElementById('paxExp').value = '2030-01-01';
+        document.getElementById('paxNat').value = 'Pakistani';
+        document.getElementById('paxMobile').value = vMob + ' [Docs: ' + f1.files[0].name + ', ' + f2.files[0].name + ']';
+      }
+      _origSubmitBooking(e);
+    };
 
 
     function renderBookingsTable(isAdmin) {

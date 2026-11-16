@@ -184,7 +184,7 @@
         </div>
       </div>
 
-      <div style="background:linear-gradient(115deg,#0f4c5c 0%,#136f82 55%,#1b8a99 100%); color:#fff; padding:22px 26px; border-radius:16px; margin-bottom:18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; box-shadow:0 8px 24px rgba(15,76,92,0.18);">
+      <div id="dashHeroBanner" style="background:linear-gradient(115deg,#0f4c5c 0%,#136f82 55%,#1b8a99 100%); color:#fff; padding:22px 26px; border-radius:16px; margin-bottom:18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; box-shadow:0 8px 24px rgba(15,76,92,0.18);">
         <div style="max-width:560px;">
           <div style="font-size:11px; font-weight:700; letter-spacing:1px; color:#bae6fd; text-transform:uppercase; margin-bottom:6px;">📅 SUNDAY, 15 NOVEMBER 2026 • GOLAN B2B PORTAL</div>
           <h2 style="font-size:24px; font-weight:800; margin:0 0 6px 0; color:#fff;">Good evening, <span id="dashAgencyName">Partner</span></h2>
@@ -1037,9 +1037,19 @@
     switchTab = function(tabName, btnEl) {
       _origSwitchTab(tabName, btnEl);
       var hb = document.getElementById('dashHomeBlocks');
-      if (hb) hb.style.display = (tabName === 'liveair') ? 'block' : 'none';
+      var hero = document.getElementById('dashHeroBanner');
+      var tabsBar = document.querySelector('#dashboardSection .tabs');
+      var isDash = (tabName === 'liveair');
+      if (hb) hb.style.display = isDash ? 'block' : 'none';
+      if (hero) hero.style.display = isDash ? 'flex' : 'none';
+      if (tabsBar) tabsBar.style.display = isDash ? 'flex' : 'none';
+      ['liveair','fares','bookings','banks','ledger','admin'].forEach(function(id) {
+        var el = document.getElementById('tab-' + id);
+        if (el) el.style.display = (id === tabName) ? 'block' : 'none';
+      });
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
+
 
     function openLedgerTab(btnEl) { switchTab('ledger', btnEl); refreshLedgerAuto(); }
      function handleInstantSlipUpload(e) {

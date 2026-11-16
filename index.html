@@ -1033,19 +1033,24 @@
       var tb = document.getElementById('ledgerTableBody');
       if (tb) tb.innerHTML = rowsHtml || '<tr><td colspan="7" style="text-align:center;color:#64748b;padding:16px;">No ledger transactions recorded yet.</td></tr>';
     }
-        var _origSwitchTab = switchTab;
+         var _origSwitchTab = switchTab;
     switchTab = function(tabName, btnEl) {
       _origSwitchTab(tabName, btnEl);
       var hb = document.getElementById('dashHomeBlocks');
       var hero = document.getElementById('dashHeroBanner');
       var tabsBar = document.querySelector('#dashboardSection .tabs');
+      var rightCol = tabsBar ? tabsBar.parentElement : null;
       var isDash = (tabName === 'liveair');
       if (hb) hb.style.display = isDash ? 'block' : 'none';
       if (hero) hero.style.display = isDash ? 'flex' : 'none';
       if (tabsBar) tabsBar.style.display = isDash ? 'flex' : 'none';
       ['liveair','fares','bookings','banks','ledger','admin'].forEach(function(id) {
         var el = document.getElementById('tab-' + id);
-        if (el) el.style.display = (id === tabName) ? 'block' : 'none';
+        if (el) {
+          if (rightCol && el.parentElement !== rightCol) rightCol.appendChild(el);
+          el.classList.remove('hidden');
+          el.style.display = (id === tabName) ? 'block' : 'none';
+        }
       });
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };

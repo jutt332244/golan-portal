@@ -207,7 +207,7 @@
           </div>
         </div>
       </div>
-
+      <div id="dashHomeBlocks">
       <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-bottom:18px;">
         <div style="background:#fff; padding:16px 20px; border-radius:14px; border:1px solid #e2e8f0; border-left:4px solid #0284c7; display:flex; align-items:center; gap:14px;">
           <div style="width:40px; height:40px; border-radius:10px; background:#e0f2fe; color:#0284c7; display:flex; align-items:center; justify-content:center; font-size:18px;">📊</div>
@@ -288,10 +288,8 @@
 
         </div>
       </div>
-
- 
+      </div>
       <div class="tabs">
-
         <button class="tab-btn active" onclick="switchTab('liveair',this)">✈️ Live Airline Search (GDS)</button>
         <button class="tab-btn" onclick="openFareCategoryTab('Group Flight',this)">🛫 Group Flights</button>
         <button class="tab-btn" onclick="openFareCategoryTab('Umrah Package',this)">🕋 Umrah Packages</button>
@@ -300,7 +298,6 @@
         <button class="tab-btn" onclick="switchTab('banks',this)">🏦 Official Payment Accounts</button>
         <button id="adminTabBtn" class="tab-btn hidden" onclick="switchTab('admin',this)">👑 Super Admin Control</button>
       </div>
-
           <div id="tab-liveair" class="card">
         <div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
           <button type="button" id="pill-oneway" class="tab-btn active" style="border-radius:999px; padding:8px 20px;" onclick="setTripType('oneway')">One Way</button>
@@ -1036,6 +1033,14 @@
       var tb = document.getElementById('ledgerTableBody');
       if (tb) tb.innerHTML = rowsHtml || '<tr><td colspan="7" style="text-align:center;color:#64748b;padding:16px;">No ledger transactions recorded yet.</td></tr>';
     }
+        var _origSwitchTab = switchTab;
+    switchTab = function(tabName, btnEl) {
+      _origSwitchTab(tabName, btnEl);
+      var hb = document.getElementById('dashHomeBlocks');
+      if (hb) hb.style.display = (tabName === 'liveair') ? 'block' : 'none';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     function openLedgerTab(btnEl) { switchTab('ledger', btnEl); refreshLedgerAuto(); }
      function handleInstantSlipUpload(e) {
       e.preventDefault();

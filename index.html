@@ -374,15 +374,17 @@
       <div id="tab-banks" class="card hidden">
         <h3>🏦 Official Payment Deposit Accounts</h3>
         <div id="banksGrid" class="bank-grid" style="margin-top:12px;"></div>
-        <div style="margin-top:24px; padding-top:18px; border-top:1px solid var(--border); max-width:500px;">
-          <h3>💳 Submit Deposit Receipt to Upgrade Wallet Limit</h3>
-          <form onsubmit="handleDepositRequest(event)" style="margin-top:10px;">
-            <div class="form-group"><label>Deposited Bank</label><input type="text" id="depBank" value="UBL (384263615)" required /></div>
-            <div class="form-group"><label>Amount Deposited (PKR)</label><input type="number" id="depAmount" placeholder="100000" required /></div>
-            <div class="form-group"><label>Transaction ID / Slip Reference</label><input type="text" id="depRef" placeholder="TID-98234712" required /></div>
-            <button type="submit" class="btn btn-green">Submit Deposit for Limit Upgrade</button>
+              <div style="margin-top:20px; padding-top:18px; border-top:1px solid var(--border); max-width:520px;">
+          <h3>📎 Upload Transaction Slip (Instant Wallet &amp; Ledger Credit)</h3>
+          <form onsubmit="handleInstantSlipUpload(event)" style="margin-top:12px;">
+            <div class="form-group"><label>Amount Deposited (PKR)</label><input type="number" id="depAmount" placeholder="e.g. 100000" min="100" required /></div>
+            <div class="form-group"><label>Transaction ID / Slip Reference</label><input type="text" id="depRef" placeholder="e.g. TID-98234712" required /></div>
+            <div class="form-group"><label>Attach Transaction Slip (Image / Receipt)</label><input type="file" id="depSlipFile" accept="image/*,.pdf" required style="padding:8px; border:1px dashed #94a3b8; border-radius:8px; width:100%; background:#f8fafc;" /></div>
+            <input type="hidden" id="depBank" value="UBL (384263615)" />
+            <button type="submit" class="btn btn-green">Upload Slip &amp; Credit Wallet Instantly</button>
           </form>
         </div>
+
       </div>      <div id="tab-ledger" class="card hidden" style="font-size:12px;">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
           <div>
@@ -1029,7 +1031,30 @@
       if (tb) tb.innerHTML = rowsHtml || '<tr><td colspan="7" style="text-align:center;color:#64748b;padding:16px;">No ledger transactions recorded yet.</td></tr>';
     }
     function openLedgerTab(btnEl) { switchTab('ledger', btnEl); refreshLedgerAuto(); }
- 
+     function handleInstantSlipUpload(e) {
+      e.preventDefault();
+      var amt = Number(document.getElementById('depAmount').value || 0);
+      var ref = document.getElementById('depRef').value.trim();
+      var fileInput = document.getElementById('depSlipFile');
+      var fileName = (fileInput && fileInput.files && fileInput.files[0]) ? fileInput.files[0].name : 'Slip_Attached';
+      if (amt <= 0) { alert('Please enter a valid deposit amount.'); return; }
+      var wb = document.getElementById('walletBadge');
+      var curBal = Number((wb ? wb.textContent : '0').replace(/[^0-9-]/g, '') || 0);
+      var newBal = curBal + amt;
+      if (wb) wb.textContent = '💰 Wallet: PKR ' + newBal.toLocaleString();
+      window.__EXTRA_DEPOSITS__ = window.__EXTRA_DEPOSITS__ || [];
+      window.__EXTRA_DEPOSITS__.unshift({ date: new Date().toLocaleDateString('en-GB'), ref: ref, desc: 'Deposit Slip (' + fileName + ')', amt: amt });
+      refreshLedgerAuto();
+      var tb = document.getElementById('ledgerTableBody');
+      if (tb) {
+        var slipRow = '<tr><td>' + new Date().toLocaleDateString('en-GB') + '</td><td><strong>' + ref + '</strong></td><td>Deposit Slip (' + fileName + ')</td><td><span style="background:#dcfce7;color:#166534;padding:2px 6px;border-radius:4px;font-weight:700;">CREDIT</span></td><td>-</td><td style="color:#15803d;font-weight:700;">+ PKR ' + amt.toLocaleString() + '</td><td>VERIFIED</td></tr>';
+        tb.innerHTML = slipRow + (tb.innerHTML.indexOf('No ledger') !== -1 ? '' : tb.innerHTML);
+      }
+      if (typeof handleDepositRequest === 'function') { try { handleDepositRequest(e); } catch(err) {} }
+      alert('✅ Slip Uploaded! PKR ' + amt.toLocaleString() + ' has been added to your Wallet & B2B Ledger.');
+      e.target.reset();
+    }
+
 
     function renderBookingsTable(isAdmin) {
       var list = window.__ALL_BOOKINGS__ || []

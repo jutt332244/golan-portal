@@ -1014,7 +1014,11 @@
       var elD = document.getElementById('ldgTotalDebit');
       var elR = document.getElementById('ldgTotalRefund');
       var netEl = document.getElementById('ldgNetBalance');
-      var noteEl = document.getElementById('ldgBalanceNote');
+          var elGrp = document.getElementById('statAvailGroups');
+      if (elGrp) elGrp.textContent = document.querySelectorAll('#faresTableBody tr').length;
+      var elTdy = document.getElementById('statTodayBookings');
+      if (elTdy) elTdy.textContent = bookings.length;
+
       if (elC) elC.textContent = 'PKR ' + credit.toLocaleString();
       if (elD) elD.textContent = 'PKR ' + debit.toLocaleString();
       if (elR) elR.textContent = 'PKR ' + refund.toLocaleString();

@@ -1037,16 +1037,16 @@
         BAH: ['BAH', 'BAHRAIN'],
         LHR: ['LHR', 'MAN', 'BHX', 'UK', 'LONDON', 'MANCHESTER']
       };
-      var titles = {
+          var titles = {
         ALL: '🌐 All Live Flights, Packages & Visas',
         'Group Flight': '🛫 Live Group Flights',
         'Umrah Package': '🕋 Live Umrah Packages',
         'Visit Visa': '🛂 Live Visit Visas',
-        DXB: '🇦🇪 UAE & Dubai Group Inventory',
-        JED: '🇸🇦 KSA One-Way Inventory',
-        MCT: '🇴🇲 Muscat & Oman Group Fares',
-        BAH: '🇧🇭 Bahrain Group Flights',
-        LHR: '🇬🇧 UK & London Flights & Visas'
+        DXB: '✈️ UAE & Dubai Live Flights & Groups',
+        JED: '✈️ KSA (Jeddah / Riyadh) Live Flights & Groups',
+        MCT: '✈️ Muscat & Oman Live Flights & Groups',
+        BAH: '✈️ Bahrain Live Flights & Groups',
+        LHR: '✈️ UK & London Live Flights & Visas'
       };
       var hd = document.getElementById('faresTabHeading');
       if (hd) hd.textContent = titles[catName] || ('🛫 ' + catName);
@@ -1063,10 +1063,28 @@
       if (emptyRow) emptyRow.remove();
       if (shown === 0) {
         var tb = document.getElementById('faresTableBody');
-        if (tb) tb.insertAdjacentHTML('beforeend', '<tr id="quickJourneyEmptyRow"><td colspan="5" style="text-align:center;color:#64748b;padding:24px;">No active inventory posted for this category yet. <button type="button" class="btn btn-sm btn-primary" style="margin-left:8px;" onclick="openFareCategoryTab(\'ALL\')">Show All Available Inventory</button></td></tr>');
+        var isRoute = !!mapKeys[catName];
+        var btnHtml = isRoute
+          ? '<button type="button" class="btn btn-sm btn-primary" style="margin-left:8px;" onclick="searchDuffelDestination(\'' + catName + '\')">Search Live Duffel Flights (' + catName + ')</button>'
+          : '<button type="button" class="btn btn-sm btn-primary" style="margin-left:8px;" onclick="openFareCategoryTab(\'ALL\')">Show All Inventory</button>';
+        if (tb) tb.insertAdjacentHTML('beforeend', '<tr id="quickJourneyEmptyRow"><td colspan="5" style="text-align:center;color:#64748b;padding:24px;">No manual group seats posted for this route yet. ' + btnHtml + '</td></tr>');
       }
     }
+    function searchDuffelDestination(destCode) {
+      switchTab('liveair');
+      var o = document.getElementById('gdsOrigin');
+      var d = document.getElementById('gdsDest');
+      var dt = document.getElementById('gdsDate');
+      if (o && !o.value) o.value = 'LHE';
+      if (d) d.value = destCode;
+      if (dt && !dt.value) {
+        var tmr = new Date(Date.now() + 86400000 * 3);
+        dt.value = tmr.toISOString().split('T');
+      }
+      if (typeof searchLiveAirlines === 'function') searchLiveAirlines();
+    }
     function quickBrowseJourney(code) { openFareCategoryTab(code); }
+
 
          function refreshLedgerAuto() {
       var bookings = window.__ALL_BOOKINGS__ || [];

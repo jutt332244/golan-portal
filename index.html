@@ -249,17 +249,17 @@
           <a href="javascript:void(0)" onclick="openFareCategoryTab('ALL',this)" style="font-size:12px; font-weight:700; color:#0f4c5c; text-decoration:none;">All available flights →</a>
         </div>
         <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px;">
-          <div onclick="openFareCategoryTab('ALL',this)" style="background:linear-gradient(135deg,#f8fafc,#e0f2fe); padding:16px; border-radius:12px; border:1px solid #bae6fd; cursor:pointer;">
+                  <div onclick="openFareCategoryTab('ALL',this)" style="background:linear-gradient(135deg,#f8fafc,#e0f2fe); padding:16px; border-radius:12px; border:1px solid #bae6fd; cursor:pointer;">
             <div style="font-size:20px; margin-bottom:8px;">🌐</div>
             <div style="font-weight:800; color:#0f172a; font-size:13.5px;">All groups</div>
             <div style="font-size:11.5px; color:#64748b;">See every available flight option</div>
           </div>
-          <div onclick="quickBrowseJourney('DXB')" style="background:linear-gradient(135deg,#f8fafc,#eef2ff); padding:16px; border-radius:12px; border:1px solid #e0e7ff; cursor:pointer;">
+          <div onclick="openFareCategoryTab('DXB',this)" style="background:linear-gradient(135deg,#f8fafc,#eef2ff); padding:16px; border-radius:12px; border:1px solid #e0e7ff; cursor:pointer;">
             <div style="margin-bottom:10px;"><svg width="28" height="20" viewBox="0 0 28 20" style="border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,0.2);"><rect width="28" height="6.67" fill="#00732f"/><rect y="6.67" width="28" height="6.67" fill="#ffffff"/><rect y="13.33" width="28" height="6.67" fill="#000000"/><rect width="7.5" height="20" fill="#ff0000"/></svg></div>
             <div style="font-weight:800; color:#0f172a; font-size:13.5px;">UAE</div>
             <div style="font-size:11.5px; color:#64748b;">Dubai and UAE group inventory</div>
           </div>
-          <div onclick="quickBrowseJourney('JED')" style="background:linear-gradient(135deg,#f8fafc,#f0fdf4); padding:16px; border-radius:12px; border:1px solid #dcfce7; cursor:pointer;">
+          <div onclick="openFareCategoryTab('JED',this)" style="background:linear-gradient(135deg,#f8fafc,#f0fdf4); padding:16px; border-radius:12px; border:1px solid #dcfce7; cursor:pointer;">
             <div style="margin-bottom:10px;"><svg width="28" height="20" viewBox="0 0 28 20" style="border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,0.2);"><rect width="28" height="20" fill="#006c35"/><rect x="6" y="7" width="16" height="3" rx="1" fill="#ffffff"/><rect x="7" y="13" width="14" height="1.6" rx="0.8" fill="#ffffff"/></svg></div>
             <div style="font-weight:800; color:#0f172a; font-size:13.5px;">KSA one way</div>
             <div style="font-size:11.5px; color:#64748b;">Saudi Arabia one-way options</div>
@@ -269,21 +269,22 @@
             <div style="font-weight:800; color:#0f172a; font-size:13.5px;">Umrah</div>
             <div style="font-size:11.5px; color:#64748b;">Makkah and Madinah journeys</div>
           </div>
-          <div onclick="quickBrowseJourney('MCT')" style="background:linear-gradient(135deg,#f8fafc,#fff7ed); padding:16px; border-radius:12px; border:1px solid #ffedd5; cursor:pointer;">
+          <div onclick="openFareCategoryTab('MCT',this)" style="background:linear-gradient(135deg,#f8fafc,#fff7ed); padding:16px; border-radius:12px; border:1px solid #ffedd5; cursor:pointer;">
             <div style="margin-bottom:10px;"><svg width="28" height="20" viewBox="0 0 28 20" style="border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,0.2);"><rect width="28" height="6.67" fill="#ffffff"/><rect y="6.67" width="28" height="6.67" fill="#db161b"/><rect y="13.33" width="28" height="6.67" fill="#008000"/><rect width="8" height="20" fill="#db161b"/></svg></div>
             <div style="font-weight:800; color:#0f172a; font-size:13.5px;">Muscat</div>
             <div style="font-size:11.5px; color:#64748b;">Current Muscat group fares</div>
           </div>
-          <div onclick="quickBrowseJourney('BAH')" style="background:linear-gradient(135deg,#f8fafc,#fdf2f8); padding:16px; border-radius:12px; border:1px solid #fce7f3; cursor:pointer;">
+          <div onclick="openFareCategoryTab('BAH',this)" style="background:linear-gradient(135deg,#f8fafc,#fdf2f8); padding:16px; border-radius:12px; border:1px solid #fce7f3; cursor:pointer;">
             <div style="margin-bottom:10px;"><svg width="28" height="20" viewBox="0 0 28 20" style="border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,0.2);"><rect width="28" height="20" fill="#ce1126"/><polygon points="0,0 8,0 11,2 8,4 11,6 8,8 11,10 8,12 11,14 8,16 11,18 8,20 0,20" fill="#ffffff"/></svg></div>
             <div style="font-weight:800; color:#0f172a; font-size:13.5px;">Bahrain</div>
             <div style="font-size:11.5px; color:#64748b;">Available Bahrain group flights</div>
           </div>
-          <div onclick="quickBrowseJourney('LHR')" style="background:linear-gradient(135deg,#f8fafc,#f5f3ff); padding:16px; border-radius:12px; border:1px solid #ede9fe; cursor:pointer;">
+          <div onclick="openFareCategoryTab('LHR',this)" style="background:linear-gradient(135deg,#f8fafc,#f5f3ff); padding:16px; border-radius:12px; border:1px solid #ede9fe; cursor:pointer;">
             <div style="margin-bottom:10px;"><svg width="28" height="20" viewBox="0 0 28 20" style="border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,0.2);"><rect width="28" height="20" fill="#012169"/><path d="M0,0 L28,20 M28,0 L0,20" stroke="#ffffff" stroke-width="3.5"/><path d="M0,0 L28,20 M28,0 L0,20" stroke="#c8102e" stroke-width="1.8"/><path d="M14,0 V20 M0,10 H28" stroke="#ffffff" stroke-width="5.5"/><path d="M14,0 V20 M0,10 H28" stroke="#c8102e" stroke-width="3.2"/></svg></div>
             <div style="font-weight:800; color:#0f172a; font-size:13.5px;">UK &amp; London</div>
             <div style="font-size:11.5px; color:#64748b;">London &amp; Manchester flights &amp; visas</div>
           </div>
+
 
 
         </div>

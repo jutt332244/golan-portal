@@ -1066,13 +1066,7 @@
     }
     function quickBrowseJourney(code) { openFareCategoryTab(code); }
 
-      switchTab('fares', btnEl);
-      var rows = document.querySelectorAll('#faresTableBody tr');
-      rows.forEach(function(r) {
-        if (!catName || catName === 'ALL') { r.style.display = ''; return; }
-        r.style.display = r.textContent.indexOf(catName) !== -1 ? '' : 'none';
-      });
-    }    function refreshLedgerAuto() {
+         function refreshLedgerAuto() {
       var bookings = window.__ALL_BOOKINGS__ || [];
       var debit = 0, refund = 0, rowsHtml = '';
       bookings.forEach(function(b) {

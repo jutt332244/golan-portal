@@ -208,40 +208,41 @@
         </div>
       </div>
       <div id="dashHomeBlocks">
-      <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-bottom:18px;">
-        <div style="background:#fff; padding:16px 20px; border-radius:14px; border:1px solid #e2e8f0; border-left:4px solid #0284c7; display:flex; align-items:center; gap:14px;">
-          <div style="width:40px; height:40px; border-radius:10px; background:#e0f2fe; color:#0284c7; display:flex; align-items:center; justify-content:center; font-size:18px;">📊</div>
-          <div>
-            <div style="font-size:10.5px; font-weight:800; color:#64748b; letter-spacing:0.5px;">TOTAL BOOKINGS</div>
-            <div id="statTotalBookings" style="font-size:24px; font-weight:900; color:#0f172a; line-height:1.2;">0</div>
-            <div style="font-size:11px; color:#64748b;">All active booking records</div>
+        <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-bottom:18px;">
+          <div style="background:#fff; padding:16px 20px; border-radius:14px; border:1px solid #e2e8f0; border-left:4px solid #0284c7; display:flex; align-items:center; gap:14px; box-shadow:0 2px 6px rgba(15,23,42,0.03);">
+            <div style="width:40px; height:40px; border-radius:10px; background:#e0f2fe; color:#0284c7; display:flex; align-items:center; justify-content:center; font-size:18px;">📊</div>
+            <div>
+              <div style="font-size:11px; font-weight:800; color:#64748b; letter-spacing:0.4px;">ALL BOOKINGS</div>
+              <div id="statTotalBookings" style="font-size:24px; font-weight:900; color:#0f172a; line-height:1.2;">0</div>
+              <div style="font-size:11px; color:#64748b;">Total tickets, visas &amp; packages</div>
+            </div>
+          </div>
+          <div style="background:#fff; padding:16px 20px; border-radius:14px; border:1px solid #e2e8f0; border-left:4px solid #16a34a; display:flex; align-items:center; gap:14px; box-shadow:0 2px 6px rgba(15,23,42,0.03);">
+            <div style="width:40px; height:40px; border-radius:10px; background:#dcfce7; color:#16a34a; display:flex; align-items:center; justify-content:center; font-size:18px;">✅</div>
+            <div>
+              <div style="font-size:11px; font-weight:800; color:#64748b; letter-spacing:0.4px;">CONFIRM TICKETS</div>
+              <div id="statSoldTickets" style="font-size:24px; font-weight:900; color:#0f172a; line-height:1.2;">0</div>
+              <div style="font-size:11px; color:#64748b;">Issued &amp; approved bookings</div>
+            </div>
+          </div>
+          <div style="background:#fff; padding:16px 20px; border-radius:14px; border:1px solid #e2e8f0; border-left:4px solid #d97706; display:flex; align-items:center; gap:14px; box-shadow:0 2px 6px rgba(15,23,42,0.03);">
+            <div style="width:40px; height:40px; border-radius:10px; background:#fef3c7; color:#d97706; display:flex; align-items:center; justify-content:center; font-size:18px;">⏳</div>
+            <div>
+              <div style="font-size:11px; font-weight:800; color:#64748b; letter-spacing:0.4px;">HOLD TICKETS</div>
+              <div id="statHoldTickets" style="font-size:24px; font-weight:900; color:#0f172a; line-height:1.2;">0</div>
+              <div style="font-size:11px; color:#64748b;">Payment pending / on hold</div>
+            </div>
+          </div>
+          <div style="background:#fff; padding:16px 20px; border-radius:14px; border:1px solid #e2e8f0; border-left:4px solid #dc2626; display:flex; align-items:center; gap:14px; box-shadow:0 2px 6px rgba(15,23,42,0.03);">
+            <div style="width:40px; height:40px; border-radius:10px; background:#fee2e2; color:#dc2626; display:flex; align-items:center; justify-content:center; font-size:18px;">❌</div>
+            <div>
+              <div style="font-size:11px; font-weight:800; color:#64748b; letter-spacing:0.4px;">CANCEL TICKETS</div>
+              <div id="statCanceledTickets" style="font-size:24px; font-weight:900; color:#0f172a; line-height:1.2;">0</div>
+              <div style="font-size:11px; color:#64748b;">Canceled bookings</div>
+            </div>
           </div>
         </div>
-        <div style="background:#fff; padding:16px 20px; border-radius:14px; border:1px solid #e2e8f0; border-left:4px solid #16a34a; display:flex; align-items:center; gap:14px;">
-          <div style="width:40px; height:40px; border-radius:10px; background:#dcfce7; color:#16a34a; display:flex; align-items:center; justify-content:center; font-size:18px;">✅</div>
-          <div>
-            <div style="font-size:10.5px; font-weight:800; color:#64748b; letter-spacing:0.5px;">SOLD TICKETS</div>
-            <div id="statSoldTickets" style="font-size:24px; font-weight:900; color:#0f172a; line-height:1.2;">0</div>
-            <div style="font-size:11px; color:#64748b;">Confirmed adult and child seats</div>
-          </div>
-        </div>
-        <div style="background:#fff; padding:16px 20px; border-radius:14px; border:1px solid #e2e8f0; border-left:4px solid #d97706; display:flex; align-items:center; gap:14px;">
-          <div style="width:40px; height:40px; border-radius:10px; background:#fef3c7; color:#d97706; display:flex; align-items:center; justify-content:center; font-size:18px;">⏳</div>
-          <div>
-            <div style="font-size:10.5px; font-weight:800; color:#64748b; letter-spacing:0.5px;">TICKETS ON HOLD</div>
-            <div id="statHoldTickets" style="font-size:24px; font-weight:900; color:#0f172a; line-height:1.2;">0</div>
-            <div style="font-size:11px; color:#64748b;">Seats waiting for confirmation</div>
-          </div>
-        </div>
-        <div style="background:#fff; padding:16px 20px; border-radius:14px; border:1px solid #e2e8f0; border-left:4px solid #dc2626; display:flex; align-items:center; gap:14px;">
-          <div style="width:40px; height:40px; border-radius:10px; background:#fee2e2; color:#dc2626; display:flex; align-items:center; justify-content:center; font-size:18px;">❌</div>
-          <div>
-            <div style="font-size:10.5px; font-weight:800; color:#64748b; letter-spacing:0.5px;">CANCELED TICKETS</div>
-            <div id="statCanceledTickets" style="font-size:24px; font-weight:900; color:#0f172a; line-height:1.2;">0</div>
-            <div style="font-size:11px; color:#64748b;">Canceled adult and child seats</div>
-          </div>
-        </div>
-      </div>
+
 
       <div style="background:#fff; padding:18px; border-radius:16px; border:1px solid #e2e8f0; margin-bottom:18px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">

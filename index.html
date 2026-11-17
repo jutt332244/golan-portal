@@ -1141,58 +1141,32 @@
       if (hb) hb.style.display = isDash ? 'block' : 'none';
       if (hero) hero.style.display = isDash ? 'flex' : 'none';
       if (tabsBar) tabsBar.style.display = isDash ? 'flex' : 'none';
-      ['liveair','fares','bookings','banks','ledger','admin'].forEach(function(id) {
-        var el = document.getElementById('tab-' + id);
-        if (el) {
-          if (rightCol && el.parentElement !== rightCol) rightCol.appendChild(el);
-          el.classList.remove('hidden');
-          el.style.display = (id === tabName) ? 'block' : 'none';
-        }
+        DXB: '✈️ UAE & Dubai Group Fares',
+        JED: '✈️ KSA (Jeddah / Riyadh) Group Fares',
+        MCT: '✈️ Muscat & Oman Group Fares',
+        BAH: '✈️ Bahrain Group Fares',
+        LHR: '✈️ UK & London Group Fares'
+      };
+      var hd = document.getElementById('faresTabHeading');
+      if (hd) hd.textContent = titles[catName] || ('🛫 ' + catName);
+      var rows = document.querySelectorAll('#faresTableBody tr');
+      var shown = 0;
+      rows.forEach(function(tr) {
+        if (tr.id === 'quickJourneyEmptyRow') return;
+        var txt = (tr.textContent || '').toUpperCase();
+        var match = (!catName || catName === 'ALL') ? true : (mapKeys[catName] ? mapKeys[catName].some(function(k) { return txt.indexOf(k) !== -1; }) : txt.indexOf(catName.toUpperCase()) !== -1);
+        tr.style.display = match ? '' : 'none';
+        if (match) shown++;
       });
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-
-
-    function openLedgerTab(btnEl) { switchTab('ledger', btnEl); refreshLedgerAuto(); }
-     function handleInstantSlipUpload(e) {
-      e.preventDefault();
-      var amt = Number(document.getElementById('depAmount').value || 0);
-      var ref = document.getElementById('depRef').value.trim();
-      var fileInput = document.getElementById('depSlipFile');
-      var fileName = (fileInput && fileInput.files && fileInput.files[0]) ? fileInput.files[0].name : 'Slip_Attached';
-      if (amt <= 0) { alert('Please enter a valid deposit amount.'); return; }
-      var wb = document.getElementById('walletBadge');
-      var curBal = Number((wb ? wb.textContent : '0').replace(/[^0-9-]/g, '') || 0);
-      var newBal = curBal + amt;
-      if (wb) wb.textContent = '💰 Wallet: PKR ' + newBal.toLocaleString();
-      window.__EXTRA_DEPOSITS__ = window.__EXTRA_DEPOSITS__ || [];
-      window.__EXTRA_DEPOSITS__.unshift({ date: new Date().toLocaleDateString('en-GB'), ref: ref, desc: 'Deposit Slip (' + fileName + ')', amt: amt });
-      refreshLedgerAuto();
-      var tb = document.getElementById('ledgerTableBody');
-      if (tb) {
-        var slipRow = '<tr><td>' + new Date().toLocaleDateString('en-GB') + '</td><td><strong>' + ref + '</strong></td><td>Deposit Slip (' + fileName + ')</td><td><span style="background:#dcfce7;color:#166534;padding:2px 6px;border-radius:4px;font-weight:700;">CREDIT</span></td><td>-</td><td style="color:#15803d;font-weight:700;">+ PKR ' + amt.toLocaleString() + '</td><td>VERIFIED</td></tr>';
-        tb.innerHTML = slipRow + (tb.innerHTML.indexOf('No ledger') !== -1 ? '' : tb.innerHTML);
+      var emptyRow = document.getElementById('quickJourneyEmptyRow');
+      if (emptyRow) emptyRow.remove();
+      if (shown === 0) {
+        var tb = document.getElementById('faresTableBody');
+        if (tb) tb.insertAdjacentHTML('beforeend', '<tr id="quickJourneyEmptyRow"><td colspan="5" style="text-align:center;color:#64748b;padding:24px;">No group seats posted for this route right now. <button type="button" class="btn btn-sm btn-primary" style="margin-left:8px;" onclick="openFareCategoryTab(\'ALL\')">View All Available Groups</button></td></tr>');
       }
-      if (typeof handleDepositRequest === 'function') { try { handleDepositRequest(e); } catch(err) {} }
-      alert('✅ Slip Uploaded! PKR ' + amt.toLocaleString() + ' has been added to your Wallet & B2B Ledger.');
-      e.target.reset();
     }
-    var _origOpenBookingModal = openBookingModal;
-    openBookingModal = function(cat, title, fare) {
-      _origOpenBookingModal(cat, title, fare);
-      var isVisa = (cat === 'Visit Visa');
-      var hdr = document.getElementById('modalHeaderTitle');
-      var fw = document.getElementById('flightFieldsWrap');
-      var vw = document.getElementById('visaFieldsWrap');
-      var btn = document.getElementById('modalSubmitBtn');
-      if (hdr) hdr.textContent = isVisa ? '🛂 Submit Visit Visa Application & Documents' : '✈️ Confirm B2B Booking (Passport Details)';
-      if (fw) fw.style.display = isVisa ? 'none' : 'block';
-      if (vw) vw.style.display = isVisa ? 'block' : 'none';
-      if (btn) btn.textContent = isVisa ? 'Submit Visa Application' : 'Hold Booking (PENDING)';
-    };
+    function quickBrowseJourney(code) { openFareCategoryTab(code); }
 
-    var _origSubmitBooking = submitBooking;
-    submitBooking = function(e) {
       if (selectedItem && selectedItem.category === 'Visit Visa') {
         var vName = (document.getElementById('visaFullName').value || '').trim();
         var vPass = (document.getElementById('visaPassport').value || '').trim();

@@ -1026,7 +1026,46 @@
         category:selectedItem.Category, itemTitle:selectedItem.Title, farePKR:selectedItem.FarePKR
       }).then(function(res) { alert(res.message); closeBookingModal(); loadDashboardData(); });
     }
-    function openFareCategoryTab(catName, btnEl) {
+          function openFareCategoryTab(catName, btnEl) {
+      switchTab('fares', btnEl);
+      var mapKeys = {
+        DXB: ['DXB', 'SHJ', 'AUH', 'UAE', 'DUBAI', 'SHARJAH', 'ABU DHABI'],
+        JED: ['JED', 'RUH', 'DMM', 'MED', 'KSA', 'SAUDI', 'JEDDAH', 'RIYADH', 'DAMMAM'],
+        MCT: ['MCT', 'SLL', 'MUSCAT', 'OMAN'],
+        BAH: ['BAH', 'BAHRAIN'],
+        LHR: ['LHR', 'MAN', 'BHX', 'UK', 'LONDON', 'MANCHESTER']
+      };
+      var titles = {
+        ALL: '🌐 All Live Flights, Packages & Visas',
+        'Group Flight': '🛫 Live Group Flights',
+        'Umrah Package': '🕋 Live Umrah Packages',
+        'Visit Visa': '🛂 Live Visit Visas',
+        DXB: '🇦🇪 UAE & Dubai Group Inventory',
+        JED: '🇸🇦 KSA One-Way Inventory',
+        MCT: '🇴🇲 Muscat & Oman Group Fares',
+        BAH: '🇧🇭 Bahrain Group Flights',
+        LHR: '🇬🇧 UK & London Flights & Visas'
+      };
+      var hd = document.getElementById('faresTabHeading');
+      if (hd) hd.textContent = titles[catName] || ('🛫 ' + catName);
+      var rows = document.querySelectorAll('#faresTableBody tr');
+      var shown = 0;
+      rows.forEach(function(tr) {
+        if (tr.id === 'quickJourneyEmptyRow') return;
+        var txt = (tr.textContent || '').toUpperCase();
+        var match = (!catName || catName === 'ALL') ? true : (mapKeys[catName] ? mapKeys[catName].some(function(k) { return txt.indexOf(k) !== -1; }) : txt.indexOf(catName.toUpperCase()) !== -1);
+        tr.style.display = match ? '' : 'none';
+        if (match) shown++;
+      });
+      var emptyRow = document.getElementById('quickJourneyEmptyRow');
+      if (emptyRow) emptyRow.remove();
+      if (shown === 0) {
+        var tb = document.getElementById('faresTableBody');
+        if (tb) tb.insertAdjacentHTML('beforeend', '<tr id="quickJourneyEmptyRow"><td colspan="5" style="text-align:center;color:#64748b;padding:24px;">No active inventory posted for this category yet. <button type="button" class="btn btn-sm btn-primary" style="margin-left:8px;" onclick="openFareCategoryTab(\'ALL\')">Show All Available Inventory</button></td></tr>');
+      }
+    }
+    function quickBrowseJourney(code) { openFareCategoryTab(code); }
+
       switchTab('fares', btnEl);
       var rows = document.querySelectorAll('#faresTableBody tr');
       rows.forEach(function(r) {

@@ -1258,13 +1258,44 @@
       if (!confirm('Are you sure you want to permanently delete Booking ' + bookingId + '?')) return;
       callBackend({ action:'adminDeleteBooking', email:currentEmail, token:currentToken, bookingId:bookingId }).then(function(res) { alert(res.message); loadDashboardData(); });
       }
-        document.addEventListener('click', function(ev) {
-      var card = ev.target.closest('[onclick*="quickBrowseJourney"]');
-      if (card) {
-        var m = (card.getAttribute('onclick') || '').match(/quickBrowseJourney\('([^']+)'\)/);
-        if (m && typeof quickBrowseJourney === 'function') quickBrowseJourney(m);
+          window.quickBrowseJourney = function(code) {
+      var names = {
+        DXB: '🇦🇪 UAE & Dubai Group Inventory',
+        JED: '🇸🇦 KSA One-Way Inventory',
+        MCT: '🇴🇲 Muscat & Oman Group Fares',
+        BAH: '🇧🇭 Bahrain Group Flights',
+        LHR: '🇬🇧 UK & London Flights & Visas'
+      };
+      var keys = {
+        DXB: ['DXB', 'SHJ', 'AUH', 'UAE', 'DUBAI', 'SHARJAH', 'ABU DHABI'],
+        JED: ['JED', 'RUH', 'DMM', 'MED', 'KSA', 'SAUDI', 'JEDDAH', 'RIYADH', 'DAMMAM'],
+        MCT: ['MCT', 'SLL', 'MUSCAT', 'OMAN'],
+        BAH: ['BAH', 'BAHRAIN'],
+        LHR: ['LHR', 'MAN', 'BHX', 'UK', 'LONDON', 'MANCHESTER']
+      };
+      if (typeof openFareCategoryTab === 'function') {
+        openFareCategoryTab('ALL');
+      } else if (typeof switchTab === 'function') {
+        switchTab('fares');
       }
-    });
+      var hd = document.getElementById('faresTabHeading');
+      if (hd) hd.textContent = names[code] || '🛫 Live Group Flights';
+      var list = keys[code] || [code];
+      var rows = document.querySelectorAll('#faresTableBody tr');
+      var shown = 0;
+      rows.forEach(function(tr) {
+        var txt = (tr.textContent || '').toUpperCase();
+        var match = list.some(function(k) { return txt.indexOf(k) !== -1; });
+        tr.style.display = match ? '' : 'none';
+        if (match) shown++;
+      });
+      var emptyRow = document.getElementById('quickJourneyEmptyRow');
+      if (emptyRow) emptyRow.remove();
+      if (shown === 0) {
+        var tb = document.getElementById('faresTableBody');
+        if (tb) tb.insertAdjacentHTML('beforeend', '<tr id="quickJourneyEmptyRow"><td colspan="5" style="text-align:center;color:#64748b;padding:24px;">No active fares posted for this route yet. <button type="button" class="btn btn-sm btn-primary" style="margin-left:8px;" onclick="openFareCategoryTab(\'ALL\')">Show All Available Inventory</button></td></tr>');
+      }
+    };
 
   </script>
   <div onclick="openCeoWhatsApp()" title="WhatsApp CEO Shan Chairman" style="position:fixed; bottom:25px; right:25px; width:60px; height:60px; background-color:#25D366; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(0,0,0,0.28); z-index:2147483647; cursor:pointer;">

@@ -909,7 +909,7 @@
                 '<div style="display:flex; gap:6px; justify-content:flex-end; margin-top:8px; flex-wrap:wrap;">' +
                   '<button type="button" class="btn btn-sm" style="background:#0b1f3a; color:#fff;" onclick="openGdsModal(' + idx + ',\'itin\')">Flight Details</button>' +
                   '<button type="button" class="btn btn-sm" style="background:#0284c7; color:#fff;" onclick="openGdsModal(' + idx + ',\'fares\')">More Price</button>' +
-              '<button type="button" class="btn btn-sm btn-primary" onclick="openBookingModal(\x27Live Airline\x27,\x27' + title.replace(/\x27/g, '') + '\x27,' + o.FarePKR + ')">Hold / Book</button>' +
+            '<button type="button" class="btn btn-sm btn-primary" onclick="bookGdsOffer(' + idx + ', \'Standard 30 KG + 7 KG\', ' + Number(o.FarePKR || 0) + ')">Hold / Book</button>' +
                 '</div>' +
               '</div>' +
             '</div>' +
@@ -940,12 +940,14 @@
       var baseFare = Number(o.FarePKR || 0);
       var valFare = baseFare + 4500;
       var flexFare = baseFare + 11500;
-      var box = document.getElementById('gdsModalContent');
-           if (tab === 'fares') {
-        box.innerHTML = '<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:12px;">' +
-          '<div style="border:2px solid #0b1f3a; border-radius:10px; padding:14px;"><div style="display:flex;justify-content:space-between;font-weight:800;color:#0b1f3a;"><span>ECONOMY LITE</span><span>PKR ' + baseFare.toLocaleString() + '</span></div><ul style="font-size:12px;margin:10px 0 14px 16px;color:#334155;"><li>7 KG Hand Carry Only</li><li>Standard Meal Included</li><li>Paid Seat Selection</li></ul><button class="btn btn-sm btn-primary" style="width:100%;" onclick="document.getElementById(\x27gdsDetailsModal\x27).classList.add(\x27hidden\x27);openBookingModal(\x27Live Airline\x27,\x27' + (o.Airline + ' (' + o.FlightNo + ') ECONOMY LITE ' + o.Route).replace(/\x27/g, '') + '\x27,' + baseFare + ')">Book Lite</button></div>' +
-          '<div style="border:1px solid #cbd5e1; border-radius:10px; padding:14px;"><div style="display:flex;justify-content:space-between;font-weight:800;color:#0284c7;"><span>ECONOMY VALUE</span><span>PKR ' + valFare.toLocaleString() + '</span></div><ul style="font-size:12px;margin:10px 0 14px 16px;color:#334155;"><li>30 KG Checked Bag + 7 KG</li><li>Hot Halal Meal Included</li><li>Low Change Fee</li></ul><button class="btn btn-sm" style="width:100%;background:#0284c7;color:#fff;" onclick="document.getElementById(\x27gdsDetailsModal\x27).classList.add(\x27hidden\x27);openBookingModal(\x27Live Airline\x27,\x27' + (o.Airline + ' (' + o.FlightNo + ') ECONOMY VALUE ' + o.Route).replace(/\x27/g, '') + '\x27,' + valFare + ')">Book Value</button></div>' +
-          '<div style="border:1px solid #cbd5e1; border-radius:10px; padding:14px;"><div style="display:flex;justify-content:space-between;font-weight:800;color:#15803d;"><span>ECONOMY FLEX</span><span>PKR ' + flexFare.toLocaleString() + '</span></div><ul style="font-size:12px;margin:10px 0 14px 16px;color:#334155;"><li>40 KG Checked Bag + 7 KG</li><li>Free Seat Selection Included</li><li>Free Date Change</li></ul><button class="btn btn-sm" style="width:100%;background:#15803d;color:#fff;" onclick="document.getElementById(\x27gdsDetailsModal\x27).classList.add(\x27hidden\x27);openBookingModal(\x27Live Airline\x27,\x27' + (o.Airline + ' (' + o.FlightNo + ') ECONOMY FLEX ' + o.Route).replace(/\x27/g, '') + '\x27,' + flexFare + ')">Book Flex</button></div>' +
+          var box = document.getElementById('gdsModalContent');
+      if (!box) return;
+      if (tab === 'fares') {
+        var titleTxt = (o.Airline || 'Flight') + ' (' + (o.FlightNo || '') + ') ' + (o.Origin || '') + '-' + (o.Dest || '');
+        box.innerHTML = '<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(175px,1fr)); gap:12px;">' +
+          '<div style="border:2px solid #0b1f3a; border-radius:12px; padding:14px; background:#f8fafc;"><div style="font-weight:800; color:#0b1f3a; font-size:14px;">🎒 Economy Light</div><div style="font-size:12px; color:#475569; margin:6px 0;">• 7 KG Hand Carry Only<br>• Non-Refundable</div><div style="font-size:17px; font-weight:900; color:#15803d; margin:8px 0;">PKR ' + baseFare.toLocaleString() + '</div><button type="button" class="btn btn-sm btn-primary" style="width:100%;" onclick="bookGdsOffer(' + ACTIVE_GDS_IDX + ', \'Light 7 KG\', ' + baseFare + ')">Select &amp; Book</button></div>' +
+          '<div style="border:2px solid #0284c7; border-radius:12px; padding:14px; background:#f0f9ff;"><div style="font-weight:800; color:#0284c7; font-size:14px;">🧳 Economy Value</div><div style="font-size:12px; color:#475569; margin:6px 0;">• 30 KG Checked + 7 KG<br>• Date Change Allowed</div><div style="font-size:17px; font-weight:900; color:#15803d; margin:8px 0;">PKR ' + valFare.toLocaleString() + '</div><button type="button" class="btn btn-sm btn-primary" style="width:100%;" onclick="bookGdsOffer(' + ACTIVE_GDS_IDX + ', \'Value 30 KG + 7 KG\', ' + valFare + ')">Select &amp; Book</button></div>' +
+          '<div style="border:2px solid #d97706; border-radius:12px; padding:14px; background:#fffbeb;"><div style="font-weight:800; color:#b45309; font-size:14px;">👑 Economy Flex</div><div style="font-size:12px; color:#475569; margin:6px 0;">• 40 KG Checked + 7 KG<br>• Free Date Change &amp; Meal</div><div style="font-size:17px; font-weight:900; color:#15803d; margin:8px 0;">PKR ' + flexFare.toLocaleString() + '</div><button type="button" class="btn btn-sm btn-primary" style="width:100%;" onclick="bookGdsOffer(' + ACTIVE_GDS_IDX + ', \'Flex 40 KG + 7 KG\', ' + flexFare + ')">Select &amp; Book</button></div>' +
         '</div>';
 
          
@@ -957,6 +959,15 @@
           '</div>';
       } else {
         box.innerHTML = '<div style="font-size:14px;line-height:1.7;"><strong>🧳 Baggage Allowance:</strong> 30 KG Checked Baggage + 7 KG Cabin Baggage.<br><strong>🔄 Cancellation & Reissue:</strong> Airline penalty + Golan International service charges apply before departure.</div>';
+           function bookGdsOffer(idx, bagLabel, finalFare) {
+      var o = (window.__GDS_OFFERS__ || []).at(idx);
+      if (!o) return;
+      var modal = document.getElementById('gdsDetailsModal');
+      if (modal) modal.classList.add('hidden');
+      var title = (o.Airline || 'Flight') + ' ' + (o.FlightNo || '') + ' (' + (o.Origin || '') + '-' + (o.Dest || '') + ') [' + bagLabel + ']';
+      openBookingModal('Live Airline', title, Number(finalFare || o.FarePKR || 0));
+    }
+
       }
     }
 

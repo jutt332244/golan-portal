@@ -687,7 +687,7 @@
             return '<tr><td><strong>'+a.AgencyName+'</strong></td><td>'+a.Email+'</td><td>'+a.City+'<br><small>'+a.Mobile+'</small></td><td>'+a.TotpVerified+'</td><td><span class="status-badge st-'+a.Status+'">'+a.Status+'</span></td><td style="display:flex;gap:5px;flex-wrap:wrap;"><button class="btn btn-sm btn-green" onclick="manageAgent(\''+a.Email+'\',\'APPROVE\')">Approve</button><button class="btn btn-sm btn-red" onclick="manageAgent(\''+a.Email+'\',\'BLOCK\')">Block</button><button class="btn btn-sm btn-gold" onclick="resetAgentPass(\''+a.Email+'\')">Reset Pass & QR</button></td></tr>';
           }).join('');
         }
-      });
+      
     }
 
     function switchTab(name, btn) {

@@ -642,17 +642,10 @@
       var sideAdm = document.getElementById('sideAdminBtn');
       if (sideAdm) sideAdm.classList.toggle('hidden', !isAdmin);
       setInterval(function() { if (Date.now() >= expiry) { alert('12:00 AM Midnight Lock: Please verify 2FA again.'); logout(); } }, 15000);
-      loadDashboardData();
-    }
+            async function loadDashboardData() {
+      var res = window.__LAST_DASH_RES__ || { fares: [] };
+      document.getElementById('faresTableBody').innerHTML = res.fares.length ? res.fares.map(function(f) {
 
-    function quickBrowseJourney(code) {
-      if (code === 'ALL' || code === 'UMRAH') {
-        switchTab('fares', document.querySelectorAll('.tab-btn')[1]);
-        return;
-      }
-      switchTab('liveair', document.querySelectorAll('.tab-btn')[0]);
-      var toSel = document.getElementById('toAirport');      if (toSel) { toSel.value = code; }
-        if (!res.ok) { logout(); return; }        document.getElementById('faresTableBody').innerHTML = res.fares.length ? res.fares.map(function(f) {
           var isVisa = (f.Category === 'Visit Visa');
           var isUmrah = (f.Category === 'Umrah Package');
           var mainName = f.Route || f.Title || f.PackageName || f.Destination || f.Category;

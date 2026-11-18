@@ -862,7 +862,7 @@
     function handleLiveFlightSearch(e) {
       e.preventDefault();
       var btn = document.getElementById('srchBtn');
-      btn.disabled = true; btn.textContent = 'Searching GDS...';
+      btn.disabled = true; btn.textContent = '✈️ Searching Flights...';
       document.getElementById('liveFlightsBody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:#0b1f3a;font-weight:700;">⏳ Fetching live airline schedules & fares...</td></tr>';
       var o1 = document.getElementById('srchOrigin').value || document.getElementById('srchOriginText').value.trim().toUpperCase().slice(0,3);
       var d1 = document.getElementById('srchDest').value || document.getElementById('srchDestText').value.trim().toUpperCase().slice(0,3);

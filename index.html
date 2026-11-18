@@ -1011,7 +1011,14 @@
         nationality:document.getElementById('paxNat').value,
         paxMobile:document.getElementById('paxMobile').value,
         category:selectedItem.Category, itemTitle:selectedItem.Title, farePKR:selectedItem.FarePKR
-      }).then(function(res) { alert(res.message); closeBookingModal(); loadDashboardData(); });
+      }).then(function(res) {
+        alert(res.message);
+        var gm = document.getElementById('gdsDetailsModal');
+        if (gm) gm.style.display = 'none';
+        if (typeof closeBookingModal === 'function') { try { closeBookingModal(); } catch(e) {} }
+        if (typeof loadDashboardData === 'function') { loadDashboardData(); }
+        window.switchTab('bookings');
+      });
     }
           function openFareCategoryTab(catName, btnEl) {
       switchTab('fares', btnEl);

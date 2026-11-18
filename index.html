@@ -1409,6 +1409,12 @@
         }
       });
     })();
+        document.querySelectorAll('.side-btn').forEach(function(b) {
+      b.addEventListener('click', function() {
+        if (typeof loadDashboardData === 'function') loadDashboardData();
+      });
+    });
+
     window.openLedgerTab = function(btnEl) {
       window.switchTab('ledger', btnEl || document.querySelector('.side-btn[onclick*="openLedgerTab"]'));
     };

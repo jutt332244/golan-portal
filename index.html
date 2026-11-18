@@ -652,12 +652,11 @@
       }
       switchTab('liveair', document.querySelectorAll('.tab-btn')[0]);
       var toSel = document.getElementById('toAirport');
-      if (toSel) { toSel.value = code; }
-      window.scrollTo({ top: 320, behavior: 'smooth' });
-    }
+      if (toSel) { toSel.value = code; }          var lbl1 = isVisa ? 'Processing Time:' : (isUmrah ? 'Flight Route:' : 'Timing:');
+          var lbl2 = isVisa ? 'Visa Validity:' : (isUmrah ? 'Baggage:' : 'Baggage:');
+          var lbl3 = isVisa ? 'Entry Type:' : (isUmrah ? 'Meal:' : 'Meal:');
+          var lbl4 = isVisa ? 'Required Documents:' : (isUmrah ? 'Makkah & Madinah Stay:' : 'Flight Type:');
 
-    function loadDashboardData() {
-      callBackend({ action:'getDashboardData', email:currentEmail, token:currentToken }).then(function(res) {
         if (!res.ok) { logout(); return; }        document.getElementById('faresTableBody').innerHTML = res.fares.length ? res.fares.map(function(f) {
           var isVisa = (f.Category === 'Visit Visa');
           var isUmrah = (f.Category === 'Umrah Package');

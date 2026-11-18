@@ -313,7 +313,7 @@
               <input type="hidden" id="srchDest" value="" />
               <div id="drop-dest" style="display:none; position:absolute; top:100%; left:0; min-width:300px; background:#fff; border:1px solid #cbd5e1; border-radius:10px; box-shadow:0 10px 25px rgba(15,23,42,0.15); max-height:220px; overflow-y:auto; z-index:999;"></div>
             </div>
-
+            <div class="form-group" style="margin:0;"><label>Departure Date</label><input type="date" id="srchDate" required /></div>
             <div class="form-group" id="boxReturnDate" style="margin:0; display:none;"><label>Return Date</label><input type="date" id="srchReturnDate" /></div>
             <div class="form-group" id="boxCabin" style="margin:0;"><label>Cabin Class</label><select id="srchCabin"><option value="economy">Economy</option><option value="business">Business</option></select></div>
             <button type="submit" id="srchBtn" class="btn btn-primary" style="height:42px; padding:0 22px; font-size:13.5px; font-weight:800; border-radius:8px; white-space:nowrap;">Search Flights 🔍</button>
@@ -334,13 +334,13 @@
             <div class="form-group" style="margin:0;"><label>Flight 2 Date</label><input type="date" id="srchDate2" /></div>
           </div>
 
-        </form>
-        <div id="liveResults" style="margin-top:16px;"></div>
+        </form>        <div id="liveFlightsBody" style="margin-top:16px;"></div>
       </div>
       <div id="gdsDetailsModal" class="hidden" style="position:fixed; inset:0; background:rgba(15,23,42,0.6); z-index:9999; display:flex; align-items:center; justify-content:center; padding:16px;">
         <div style="background:#fff; border-radius:16px; max-width:640px; width:100%; overflow:hidden; box-shadow:0 20px 40px rgba(0,0,0,0.25);">
-        <div id="liveFlightsBody" style="margin-top:16px;"></div>
+          <div style="background:#0b1f44; color:#fff; padding:14px 18px; display:flex; justify-content:space-between; align-items:center;">
             <strong style="font-size:15px;">✈️ Flight Fare &amp; Baggage Details</strong>
+
             <button type="button" onclick="document.getElementById('gdsDetailsModal').classList.add('hidden')" style="border:1px solid rgba(255,255,255,0.3); background:transparent; color:#fff; border-radius:6px; padding:4px 10px; cursor:pointer;">Close ✕</button>
           </div>
           <div id="gdsModalContent" style="padding:18px; max-height:70vh; overflow-y:auto;"></div>

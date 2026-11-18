@@ -1150,6 +1150,7 @@
 
     var _origSubmitBooking = submitBooking;
     submitBooking = function(e) {
+      if (selectedItem && selectedItem.category === 'Visit Visa') {
 
         var vName = (document.getElementById('visaFullName').value || '').trim();
         var vPass = (document.getElementById('visaPassport').value || '').trim();

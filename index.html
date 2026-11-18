@@ -651,25 +651,21 @@
         return;
       }
       switchTab('liveair', document.querySelectorAll('.tab-btn')[0]);
-      var toSel = document.getElementById('toAirport');
-      if (toSel) { toSel.value = code; }          var lbl1 = isVisa ? 'Processing Time:' : (isUmrah ? 'Flight Route:' : 'Timing:');
-          var lbl2 = isVisa ? 'Visa Validity:' : (isUmrah ? 'Baggage:' : 'Baggage:');
-          var lbl3 = isVisa ? 'Entry Type:' : (isUmrah ? 'Meal:' : 'Meal:');
-          var lbl4 = isVisa ? 'Required Documents:' : (isUmrah ? 'Makkah & Madinah Stay:' : 'Flight Type:');
-
+      var toSel = document.getElementById('toAirport');      if (toSel) { toSel.value = code; }
+    }
         if (!res.ok) { logout(); return; }        document.getElementById('faresTableBody').innerHTML = res.fares.length ? res.fares.map(function(f) {
           var isVisa = (f.Category === 'Visit Visa');
           var isUmrah = (f.Category === 'Umrah Package');
           var mainName = f.Route || f.Title || f.PackageName || f.Destination || f.Category;
-          var lbl1 = isVisa ? 'Processing Time:' : (isUmrah ? 'Duration:' : 'Timing:');
-          var lbl2 = isVisa ? 'Visa Validity:' : (isUmrah ? 'Makkah Hotel:' : 'Baggage:');
-          var lbl3 = isVisa ? 'Entry Type:' : (isUmrah ? 'Madinah Hotel:' : 'Meal:');
-          var lbl4 = isVisa ? 'Required Documents:' : (isUmrah ? 'Transport:' : 'Flight Type:');
+               var lbl1 = isVisa ? 'Processing Time:' : (isUmrah ? 'Flight Route:' : 'Timing:');
+          var lbl2 = isVisa ? 'Visa Validity:' : (isUmrah ? 'Baggage:' : 'Baggage:');
+          var lbl3 = isVisa ? 'Entry Type:' : (isUmrah ? 'Meal:' : 'Meal:');
+          var lbl4 = isVisa ? 'Required Documents:' : (isUmrah ? 'Makkah & Madinah Stay:' : 'Flight Type:');
           var fmt = function(txt) { return String(txt || '').toLowerCase().replace(/\b\w/g, function(c) { return c.toUpperCase(); }); };
           var metaHtml = '<div style="margin-top:6px;font-size:11.5px;line-height:1.65;color:#334155;">'
             + (f.Timing ? '<div><span style="color:#64748b;font-weight:700;">' + lbl1 + '</span> ' + fmt(f.Timing) + '</div>' : '')
             + (f.Luggage ? '<div><span style="color:#64748b;font-weight:700;">' + lbl2 + '</span> ' + fmt(f.Luggage) + '</div>' : '')
-            + (f.Meal ? '<div><span style="color:#64748b;font-weight:700;">' + lbl3 + '</span> ' + fmt(f.Meal) + '</div>' : '')
+
             + (f.Stay ? '<div><span style="color:#64748b;font-weight:700;">' + lbl4 + '</span> ' + fmt(f.Stay) + '</div>' : '')
             + (f.Details ? '<div style="color:#0f4c5c;font-weight:600;margin-top:2px;">• ' + fmt(f.Details) + '</div>' : '')
             + '</div>';

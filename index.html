@@ -652,7 +652,6 @@
       }
       switchTab('liveair', document.querySelectorAll('.tab-btn')[0]);
       var toSel = document.getElementById('toAirport');      if (toSel) { toSel.value = code; }
-    }
         if (!res.ok) { logout(); return; }        document.getElementById('faresTableBody').innerHTML = res.fares.length ? res.fares.map(function(f) {
           var isVisa = (f.Category === 'Visit Visa');
           var isUmrah = (f.Category === 'Umrah Package');

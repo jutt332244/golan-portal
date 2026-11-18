@@ -1393,6 +1393,9 @@
           if (!el) return;
           if (id === tabName) {
             el.classList.remove('hidden');
+                       var rCol = document.getElementById('liveB2bRatesText') && document.getElementById('liveB2bRatesText').closest('div[style*="margin-bottom:14px"]').parentElement;
+            if (rCol && el.parentElement !== rCol) rCol.appendChild(el);
+
             el.style.setProperty('display', 'block', 'important');
           } else {
             el.style.setProperty('display', 'none', 'important');

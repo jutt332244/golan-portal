@@ -1399,8 +1399,10 @@
             el.style.setProperty('display', 'block', 'important');
           } else {
             el.style.setProperty('display', 'none', 'important');
-          }
-            };
+                  }
+      });
+    };
+
       document.querySelectorAll('.side-btn').forEach(function(btn) {
         if ((btn.textContent || '').indexOf('Ledger') !== -1) {
           btn.onclick = function() { window.switchTab('ledger', btn); };

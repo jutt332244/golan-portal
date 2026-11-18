@@ -1419,6 +1419,45 @@ renderBookingsTable(res.isAdmin);
     };
     document.querySelectorAll('.side-btn').forEach(function(b) {
       b.addEventListener('click', function() {
+           window.syncGolanTables = function() {
+      if (typeof callBackend === 'function' && typeof currentEmail !== 'undefined' && currentEmail) {
+        callBackend({ action: 'getDashboard', email: currentEmail, token: currentToken }).then(function(res) {
+          var list = (res && (res.bookings || res.myBookings || res.allBookings)) || window.__ALL_BOOKINGS__ || [];
+          document.querySelectorAll('#bookingsTableBody').forEach(function(bBody) {
+            bBody.innerHTML = list.length ? list.map(function(b) {
+              var st = b.Status || 'PENDING';
+              return '<tr>' +
+                '<td><strong>' + (b.BookingID || b.ID || '') + '</strong></td>' +
+                '<td>' + (b.Date || '') + '</td>' +
+                '<td><strong>' + (b.PassengerName || '') + '</strong><br><small style="color:#64748b;">PP: ' + (b.PassportNo || b.Passport || '') + '</small></td>' +
+                '<td>' + (b.ItemTitle || b.PackageTitle || '') + '</td>' +
+                '<td><span style="font-family:monospace;font-weight:800;color:#0b1f44;">' + (b.PNR || 'PENDING') + '</span></td>' +
+                '<td style="font-weight:800;color:#15803d;">PKR ' + Number(b.FarePKR || 0).toLocaleString() + '</td>' +
+                '<td><span class="status-badge st-' + st + '">' + st + '</span></td>' +
+                '<td><button type="button" class="btn btn-sm btn-primary" onclick="window.print()">Print PDF</button></td>' +
+                '</tr>';
+            }).join('') : '<tr><td colspan="8" style="text-align:center;color:#64748b;padding:20px;">No bookings found yet.</td></tr>';
+          });
+          document.querySelectorAll('#ledgerTableBody').forEach(function(lBody) {
+            lBody.innerHTML = list.length ? list.map(function(b) {
+              var st = b.Status || 'PENDING';
+              return '<tr>' +
+                '<td>' + (b.Date || '') + '</td>' +
+                '<td><strong>' + (b.BookingID || b.PNR || '') + '</strong></td>' +
+                '<td>' + (b.ItemTitle || b.PackageTitle || '') + ' (' + (b.PassengerName || '') + ')</td>' +
+                '<td style="color:#b91c1c;font-weight:800;">- PKR ' + Number(b.FarePKR || 0).toLocaleString() + '</td>' +
+                '<td>—</td>' +
+                '<td><span class="status-badge st-' + st + '">' + st + '</span></td>' +
+                '</tr>';
+            }).join('') : '<tr><td colspan="6" style="text-align:center;color:#64748b;padding:20px;">No ledger entries yet.</td></tr>';
+          });
+        });
+      }
+    };
+    document.querySelectorAll('.side-btn').forEach(function(b) {
+      b.addEventListener('click', window.syncGolanTables);
+    });
+
         if (typeof loadDashboard === 'function') loadDashboard();
       });
     });

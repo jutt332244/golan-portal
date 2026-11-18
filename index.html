@@ -290,16 +290,8 @@
 
         </div>
       </div>
-      </div>
-      <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('liveair',this)">✈️ Live Airline Search (GDS)</button>
-        <button class="tab-btn" onclick="openFareCategoryTab('Group Flight',this)">🛫 Group Flights</button>
-        <button class="tab-btn" onclick="openFareCategoryTab('Umrah Package',this)">🕋 Umrah Packages</button>
-        <button class="tab-btn" onclick="openFareCategoryTab('Visit Visa',this)">🛂 Visit Visas</button>
-        <button class="tab-btn" onclick="switchTab('bookings',this)">📋 My Bookings</button>
-        <button class="tab-btn" onclick="switchTab('banks',this)">🏦 Official Payment Accounts</button>
-        <button id="adminTabBtn" class="tab-btn hidden" onclick="switchTab('admin',this)">👑 Super Admin Control</button>
-      </div>
+            <button id="adminTabBtn" style="display:none"></button>
+
           <div id="tab-liveair" class="card">
         <div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
           <button type="button" id="pill-oneway" class="tab-btn active" style="border-radius:999px; padding:8px 20px;" onclick="setTripType('oneway')">One Way</button>
@@ -331,37 +323,31 @@
               <input type="text" id="srchOrigin2Text" placeholder="e.g. Jeddah (JED)" autocomplete="off" onfocus="filterAirports('origin2')" oninput="filterAirports('origin2')" />
               <input type="hidden" id="srchOrigin2" value="" />
               <div id="drop-origin2" style="display:none; position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #cbd5e1; border-radius:8px; max-height:200px; overflow-y:auto; z-index:999; box-shadow:0 10px 25px rgba(0,0,0,0.15);"></div>
-        document.getElementById('faresTableBody').innerHTML = res.fares.length ? res.fares.map(function(f) {
-          var isVisa = (f.Category === 'Visit Visa');
-          var isUmrah = (f.Category === 'Umrah Package');
-          var mainName = f.Route || f.Title || f.PackageName || f.Destination || f.Category;
-          var lbl1 = isVisa ? 'Processing Time:' : (isUmrah ? 'Duration:' : 'Timing:');
-          var lbl2 = isVisa ? 'Visa Validity:' : (isUmrah ? 'Makkah Hotel:' : 'Baggage:');
-          var lbl3 = isVisa ? 'Entry Type:' : (isUmrah ? 'Madinah Hotel:' : 'Meal:');
-          var lbl4 = isVisa ? 'Required Documents:' : (isUmrah ? 'Transport:' : 'Flight Type:');
-          var fmt = function(txt) { return String(txt || '').toLowerCase().replace(/\b\w/g, function(c) { return c.toUpperCase(); }); };
-          var metaHtml = '<div style="margin-top:6px;font-size:11.5px;line-height:1.65;color:#334155;">'
-            + (f.Timing ? '<div><span style="color:#64748b;font-weight:700;">' + lbl1 + '</span> ' + fmt(f.Timing) + '</div>' : '')
-            + (f.Luggage ? '<div><span style="color:#64748b;font-weight:700;">' + lbl2 + '</span> ' + fmt(f.Luggage) + '</div>' : '')
-            + (f.Meal ? '<div><span style="color:#64748b;font-weight:700;">' + lbl3 + '</span> ' + fmt(f.Meal) + '</div>' : '')
-            + (f.Stay ? '<div><span style="color:#64748b;font-weight:700;">' + lbl4 + '</span> ' + fmt(f.Stay) + '</div>' : '')
-            + (f.Details ? '<div style="color:#0f4c5c;font-weight:600;margin-top:2px;">• ' + fmt(f.Details) + '</div>' : '')
-            + '</div>';
-          var safeTitle = (f.Category + ' - ' + mainName).replace(/'/g, '');
-          return '<tr>'
-            + '<td style="width:130px;"><span class="status-badge st-APPROVED" style="font-size:10.5px;">' + f.Category + '</span><div style="font-size:11px;color:#64748b;margin-top:5px;">' + (f.Date || 'Open Validity') + '</div></td>'
-            + '<td><strong style="font-size:14px;color:#0b1f44;text-transform:uppercase;">' + mainName + '</strong>' + metaHtml + '</td>'
-            + '<td style="width:95px;"><span style="background:#dcfce7;color:#15803d;padding:3px 8px;border-radius:6px;font-weight:700;font-size:11px;">Available</span></td>'
-            + '<td style="width:115px;"><strong style="font-size:14px;color:#0b1f44;">PKR ' + Number(f.FarePKR || 0).toLocaleString() + '</strong></td>'
-            + '<td style="width:110px;"><button type="button" class="btn btn-sm btn-primary" style="font-size:11.5px;padding:7px 12px;white-space:nowrap;" onclick="openBookingModal(\'' + f.Category + '\',\'' + safeTitle + '\',' + Number(f.FarePKR || 0) + ')">Book / Hold</button></td>'
-            + '</tr>';
-        }).join('') : '<tr><td colspan="5" style="text-align:center;color:#64748b;padding:20px;">No active records posted yet.</td></tr>';
-              </div>
-              <button type="button" onclick="document.getElementById('gdsDetailsModal').classList.add('hidden')" style="border:1px solid #cbd5e1; background:#fff; border-radius:50%; width:30px; height:30px; cursor:pointer; font-weight:700;">✕</button>
+               </div>
+            <div class="form-group" style="margin:0; position:relative;">
+              <label>Flight 2 To</label>
+              <input type="text" id="srchDest2Text" placeholder="e.g. Dubai (DXB)" autocomplete="off" onfocus="filterAirports('dest2')" oninput="filterAirports('dest2')" />
+              <input type="hidden" id="srchDest2" value="" />
+              <div id="drop-dest2" style="display:none; position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #cbd5e1; border-radius:8px; max-height:180px; overflow-y:auto; z-index:99;"></div>
             </div>
-            <div id="gdsModalContent" style="padding:18px; max-height:70vh; overflow-y:auto;"></div>
+            <div class="form-group" style="margin:0;"><label>Flight 2 Date</label><input type="date" id="srchDate2" /></div>
           </div>
+          <div style="margin-top:14px; display:flex; justify-content:flex-end;">
+            <button type="submit" id="btnSearchLive" class="btn btn-primary" style="padding:11px 26px; font-size:14px; font-weight:800; border-radius:10px;">Search Live Flights 🔍</button>
+          </div>
+        </form>
+        <div id="liveResults" style="margin-top:16px;"></div>
+      </div>
+      <div id="gdsDetailsModal" class="hidden" style="position:fixed; inset:0; background:rgba(15,23,42,0.6); z-index:9999; display:flex; align-items:center; justify-content:center; padding:16px;">
+        <div style="background:#fff; border-radius:16px; max-width:640px; width:100%; overflow:hidden; box-shadow:0 20px 40px rgba(0,0,0,0.25);">
+          <div style="background:#0b1f44; color:#fff; padding:14px 18px; display:flex; justify-content:space-between; align-items:center;">
+            <strong style="font-size:15px;">✈️ Flight Fare &amp; Baggage Details</strong>
+            <button type="button" onclick="document.getElementById('gdsDetailsModal').classList.add('hidden')" style="border:1px solid rgba(255,255,255,0.3); background:transparent; color:#fff; border-radius:6px; padding:4px 10px; cursor:pointer;">Close ✕</button>
+          </div>
+          <div id="gdsModalContent" style="padding:18px; max-height:70vh; overflow-y:auto;"></div>
         </div>
+      </div>
+
       <div id="tab-fares" class="card" style="display:none;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
           <h3 id="faresTabHeading" style="color:#0b1f44; font-size:16px; margin:0;">🛫 Live Group Flights &amp; Packages</h3>

@@ -921,58 +921,59 @@
     }
 
 
-    var ACTIVE_GDS_IDX = 0;
-    function openGdsModal(idx, tab) {
-      ACTIVE_GDS_IDX = idx;
-      document.getElementById('gdsDetailsModal').classList.remove('hidden');
-      switchGdsModalTab(tab);
-    }
+     window.ACTIVE_GDS_IDX = 0;
+    window.openGdsModal = function(idx, tab) {
+      window.ACTIVE_GDS_IDX = idx;
+      var modal = document.getElementById('gdsDetailsModal');
+      if (modal) { modal.classList.remove('hidden'); modal.style.display = 'flex'; }
+      window.switchGdsModalTab(tab || 'fares');
+    };
 
-    function switchGdsModalTab(tab) {
-      ['fares','itin','bag'].forEach(function(t) {
-        var el = document.getElementById('mTab-' + t);
-        if (el) el.className = (t === tab) ? 'tab-btn active' : 'tab-btn';
-      });
-      var o = (window.__GDS_OFFERS__ || []).at(ACTIVE_GDS_IDX);
+    window.switchGdsModalTab = function(tab) {
+      var o = (window.__GDS_OFFERS__ || [])[window.ACTIVE_GDS_IDX];
       if (!o) return;
-      var dParts = (o.DepTime || '').split(' ');
-      var aParts = (o.ArrTime || '').split(' ');
-      var depDate = dParts.at(0) || '-', depClock = dParts.at(1) || '08:30';
-      var arrDate = aParts.at(0) || depDate, arrClock = aParts.at(1) || '10:33';
       var baseFare = Number(o.FarePKR || 0);
       var valFare = baseFare + 4500;
       var flexFare = baseFare + 11500;
-          var box = document.getElementById('gdsModalContent');
+      var box = document.getElementById('gdsModalContent');
       if (!box) return;
       if (tab === 'fares') {
         var titleTxt = (o.Airline || 'Flight') + ' (' + (o.FlightNo || '') + ') ' + (o.Origin || '') + '-' + (o.Dest || '');
-            box.innerHTML = '<div style="margin-bottom:12px; font-size:13px; color:#475569; font-weight:600;">Select a fare bundle for <strong style="color:#0b1f44;">' + titleTxt + '</strong></div>' +
+        box.innerHTML = '<div style="margin-bottom:12px; font-size:13px; color:#475569; font-weight:600;">Select a fare bundle for <strong style="color:#0b1f44;">' + titleTxt + '</strong></div>' +
           '<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px;">' +
-          '<div style="border:1.5px solid #cbd5e1; border-radius:14px; padding:16px; background:#ffffff; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 4px 12px rgba(15,23,42,0.04);"><div><div style="font-size:11px; font-weight:800; color:#64748b; text-transform:uppercase; letter-spacing:0.6px;">Basic Saver</div><div style="font-size:16px; font-weight:900; color:#0f172a; margin:2px 0 10px;">Economy Light</div><div style="font-size:12px; color:#334155; line-height:1.8;"><div><span style="color:#16a34a; font-weight:900;">✓</span> 7 KG Cabin Hand Carry</div><div><span style="color:#dc2626; font-weight:900;">✕</span> No Checked Baggage</div><div><span style="color:#dc2626; font-weight:900;">✕</span> Non-Refundable</div></div></div><div style="margin-top:14px; padding-top:12px; border-top:1px solid #f1f5f9;"><div style="font-size:11px; color:#64748b;">Total Net Fare</div><div style="font-size:19px; font-weight:900; color:#0f172a; margin-bottom:10px;">PKR ' + baseFare.toLocaleString() + '</div><button type="button" onclick="bookGdsOffer(' + ACTIVE_GDS_IDX + ', \'Economy Light (7 KG)\', ' + baseFare + ')" style="width:100%; padding:10px; border:none; border-radius:9px; background:#0f172a; color:#fff; font-weight:800; font-size:12.5px; cursor:pointer;">Select Light →</button></div></div>' +
-          '<div style="border:2px solid #0284c7; border-radius:14px; padding:16px; background:linear-gradient(180deg,#f0f9ff 0%,#ffffff 100%); position:relative; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 8px 20px rgba(2,132,199,0.12);"><div style="position:absolute; top:-10px; right:14px; background:#0284c7; color:#fff; font-size:10px; font-weight:800; padding:3px 9px; border-radius:99px; letter-spacing:0.5px;">MOST POPULAR</div><div><div style="font-size:11px; font-weight:800; color:#0284c7; text-transform:uppercase; letter-spacing:0.6px;">Standard Bundle</div><div style="font-size:16px; font-weight:900; color:#0b1f44; margin:2px 0 10px;">Economy Value</div><div style="font-size:12px; color:#334155; line-height:1.8;"><div><span style="color:#16a34a; font-weight:900;">✓</span> 30 KG Checked + 7 KG</div><div><span style="color:#16a34a; font-weight:900;">✓</span> Standard Seat Selection</div><div><span style="color:#16a34a; font-weight:900;">✓</span> Date Change (With Fee)</div></div></div><div style="margin-top:14px; padding-top:12px; border-top:1px solid #e0f2fe;"><div style="font-size:11px; color:#64748b;">Total Net Fare</div><div style="font-size:19px; font-weight:900; color:#0284c7; margin-bottom:10px;">PKR ' + valFare.toLocaleString() + '</div><button type="button" onclick="bookGdsOffer(' + ACTIVE_GDS_IDX + ', \'Economy Value (30 KG + 7 KG)\', ' + valFare + ')" style="width:100%; padding:10px; border:none; border-radius:9px; background:linear-gradient(135deg,#0284c7,#0369a1); color:#fff; font-weight:800; font-size:12.5px; cursor:pointer;">Select Value →</button></div></div>' +
-          '<div style="border:1.5px solid #f59e0b; border-radius:14px; padding:16px; background:linear-gradient(180deg,#fffbeb 0%,#ffffff 100%); display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 4px 12px rgba(245,158,11,0.08);"><div><div style="font-size:11px; font-weight:800; color:#b45309; text-transform:uppercase; letter-spacing:0.6px;">Full Flexibility</div><div style="font-size:16px; font-weight:900; color:#78350f; margin:2px 0 10px;">Economy Flex</div><div style="font-size:12px; color:#334155; line-height:1.8;"><div><span style="color:#16a34a; font-weight:900;">✓</span> 40 KG Checked + 7 KG</div><div><span style="color:#16a34a; font-weight:900;">✓</span> Free Date Change &amp; Meal</div><div><span style="color:#16a34a; font-weight:900;">✓</span> Priority Check-in &amp; Refund</div></div></div><div style="margin-top:14px; padding-top:12px; border-top:1px solid #fef3c7;"><div style="font-size:11px; color:#64748b;">Total Net Fare</div><div style="font-size:19px; font-weight:900; color:#b45309; margin-bottom:10px;">PKR ' + flexFare.toLocaleString() + '</div><button type="button" onclick="bookGdsOffer(' + ACTIVE_GDS_IDX + ', \'Economy Flex (40 KG + 7 KG)\', ' + flexFare + ')" style="width:100%; padding:10px; border:none; border-radius:9px; background:linear-gradient(135deg,#d97706,#b45309); color:#fff; font-weight:800; font-size:12.5px; cursor:pointer;">Select Flex →</button></div></div>' +
-          '</div>';
-
-         
-      } else if (tab === 'itin') {
-        box.innerHTML = '<div style="background:#0b1f3a;color:#fff;padding:10px 14px;border-radius:8px;font-weight:700;margin-bottom:14px;">' + depDate + ' • ' + o.Route + '</div>' +
-          '<div style="display:grid;grid-template-columns:100px 1fr;gap:12px;border-left:3px solid #0284c7;padding-left:14px;">' +
-            '<div><div style="font-size:12px;color:#64748b;">' + depDate + '</div><div style="font-size:18px;font-weight:900;">' + depClock + '</div></div><div><strong>Departure Airport</strong><br><small>' + o.Airline + ' • ' + o.FlightNo + ' • ECONOMY</small></div>' +
-            '<div><div style="font-size:12px;color:#64748b;">' + arrDate + '</div><div style="font-size:18px;font-weight:900;">' + arrClock + '</div></div><div><strong>Arrival Airport</strong><br><small>' + o.Stops + '</small></div>' +
+          '<div style="border:1.5px solid #cbd5e1; border-radius:14px; padding:16px; background:#ffffff; display:flex; flex-direction:column; justify-content:space-between;"><div><div style="font-size:11px; font-weight:800; color:#64748b; text-transform:uppercase;">Basic Saver</div><div style="font-size:16px; font-weight:900; color:#0f172a; margin:2px 0 10px;">Economy Light</div><div style="font-size:12px; color:#334155; line-height:1.8;"><div><span style="color:#16a34a; font-weight:900;">✓</span> 7 KG Cabin Hand Carry</div><div><span style="color:#dc2626; font-weight:900;">✕</span> No Checked Baggage</div><div><span style="color:#dc2626; font-weight:900;">✕</span> Non-Refundable</div></div></div><div style="margin-top:14px; padding-top:12px; border-top:1px solid #f1f5f9;"><div style="font-size:11px; color:#64748b;">Total Net Fare</div><div style="font-size:19px; font-weight:900; color:#0f172a; margin-bottom:10px;">PKR ' + baseFare.toLocaleString() + '</div><button type="button" onclick="window.bookGdsOffer(' + window.ACTIVE_GDS_IDX + ', \'Economy Light (7 KG)\', ' + baseFare + ')" style="width:100%; padding:10px; border:none; border-radius:9px; background:#0f172a; color:#fff; font-weight:800; font-size:12.5px; cursor:pointer;">Select Light →</button></div></div>' +
+          '<div style="border:2px solid #0284c7; border-radius:14px; padding:16px; background:linear-gradient(180deg,#f0f9ff 0%,#ffffff 100%); position:relative; display:flex; flex-direction:column; justify-content:space-between;"><div style="position:absolute; top:-10px; right:14px; background:#0284c7; color:#fff; font-size:10px; font-weight:800; padding:3px 9px; border-radius:99px;">MOST POPULAR</div><div><div style="font-size:11px; font-weight:800; color:#0284c7; text-transform:uppercase;">Standard Bundle</div><div style="font-size:16px; font-weight:900; color:#0b1f44; margin:2px 0 10px;">Economy Value</div><div style="font-size:12px; color:#334155; line-height:1.8;"><div><span style="color:#16a34a; font-weight:900;">✓</span> 30 KG Checked + 7 KG</div><div><span style="color:#16a34a; font-weight:900;">✓</span> Standard Seat Selection</div><div><span style="color:#16a34a; font-weight:900;">✓</span> Date Change (With Fee)</div></div></div><div style="margin-top:14px; padding-top:12px; border-top:1px solid #e0f2fe;"><div style="font-size:11px; color:#64748b;">Total Net Fare</div><div style="font-size:19px; font-weight:900; color:#0284c7; margin-bottom:10px;">PKR ' + valFare.toLocaleString() + '</div><button type="button" onclick="window.bookGdsOffer(' + window.ACTIVE_GDS_IDX + ', \'Economy Value (30 KG + 7 KG)\', ' + valFare + ')" style="width:100%; padding:10px; border:none; border-radius:9px; background:linear-gradient(135deg,#0284c7,#0369a1); color:#fff; font-weight:800; font-size:12.5px; cursor:pointer;">Select Value →</button></div></div>' +
+          '<div style="border:1.5px solid #f59e0b; border-radius:14px; padding:16px; background:linear-gradient(180deg,#fffbeb 0%,#ffffff 100%); display:flex; flex-direction:column; justify-content:space-between;"><div><div style="font-size:11px; font-weight:800; color:#b45309; text-transform:uppercase;">Full Flexibility</div><div style="font-size:16px; font-weight:900; color:#78350f; margin:2px 0 10px;">Economy Flex</div><div style="font-size:12px; color:#334155; line-height:1.8;"><div><span style="color:#16a34a; font-weight:900;">✓</span> 40 KG Checked + 7 KG</div><div><span style="color:#16a34a; font-weight:900;">✓</span> Free Date Change &amp; Meal</div><div><span style="color:#16a34a; font-weight:900;">✓</span> Priority Check-in &amp; Refund</div></div></div><div style="margin-top:14px; padding-top:12px; border-top:1px solid #fef3c7;"><div style="font-size:11px; color:#64748b;">Total Net Fare</div><div style="font-size:19px; font-weight:900; color:#b45309; margin-bottom:10px;">PKR ' + flexFare.toLocaleString() + '</div><button type="button" onclick="window.bookGdsOffer(' + window.ACTIVE_GDS_IDX + ', \'Economy Flex (40 KG + 7 KG)\', ' + flexFare + ')" style="width:100%; padding:10px; border:none; border-radius:9px; background:linear-gradient(135deg,#d97706,#b45309); color:#fff; font-weight:800; font-size:12.5px; cursor:pointer;">Select Flex →</button></div></div>' +
           '</div>';
       } else {
-        box.innerHTML = '<div style="font-size:14px;line-height:1.7;"><strong>🧳 Baggage Allowance:</strong> 30 KG Checked Baggage + 7 KG Cabin Baggage.<br><strong>🔄 Cancellation & Reissue:</strong> Airline penalty + Golan International service charges apply before departure.</div>';
-           function bookGdsOffer(idx, bagLabel, finalFare) {
-      var o = (window.__GDS_OFFERS__ || []).at(idx);
-      if (!o) return;
-      var modal = document.getElementById('gdsDetailsModal');
-      if (modal) modal.classList.add('hidden');
-      var title = (o.Airline || 'Flight') + ' ' + (o.FlightNo || '') + ' (' + (o.Origin || '') + '-' + (o.Dest || '') + ') [' + bagLabel + ']';
-      openBookingModal('Live Airline', title, Number(finalFare || o.FarePKR || 0));
-    }
-
+        box.innerHTML = '<div style="font-size:14px;line-height:1.8;color:#334155;"><strong style="color:#0b1f44;">Flight:</strong> ' + (o.Airline || '') + ' ' + (o.FlightNo || '') + ' (' + (o.Origin || '') + ' → ' + (o.Dest || '') + ')<br><strong style="color:#0b1f44;">Departure:</strong> ' + (o.DepTime || '') + ' &nbsp;|&nbsp; <strong style="color:#0b1f44;">Arrival:</strong> ' + (o.ArrTime || '') + '<br><strong style="color:#0b1f44;">Baggage Allowance:</strong> ' + (o.Baggage || '30 KG Checked Baggage + 7 KG Cabin') + '</div>';
       }
-    }
+    };
+
+    window.bookGdsOffer = function(idx, bagLabel, finalFare) {
+      var o = (window.__GDS_OFFERS__ || [])[idx];
+      if (!o) return;
+      var title = (o.Airline || 'Flight') + ' ' + (o.FlightNo || '') + ' (' + (o.Origin || '') + '-' + (o.Dest || '') + ') [' + bagLabel + ']';
+      var fareNum = Number(finalFare || o.FarePKR || 0);
+      selectedItem = { Category: 'Live Airline', Title: title, FarePKR: fareNum };
+      var modal = document.getElementById('gdsDetailsModal');
+      var box = document.getElementById('gdsModalContent');
+      if (modal) { modal.classList.remove('hidden'); modal.style.display = 'flex'; }
+      if (box) {
+        box.innerHTML = '<div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:10px; padding:12px 14px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center;"><div><div style="font-size:11px; font-weight:800; color:#0284c7;">SELECTED FLIGHT &amp; BAGGAGE</div><div style="font-size:14px; font-weight:800; color:#0b1f44;">' + title + '</div></div><div style="font-size:17px; font-weight:900; color:#15803d;">PKR ' + fareNum.toLocaleString() + '</div></div>' +
+          '<form onsubmit="submitBooking(event)" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">' +
+          '<div class="form-group" style="margin:0;"><label>First Name *</label><input type="text" id="paxFirstName" required placeholder="e.g. MUHAMMAD" /></div>' +
+          '<div class="form-group" style="margin:0;"><label>Last Name *</label><input type="text" id="paxLastName" required placeholder="e.g. ALI" /></div>' +
+          '<div class="form-group" style="margin:0;"><label>Passport Number *</label><input type="text" id="paxPassport" required placeholder="e.g. AB1234567" /></div>' +
+          '<div class="form-group" style="margin:0;"><label>Date of Birth *</label><input type="date" id="paxDob" required /></div>' +
+          '<div class="form-group" style="margin:0;"><label>Passport Expiry *</label><input type="date" id="paxExp" required /></div>' +
+          '<div class="form-group" style="margin:0;"><label>Nationality *</label><input type="text" id="paxNat" value="Pakistan" required /></div>' +
+          '<div class="form-group" style="margin:0; grid-column:1/-1;"><label>Passenger Mobile / WhatsApp *</label><input type="text" id="paxMobile" required placeholder="e.g. 03001234567" /></div>' +
+          '<div style="grid-column:1/-1; display:flex; justify-content:flex-end; gap:10px; margin-top:8px;"><button type="button" onclick="window.switchGdsModalTab(\'fares\')" class="btn btn-sm" style="background:#e2e8f0; color:#0f172a;">← Back to Fares</button><button type="submit" class="btn btn-primary" style="padding:10px 22px; font-weight:800;">Confirm Hold / Booking ✓</button></div>' +
+          '</form>';
+      }
+    };
+
 
         function handleAdminAddBank(e) {
       e.preventDefault();

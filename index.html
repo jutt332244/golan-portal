@@ -656,10 +656,8 @@
         }).join('') : '<tr><td colspan="5" style="text-align:center;color:#64748b;padding:20px;">No active records posted yet.</td></tr>';
 
 
-
-               window.__ALL_BOOKINGS__ = res.bookings || [];
-        renderBookingsTable(res.isAdmin);
-
+window.__ALL_BOOKINGS__ = res.bookings || [];
+renderBookingsTable(res.isAdmin);
 
         var allBanks = (res.banks && res.banks.length) ? res.banks : [{ BankName:'UBL (United Bank Limited)', AccountTitle:'Golan International Travel & Tourism', AccountNumber:'384263615', IBAN:'PK30UNIL0109000384263615' }];
         document.getElementById('banksGrid').innerHTML = allBanks.map(function(bk) {

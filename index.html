@@ -1339,6 +1339,42 @@
         if (tb) tb.insertAdjacentHTML('beforeend', '<tr id="quickJourneyEmptyRow"><td colspan="5" style="text-align:center;color:#64748b;padding:24px;">No active fares posted for this route yet. <button type="button" class="btn btn-sm btn-primary" style="margin-left:8px;" onclick="openFareCategoryTab(\'ALL\')">Show All Available Inventory</button></td></tr>');
       }
     };
+    (function startLiveHeaderWidgets() {
+      function updateClockAndGreeting() {
+        var now = new Date();
+        var hr = now.getHours();
+        var greet = hr < 12 ? 'Good morning' : (hr < 17 ? 'Good afternoon' : 'Good evening');
+        var gEl = document.getElementById('liveGreetingText');
+        if (gEl) gEl.textContent = greet;
+        var days = ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
+        var months = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
+        var hh = hr % 12 || 12;
+        var mm = String(now.getMinutes()).padStart(2, '0');
+        var ss = String(now.getSeconds()).padStart(2, '0');
+        var ampm = hr >= 12 ? 'PM' : 'AM';
+        var dEl = document.getElementById('liveDateClock');
+        if (dEl) dEl.textContent = '📅 ' + days[now.getDay()] + ', ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear() + ' • ' + hh + ':' + mm + ':' + ss + ' ' + ampm + ' PKT • GOLAN B2B PORTAL';
+      }
+      function fetchLiveRates() {
+        fetch('https://er-api.com')
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (!data || !data.rates) return;
+            var r = data.rates;
+            var fmt = function(code) { return r[code] ? (1 / r[code]).toFixed(2) : null; };
+            var usd = fmt('USD'), sar = fmt('SAR'), aed = fmt('AED'), gbp = fmt('GBP'), eur = fmt('EUR'), omr = fmt('OMR'), bhd = fmt('BHD');
+            var el = document.getElementById('liveB2bRatesText');
+            if (el && usd) {
+              el.innerHTML = '1 USD = <strong>PKR ' + usd + '</strong> &nbsp;•&nbsp; 1 SAR = <strong>PKR ' + sar + '</strong> &nbsp;•&nbsp; 1 AED = <strong>PKR ' + aed + '</strong> &nbsp;•&nbsp; 1 GBP = <strong>PKR ' + gbp + '</strong> &nbsp;•&nbsp; 1 EUR = <strong>PKR ' + eur + '</strong> &nbsp;•&nbsp; 1 OMR = <strong>PKR ' + omr + '</strong> &nbsp;•&nbsp; 1 BHD = <strong>PKR ' + bhd + '</strong>';
+            }
+          })
+          .catch(function() {});
+      }
+      updateClockAndGreeting();
+      setInterval(updateClockAndGreeting, 1000);
+      fetchLiveRates();
+      setInterval(fetchLiveRates, 300000);
+    })();
 
   </script>
   <div onclick="openCeoWhatsApp()" title="WhatsApp CEO Shan Chairman" style="position:fixed; bottom:25px; right:25px; width:60px; height:60px; background-color:#25D366; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(0,0,0,0.28); z-index:2147483647; cursor:pointer;">

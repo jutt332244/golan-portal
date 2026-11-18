@@ -1162,19 +1162,27 @@
       };
       var titles = {
         ALL: '🌐 All Live Flights, Packages & Visas',
+            var flagSvg = {
+        DXB: '<svg width="26" height="18" viewBox="0 0 28 20" style="vertical-align:middle;border-radius:3px;box-shadow:0 1px 2px rgba(0,0,0,0.2);margin-right:6px;"><rect width="28" height="6.67" fill="#00732f"/><rect y="6.67" width="28" height="6.67" fill="#ffffff"/><rect y="13.33" width="28" height="6.67" fill="#000000"/><rect width="7.5" height="20" fill="#ff0000"/></svg>',
+        JED: '<svg width="26" height="18" viewBox="0 0 28 20" style="vertical-align:middle;border-radius:3px;box-shadow:0 1px 2px rgba(0,0,0,0.2);margin-right:6px;"><rect width="28" height="20" fill="#006c35"/><rect x="6" y="7" width="16" height="3" rx="1" fill="#ffffff"/><rect x="7" y="13" width="14" height="1.6" rx="0.8" fill="#ffffff"/></svg>',
+        MCT: '<svg width="26" height="18" viewBox="0 0 28 20" style="vertical-align:middle;border-radius:3px;box-shadow:0 1px 2px rgba(0,0,0,0.2);margin-right:6px;"><rect width="28" height="6.67" fill="#ffffff"/><rect y="6.67" width="28" height="6.67" fill="#db161b"/><rect y="13.33" width="28" height="6.67" fill="#008000"/><rect width="8" height="20" fill="#db161b"/></svg>',
+        BAH: '<svg width="26" height="18" viewBox="0 0 28 20" style="vertical-align:middle;border-radius:3px;box-shadow:0 1px 2px rgba(0,0,0,0.2);margin-right:6px;"><rect width="28" height="20" fill="#ce1126"/><polygon points="0,0 8,0 11,2 8,4 11,6 8,8 11,10 8,12 11,14 8,16 11,18 8,20 0,20" fill="#ffffff"/></svg>',
+        LHR: '<svg width="26" height="18" viewBox="0 0 28 20" style="vertical-align:middle;border-radius:3px;box-shadow:0 1px 2px rgba(0,0,0,0.2);margin-right:6px;"><rect width="28" height="20" fill="#012169"/><path d="M0,0 L28,20 M28,0 L0,20" stroke="#ffffff" stroke-width="3.5"/><path d="M0,0 L28,20 M28,0 L0,20" stroke="#c8102e" stroke-width="1.8"/><path d="M14,0 V20 M0,10 H28" stroke="#ffffff" stroke-width="5.5"/><path d="M14,0 V20 M0,10 H28" stroke="#c8102e" stroke-width="3.2"/></svg>'
+      };
+      var titles = {
+        ALL: '🌐 All Live Flights, Packages & Visas',
         'Group Flight': '🛫 Live Group Flights',
         'Umrah Package': '🕋 Live Umrah Packages',
         'Visit Visa': '🛂 Live Visit Visas',
-        DXB: '✈️ UAE & Dubai Group Fares',
-        JED: '✈️ KSA (Jeddah / Riyadh) Group Fares',
-        MCT: '✈️ Muscat & Oman Group Fares',
-        BAH: '✈️ Bahrain Group Fares',
-        LHR: '✈️ UK & London Group Fares'
+        DXB: 'UAE & Dubai Group Fares',
+        JED: 'KSA (Jeddah / Riyadh) Group Fares',
+        MCT: 'Muscat & Oman Group Fares',
+        BAH: 'Bahrain Group Fares',
+        LHR: 'UK & London Group Fares'
       };
       var hd = document.getElementById('faresTabHeading');
-      if (hd) hd.textContent = titles[catName] || ('🛫 ' + catName);
-      var rows = document.querySelectorAll('#faresTableBody tr');
-      var shown = 0;
+      if (hd) hd.innerHTML = (flagSvg[catName] || '') + (titles[catName] || ('🛫 ' + catName));
+
       rows.forEach(function(tr) {
         if (tr.id === 'quickJourneyEmptyRow') return;
         var txt = (tr.textContent || '').toUpperCase();

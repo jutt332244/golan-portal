@@ -1379,6 +1379,27 @@
       fetchLiveRates();
       setInterval(fetchLiveRates, 300000);
     })();
+    (function() {
+      var origSwitch = window.switchTab;
+      window.switchTab = function(tabName, btnEl) {
+        if (typeof origSwitch === 'function') {
+          try { origSwitch(tabName, btnEl); } catch (e) {}
+        }
+        document.querySelectorAll('.side-btn').forEach(function(b) { b.classList.remove('active'); });
+        if (btnEl && btnEl.classList) btnEl.classList.add('active');
+        var allTabs = ['liveair', 'fares', 'bookings', 'banks', 'ledger', 'receipts', 'admin'];
+        allTabs.forEach(function(id) {
+          var el = document.getElementById('tab-' + id);
+          if (!el) return;
+          if (id === tabName) {
+            el.classList.remove('hidden');
+            el.style.setProperty('display', 'block', 'important');
+          } else {
+            el.style.setProperty('display', 'none', 'important');
+          }
+        });
+      };
+    })();
 
   </script>
   <div onclick="openCeoWhatsApp()" title="WhatsApp CEO Shan Chairman" style="position:fixed; bottom:25px; right:25px; width:60px; height:60px; background-color:#25D366; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(0,0,0,0.28); z-index:2147483647; cursor:pointer;">

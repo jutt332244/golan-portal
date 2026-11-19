@@ -1598,6 +1598,30 @@ renderBookingsTable(res.isAdmin);
         };
       }
     })();
+    window.issueGolanBooking = function(bId) {
+      if (!confirm('Issue E-Ticket for ' + bId + ' and send PDF to Sub-Agent & Admins?')) return;
+      window.callBackend({ action: 'adminIssueBooking', bookingId: bId }).then(function(res) {
+        alert((res && res.message) || 'Ticket Issued!');
+        if (typeof loadDashboard === 'function') loadDashboard();
+      });
+    };
+    setInterval(function() {
+      if (typeof currentIsAdmin === 'undefined' || !currentIsAdmin) return;
+      document.querySelectorAll('button').forEach(function(btn) {
+        if (btn.textContent.indexOf('Print PDF') !== -1 && btn.parentElement && !btn.parentElement.querySelector('.iss-btn')) {
+          var m = (btn.getAttribute('onclick') || '').match(/'([^']+)'/);
+          var bid = m ? m.slice(1, 2).join('') : '';
+          if (bid) {
+            var ib = document.createElement('button');
+            ib.className = 'iss-btn';
+            ib.textContent = 'Issue Ticket ✓';
+            ib.style.cssText = 'margin-left:5px;background:#15803d;color:#fff;border:none;border-radius:6px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer;';
+            ib.onclick = function() { window.issueGolanBooking(bid); };
+            btn.insertAdjacentElement('afterend', ib);
+          }
+        }
+      });
+    }, 800);
 
   </script>
   <div onclick="openCeoWhatsApp()" title="WhatsApp CEO Shan Chairman" style="position:fixed; bottom:25px; right:25px; width:60px; height:60px; background-color:#25D366; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(0,0,0,0.28); z-index:2147483647; cursor:pointer;">

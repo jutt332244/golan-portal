@@ -1609,8 +1609,7 @@ renderBookingsTable(res.isAdmin);
       if (typeof currentIsAdmin === 'undefined' || !currentIsAdmin) return;
       document.querySelectorAll('button').forEach(function(btn) {
         if (btn.textContent.indexOf('Print PDF') !== -1 && btn.parentElement && !btn.parentElement.querySelector('.iss-btn')) {
-          var m = (btn.getAttribute('onclick') || '').match(/'([^']+)'/);
-          var bid = m ? m.slice(1, 2).join('') : '';
+           var bid = (btn.getAttribute('onclick') || '').split("'")[1] || '';
           if (bid) {
             var ib = document.createElement('button');
             ib.className = 'iss-btn';

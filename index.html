@@ -1470,16 +1470,20 @@ renderBookingsTable(res.isAdmin);
       var logoEl = document.getElementById('mainHeaderLogo');
       var logoSrc = (logoEl && logoEl.src) ? logoEl.src : '';
       var itemTxt = String(b.ItemTitle || '');
-      var routeMatch = itemTxt.match(/\(([A-Z]{3})\s*[-→]\s*([A-Z]{3})\)/);
-      var orig = routeMatch ? routeMatch[1] : '';
-      var dest = routeMatch ? routeMatch[2] : '';
+           var routeMatch = itemTxt.match(/\(([A-Z]{3})\s*[-→]\s*([A-Z]{3})\)/);
+      var orig = routeMatch ? routeMatch : '';
+      var dest = routeMatch ? routeMatch : '';
       var bagMatch = itemTxt.match(/\[(.*?)\]/);
-      var bagTxt = bagMatch ? bagMatch[1] : '30 KG Checked + 7 KG Cabin';
-      var dtMatch = itemTxt.match(/\{DATE:(.*?)\|DEP:(.*?)\|ARR:(.*?)\}/);
-      var travelDate = dtMatch ? dtMatch[1] : String(b.CreatedAt || '').split(',')[0];
-      var depTime = dtMatch ? dtMatch[2] : 'As per schedule';
-      var arrTime = dtMatch ? dtMatch[3] : 'As per schedule';
+      var bagTxt = bagMatch ? bagMatch : '30 KG Checked + 7 KG Cabin';
+      var dtMatch = itemTxt.match(/\{DATE:(.*?)\|DEP:(.*?)\|ARR:(.*?)\|DTERM:(.*?)\|ATERM:(.*?)\}/);
+      var dtOld = itemTxt.match(/\{DATE:(.*?)\|DEP:(.*?)\|ARR:(.*?)\}/);
+      var travelDate = dtMatch ? dtMatch : (dtOld ? dtOld : String(b.CreatedAt || '').split(','));
+      var depTime = dtMatch ? dtMatch : (dtOld ? dtOld : 'As per schedule');
+      var arrTime = dtMatch ? dtMatch : (dtOld ? dtOld : 'As per schedule');
+      var depTerm = dtMatch ? dtMatch : 'Terminal 1 (Intl)';
+      var arrTerm = dtMatch ? dtMatch : 'Main Terminal';
       var cleanTitle = itemTxt.replace(/\s*\(-\)\s*/g, ' ').replace(/\s*\([A-Z]{3}\s*[-→]\s*[A-Z]{3}\)\s*/g, ' ').replace(/\s*\[.*?\]\s*/g, '').replace(/\s*\{DATE:.*?\}\s*/g, '').trim();
+
       var stTxt = String(b.Status || 'PENDING').toUpperCase();
       var isIssued = stTxt.indexOf('ISSUED') !== -1 || stTxt.indexOf('CONFIRM') !== -1;
       var docHeading = isIssued ? 'ELECTRONIC TICKET' : 'BOOKING RESERVATION';
@@ -1527,8 +1531,9 @@ renderBookingsTable(res.isAdmin);
         '<table><thead><tr><th>Passenger Name</th><th>Passport Number</th><th>Service Category</th><th>' + refLabel + '</th></tr></thead>' +
         '<tbody><tr><td><strong style="font-size:13px;">' + (b.PassengerName || '') + '</strong></td><td style="font-family:monospace;font-weight:700;">' + (b.PassportNo || '—') + '</td><td>' + (b.Category || 'Airline Booking') + '</td><td style="font-family:monospace;font-weight:700;">' + (b.BookingID || '') + '</td></tr></tbody></table>' +
         '<div class="sec-hdr">Booking Itinerary, Schedule &amp; Baggage</div>' +
-                '<table><thead><tr><th>Flight / Service</th><th>Sector</th><th>Departure (Date &amp; Time)</th><th>Arrival (Date &amp; Time)</th><th>Baggage</th></tr></thead>' +
-        '<tbody><tr><td><strong>' + cleanTitle + '</strong></td><td><strong>' + (orig && dest ? orig + ' → ' + dest : 'As per booking') + '</strong></td><td><strong>' + travelDate + '</strong><br><span style="color:#0b1f44;font-weight:700;">' + depTime + '</span></td><td><strong>' + travelDate + '</strong><br><span style="color:#0b1f44;font-weight:700;">' + arrTime + '</span></td><td>' + bagTxt + '</td></tr></tbody></table>' +
+                      '<table><thead><tr><th>Flight / Service</th><th>Departure (Sector, Terminal, Date &amp; Time)</th><th>Arrival (Sector, Terminal, Date &amp; Time)</th><th>Baggage</th></tr></thead>' +
+        '<tbody><tr><td><strong>' + cleanTitle + '</strong></td><td><strong style="color:#0b1f44;font-size:13px;">' + (orig || 'DEP') + '</strong> • <span style="font-size:11px;color:#475569;font-weight:700;">' + depTerm + '</span><br><strong>' + travelDate + '</strong> • <span style="color:#15803d;font-weight:800;">' + depTime + '</span></td><td><strong style="color:#0b1f44;font-size:13px;">' + (dest || 'ARR') + '</strong> • <span style="font-size:11px;color:#475569;font-weight:700;">' + arrTerm + '</span><br><strong>' + travelDate + '</strong> • <span style="color:#15803d;font-weight:800;">' + arrTime + '</span></td><td>' + bagTxt + '</td></tr></tbody></table>' +
+
 
         '<div class="bottom-split">' +
         '<div class="rules"><strong style="color:#0b1f44;display:block;margin-bottom:4px;">IMPORTANT BOOKING INFORMATION:</strong>' +
@@ -1570,23 +1575,22 @@ renderBookingsTable(res.isAdmin);
         };
       }
     })();
-    (function() {
+      (function() {
       var origCall2 = window.callBackend;
       if (typeof origCall2 === 'function') {
         window.callBackend = function(payload) {
           if (payload && payload.action === 'addBooking' && payload.itemTitle && payload.itemTitle.indexOf('{DATE:') === -1) {
-            var oEl = document.getElementById('fltFrom') || document.getElementById('originSelect');
-            var dEl = document.getElementById('fltTo') || document.getElementById('destSelect');
-            var dtEl = document.getElementById('fltDate') || document.querySelector('input[type="date"]');
-            var oCode = oEl ? String(oEl.value || '').slice(0, 3).toUpperCase() : '';
-            var dCode = dEl ? String(dEl.value || '').slice(0, 3).toUpperCase() : '';
-            var tDate = (dtEl && dtEl.value) ? dtEl.value : new Date().toISOString().slice(0, 10);
-            var sumTxt = (document.getElementById('gdsSummaryBox') || {}).innerText || '';
-            var times = sumTxt.match(/\b([0-2]?\d:[0-5]\d(?:\s?[AP]M)?)\b/gi) || [];
-            var depT = times[0] || 'As per airline';
-            var arrT = times[1] || 'As per airline';
-            if (oCode && dCode) payload.itemTitle = payload.itemTitle.replace('(-)', '(' + oCode + ' - ' + dCode + ')');
-            payload.itemTitle += ' {DATE:' + tDate + '|DEP:' + depT + '|ARR:' + arrT + '}';
+            var o = (window.__GDS_OFFERS__ || [])[window.ACTIVE_GDS_IDX || 0] || {};
+            var oCode = o.Origin || (document.getElementById('srchFrom') && document.getElementById('srchFrom').value) || 'LHE';
+            var dCode = o.Dest || (document.getElementById('srchTo') && document.getElementById('srchTo').value) || 'DXB';
+            var dtEl = document.getElementById('srchDate1') || document.querySelector('input[type="date"]');
+            var tDate = (dtEl && dtEl.value) ? dtEl.value : (o.Date || new Date().toISOString().slice(0, 10));
+            var depT = o.DepTime || o.DepartureTime || o.Departure || '09:30 AM';
+            var arrT = o.ArrTime || o.ArrivalTime || o.Arrival || '12:15 PM';
+            var dTerm = o.DepTerminal || o.Terminal || 'Terminal 1 (Intl)';
+            var aTerm = o.ArrTerminal || (String(dCode).toUpperCase() === 'DXB' ? 'Terminal 3' : (String(dCode).toUpperCase() === 'JED' ? 'Terminal 1' : 'Terminal 1'));
+            if (oCode && dCode) payload.itemTitle = payload.itemTitle.replace('(-)', '(' + String(oCode).toUpperCase() + ' - ' + String(dCode).toUpperCase() + ')');
+            payload.itemTitle += ' {DATE:' + tDate + '|DEP:' + depT + '|ARR:' + arrT + '|DTERM:' + dTerm + '|ATERM:' + aTerm + '}';
           }
           return origCall2.apply(this, arguments);
         };

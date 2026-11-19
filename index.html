@@ -1527,8 +1527,9 @@ renderBookingsTable(res.isAdmin);
         '<table><thead><tr><th>Passenger Name</th><th>Passport Number</th><th>Service Category</th><th>' + refLabel + '</th></tr></thead>' +
         '<tbody><tr><td><strong style="font-size:13px;">' + (b.PassengerName || '') + '</strong></td><td style="font-family:monospace;font-weight:700;">' + (b.PassportNo || '—') + '</td><td>' + (b.Category || 'Airline Booking') + '</td><td style="font-family:monospace;font-weight:700;">' + (b.BookingID || '') + '</td></tr></tbody></table>' +
         '<div class="sec-hdr">Booking Itinerary, Schedule &amp; Baggage</div>' +
-        '<table><thead><tr><th>Flight / Service</th><th>Sector</th><th>Travel Date</th><th>Departure</th><th>Arrival</th><th>Baggage</th></tr></thead>' +
-        '<tbody><tr><td><strong>' + cleanTitle + '</strong></td><td><strong>' + (orig && dest ? orig + ' → ' + dest : 'As per booking') + '</strong></td><td><strong>' + travelDate + '</strong></td><td><strong>' + depTime + '</strong></td><td><strong>' + arrTime + '</strong></td><td>' + bagTxt + '</td></tr></tbody></table>' +
+                '<table><thead><tr><th>Flight / Service</th><th>Sector</th><th>Departure (Date &amp; Time)</th><th>Arrival (Date &amp; Time)</th><th>Baggage</th></tr></thead>' +
+        '<tbody><tr><td><strong>' + cleanTitle + '</strong></td><td><strong>' + (orig && dest ? orig + ' → ' + dest : 'As per booking') + '</strong></td><td><strong>' + travelDate + '</strong><br><span style="color:#0b1f44;font-weight:700;">' + depTime + '</span></td><td><strong>' + travelDate + '</strong><br><span style="color:#0b1f44;font-weight:700;">' + arrTime + '</span></td><td>' + bagTxt + '</td></tr></tbody></table>' +
+
         '<div class="bottom-split">' +
         '<div class="rules"><strong style="color:#0b1f44;display:block;margin-bottom:4px;">IMPORTANT BOOKING INFORMATION:</strong>' +
         '• ' + (isIssued ? 'This ticket is officially ISSUED by Head Office. Please carry valid passport (6+ months validity).' : 'This is a provisional BOOKING reservation. Final E-Ticket will be issued upon Head Office approval.') + '<br>' +

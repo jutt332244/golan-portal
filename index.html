@@ -1435,9 +1435,8 @@ renderBookingsTable(res.isAdmin);
                 '<td>' + (b.ItemTitle || '') + '</td>' +
                 '<td><span style="font-family:monospace;font-weight:800;color:#0b1f44;">' + (b.BookingID || 'PENDING') + '</span></td>' +
                 '<td style="font-weight:800;color:#15803d;">PKR ' + Number(b.FarePKR || 0).toLocaleString() + '</td>' +
-                '<td><span class="status-badge st-' + st + '">' + (b.Status || 'PENDING') + '</span></td>' +
-                '<td><button type="button" class="btn btn-sm btn-primary" onclick="window.print()">Print PDF</button></td>' +
-                '</tr>';
+                '<td><button type="button" class="btn btn-sm btn-primary" onclick="window.printSingleGolanTicket(\'' + (b.BookingID || '') + '\')">Print PDF</button></td>' +
+                 '</tr>';
             }).join('') : '<tr><td colspan="8" style="text-align:center;color:#64748b;padding:20px;">No bookings found yet.</td></tr>';
           });
           document.querySelectorAll('#ledgerTableBody').forEach(function(lBody) {
@@ -1464,6 +1463,24 @@ renderBookingsTable(res.isAdmin);
 
     window.openLedgerTab = function(btnEl) {
       window.switchTab('ledger', btnEl || document.querySelector('.side-btn[onclick*="openLedgerTab"]'));
+    };
+    window.printSingleGolanTicket = function(bookingId) {
+      var b = (window.__ALL_BOOKINGS__ || []).find(function(x) { return String(x.BookingID) === String(bookingId); });
+      if (!b) return;
+      var w = window.open('', '_blank', 'width=800,height=650');
+      w.document.write('<html><head><title>Ticket - ' + b.BookingID + '</title><style>body{font-family:Segoe UI,sans-serif;padding:30px;color:#0f172a;} .box{border:2px solid #0b1f44;border-radius:12px;padding:24px;max-width:680px;margin:auto;} .hdr{background:#0b1f44;color:#fff;padding:16px 20px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;} table{width:100%;border-collapse:collapse;margin-top:18px;} td{padding:10px;border-bottom:1px solid #e2e8f0;font-size:14px;}</style></head><body>' +
+        '<div class="box"><div class="hdr"><div><h2 style="margin:0;font-size:20px;">GOLAN INTERNATIONAL</h2><small style="color:#fbbf24;">TRAVEL & TOURS • TOBA TEK SINGH | 0345-3326318</small></div><div style="text-align:right;"><strong>E-TICKET / VOUCHER</strong><br><span>' + (b.BookingID || '') + '</span></div></div>' +
+        '<table>' +
+        '<tr><td><strong>Passenger Name</strong></td><td>' + (b.PassengerName || '') + '</td></tr>' +
+        '<tr><td><strong>Passport Number</strong></td><td>' + (b.PassportNo || '') + '</td></tr>' +
+        '<tr><td><strong>Flight / Package</strong></td><td>' + (b.ItemTitle || '') + '</td></tr>' +
+        '<tr><td><strong>Booking Date</strong></td><td>' + (b.CreatedAt || '') + '</td></tr>' +
+        '<tr><td><strong>Status</strong></td><td><strong>' + (b.Status || 'PENDING') + '</strong></td></tr>' +
+        '<tr><td><strong>Total Fare</strong></td><td><strong style="color:#15803d;font-size:16px;">PKR ' + Number(b.FarePKR || 0).toLocaleString() + '</strong></td></tr>' +
+        '</table>' +
+        '<p style="margin-top:20px;font-size:12px;color:#64748b;text-align:center;">Authorized B2B Electronic Voucher • Golan International Travel & Tours</p></div>' +
+        '<script>window.onload=function(){window.print();};<\/script></body></html>');
+      w.document.close();
     };
 
   </script>

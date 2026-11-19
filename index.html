@@ -1557,44 +1557,42 @@ renderBookingsTable(res.isAdmin);
 
        
     setInterval(function() {
-      var mob = document.getElementById('paxMobile');
-      if (mob && !document.getElementById('paxEmail')) {
-        var em = (typeof currentEmail !== 'undefined' && currentEmail) ? currentEmail : (localStorage.getItem('golan_email') || '');
-        var div = document.createElement('div');
-        div.className = 'form-group';
-        div.style.cssText = 'margin:0; grid-column:1/-1;';
-        div.innerHTML = '<label>Passenger / Agent Gmail (For Auto PDF Voucher) *</label><input type="email" id="paxEmail" required value="' + em + '" placeholder="e.g. passenger@gmail.com" />';
-        mob.parentElement.insertAdjacentElement('afterend', div);
+       setInterval(function() {
+      var modal = document.getElementById('gdsModalContent') || document.body;
+      if (document.getElementById('paxEmail')) return;
+      var labels = modal.querySelectorAll('label');
+      for (var i = 0; i < labels.length; i++) {
+        if (labels[i].textContent.indexOf('Mobile') !== -1 || labels[i].textContent.indexOf('WhatsApp') !== -1) {
+          var em = (typeof currentEmail !== 'undefined' && currentEmail) ? currentEmail : (localStorage.getItem('golan_email') || '');
+          var div = document.createElement('div');
+          div.className = 'form-group';
+          div.style.cssText = 'margin:10px 0 0; grid-column:1/-1;';
+          div.innerHTML = '<label>Passenger / Sub-Agent Gmail (For Auto PDF Voucher) *</label><input type="email" id="paxEmail" required value="' + em + '" placeholder="e.g. passenger@gmail.com" style="width:100%;padding:10px 12px;border:1.5px solid #cbd5e1;border-radius:8px;" />';
+          labels[i].parentElement.insertAdjacentElement('afterend', div);
+          break;
+        }
       }
-    }, 500);
+    }, 400);
     (function() {
-      var origCall = window.callBackend;
-      if (typeof origCall === 'function') {
+      var origCall2 = window.callBackend;
+      if (typeof origCall2 === 'function') {
         window.callBackend = function(payload) {
           if (payload && payload.action === 'addBooking') {
             var pe = document.getElementById('paxEmail');
             if (pe && pe.value) payload.passengerEmail = pe.value.trim();
-          }
-          return origCall.apply(this, arguments);
-        };
-      }
-    })();
-      (function() {
-      var origCall2 = window.callBackend;
-      if (typeof origCall2 === 'function') {
-        window.callBackend = function(payload) {
-          if (payload && payload.action === 'addBooking' && payload.itemTitle && payload.itemTitle.indexOf('{DATE:') === -1) {
-            var o = (window.__GDS_OFFERS__ || [])[window.ACTIVE_GDS_IDX || 0] || {};
-            var oCode = o.Origin || (document.getElementById('srchFrom') && document.getElementById('srchFrom').value) || 'LHE';
-            var dCode = o.Dest || (document.getElementById('srchTo') && document.getElementById('srchTo').value) || 'DXB';
-            var dtEl = document.getElementById('srchDate1') || document.querySelector('input[type="date"]');
-            var tDate = (dtEl && dtEl.value) ? dtEl.value : (o.Date || new Date().toISOString().slice(0, 10));
-            var depT = o.DepTime || o.DepartureTime || o.Departure || '09:30 AM';
-            var arrT = o.ArrTime || o.ArrivalTime || o.Arrival || '12:15 PM';
-            var dTerm = o.DepTerminal || o.Terminal || 'Terminal 1 (Intl)';
-            var aTerm = o.ArrTerminal || (String(dCode).toUpperCase() === 'DXB' ? 'Terminal 3' : (String(dCode).toUpperCase() === 'JED' ? 'Terminal 1' : 'Terminal 1'));
-            if (oCode && dCode) payload.itemTitle = payload.itemTitle.replace('(-)', '(' + String(oCode).toUpperCase() + ' - ' + String(dCode).toUpperCase() + ')');
-            payload.itemTitle += ' {DATE:' + tDate + '|DEP:' + depT + '|ARR:' + arrT + '|DTERM:' + dTerm + '|ATERM:' + aTerm + '}';
+            if (payload.itemTitle && payload.itemTitle.indexOf('{DATE:') === -1) {
+              var o = (window.__GDS_OFFERS__ || [])[window.ACTIVE_GDS_IDX || 0] || {};
+              var oCode = o.Origin || (document.getElementById('srchFrom') && document.getElementById('srchFrom').value) || 'LHE';
+              var dCode = o.Dest || (document.getElementById('srchTo') && document.getElementById('srchTo').value) || 'DXB';
+              var dtEl = document.getElementById('srchDate1') || document.querySelector('input[type="date"]');
+              var tDate = (dtEl && dtEl.value) ? dtEl.value : (o.Date || new Date().toISOString().slice(0, 10));
+              var depT = o.DepTime || o.DepartureTime || o.Departure || '09:30 AM';
+              var arrT = o.ArrTime || o.ArrivalTime || o.Arrival || '12:15 PM';
+              var dTerm = o.DepTerminal || o.Terminal || 'Terminal 1';
+              var aTerm = o.ArrTerminal || (String(dCode).toUpperCase() === 'DXB' ? 'Terminal 3' : 'Terminal 1');
+              if (oCode && dCode) payload.itemTitle = payload.itemTitle.replace('(-)', '(' + String(oCode).toUpperCase() + ' - ' + String(dCode).toUpperCase() + ')');
+              payload.itemTitle += ' {DATE:' + tDate + '|DEP:' + depT + '|ARR:' + arrT + '|DTERM:' + dTerm + '|ATERM:' + aTerm + '}';
+            }
           }
           return origCall2.apply(this, arguments);
         };

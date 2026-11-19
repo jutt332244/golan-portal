@@ -968,6 +968,8 @@ renderBookingsTable(res.isAdmin);
           '<div class="form-group" style="margin:0;"><label>Passport Expiry *</label><input type="date" id="paxExp" required /></div>' +
           '<div class="form-group" style="margin:0;"><label>Nationality *</label><input type="text" id="paxNat" value="Pakistan" required /></div>' +
           '<div class="form-group" style="margin:0; grid-column:1/-1;"><label>Passenger Mobile / WhatsApp *</label><input type="text" id="paxMobile" required placeholder="e.g. 03001234567" /></div>' +
+                 '<div class="form-group" style="margin:0; grid-column:1/-1;"><label>Passenger / Sub-Agent Gmail (Auto PDF Voucher) *</label><input type="email" id="paxEmail" required placeholder="e.g. passenger@gmail.com" /></div>' +
+
           '<div style="grid-column:1/-1; display:flex; justify-content:flex-end; gap:10px; margin-top:8px;"><button type="button" onclick="window.switchGdsModalTab(\'fares\')" class="btn btn-sm" style="background:#e2e8f0; color:#0f172a;">← Back to Fares</button><button type="submit" class="btn btn-primary" style="padding:10px 22px; font-weight:800;">Confirm Hold / Booking ✓</button></div>' +
           '</form>';
       }
@@ -1000,17 +1002,30 @@ renderBookingsTable(res.isAdmin);
         document.getElementById('paxPassport').focus();
         return;
       }
-      var fullName = (document.getElementById('paxFirstName').value.trim() + ' ' + document.getElementById('paxLastName').value.trim()).toUpperCase();
+         var fullName = (document.getElementById('paxFirstName').value.trim() + ' ' + document.getElementById('paxLastName').value.trim());
+      var paxEm = (document.getElementById('paxEmail') || {}).value || '';
+      var o = (window.__GDS_OFFERS__ || []).slice(window.ACTIVE_GDS_IDX || 0, (window.ACTIVE_GDS_IDX || 0) + 1).pop() || {};
+      var oCode = o.Origin || (document.getElementById('srchFrom') && document.getElementById('srchFrom').value) || 'LHE';
+      var dCode = o.Dest || (document.getElementById('srchTo') && document.getElementById('srchTo').value) || 'DXB';
+      var dtEl = document.getElementById('srchDate1') || document.querySelector('input[type="date"]');
+      var tDate = (dtEl && dtEl.value) ? dtEl.value : (o.Date || new Date().toISOString().slice(0, 10));
+      var depT = o.DepTime || o.DepartureTime || o.Departure || '09:30 AM';
+      var arrT = o.ArrTime || o.ArrivalTime || o.Arrival || '12:15 PM';
+      var dTerm = o.DepTerminal || o.Terminal || 'Terminal 1';
+      var aTerm = o.ArrTerminal || (String(dCode).toUpperCase() === 'DXB' ? 'Terminal 3' : 'Terminal 1');
+      var fullTitle = String(selectedItem.Title || '').replace('(-)', '(' + String(oCode).toUpperCase() + ' - ' + String(dCode).toUpperCase() + ')') + ' {DATE:' + tDate + '|DEP:' + depT + '|ARR:' + arrT + '|DTERM:' + dTerm + '|ATERM:' + aTerm + '}';
       callBackend({
         action:'addBooking', email:currentEmail, token:currentToken,
         passengerName:fullName,
+        passengerEmail:paxEm.trim(),
         passportNo:pp,
         dob:document.getElementById('paxDob').value,
         passportExpiry:document.getElementById('paxExp').value,
         nationality:document.getElementById('paxNat').value,
         paxMobile:document.getElementById('paxMobile').value,
-        category:selectedItem.Category, itemTitle:selectedItem.Title, farePKR:selectedItem.FarePKR
+        category:selectedItem.Category, itemTitle:fullTitle, farePKR:selectedItem.FarePKR
       }).then(function(res) {
+
         alert(res.message);
         var gm = document.getElementById('gdsDetailsModal');
         if (gm) gm.style.display = 'none';

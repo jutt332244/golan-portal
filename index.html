@@ -1464,19 +1464,22 @@ renderBookingsTable(res.isAdmin);
     window.openLedgerTab = function(btnEl) {
       window.switchTab('ledger', btnEl || document.querySelector('.side-btn[onclick*="openLedgerTab"]'));
     };
-        window.printSingleGolanTicket = function(bookingId) {
+    window.printSingleGolanTicket = function(bookingId) {
       var b = (window.__ALL_BOOKINGS__ || []).find(function(x) { return String(x.BookingID) === String(bookingId); });
       if (!b) return;
       var logoEl = document.getElementById('mainHeaderLogo');
       var logoSrc = (logoEl && logoEl.src) ? logoEl.src : '';
       var itemTxt = String(b.ItemTitle || '');
-      var routeMatch = itemTxt.match(/\(([A-Z]{3})\s*-\s*([A-Z]{3})\)/);
+      var routeMatch = itemTxt.match(/\(([A-Z]{3})\s*[-→]\s*([A-Z]{3})\)/);
       var orig = routeMatch ? routeMatch[1] : '';
       var dest = routeMatch ? routeMatch[2] : '';
       var bagMatch = itemTxt.match(/\[(.*?)\]/);
       var bagTxt = bagMatch ? bagMatch[1] : '30 KG Checked + 7 KG Cabin';
-
-      var cleanTitle = itemTxt.replace(/\s*\([A-Z]{3}\s*-\s*[A-Z]{3}\)\s*/g, ' ').replace(/\s*\[.*?\]\s*/g, '').trim();
+      var dtMatch = itemTxt.match(/\{DATE:(.*?)\|DEP:(.*?)\|ARR:(.*?)\}/);
+      var travelDate = dtMatch ? dtMatch[1] : String(b.CreatedAt || '').split(',')[0];
+      var depTime = dtMatch ? dtMatch[2] : 'As per schedule';
+      var arrTime = dtMatch ? dtMatch[3] : 'As per schedule';
+      var cleanTitle = itemTxt.replace(/\s*\(-\)\s*/g, ' ').replace(/\s*\([A-Z]{3}\s*[-→]\s*[A-Z]{3}\)\s*/g, ' ').replace(/\s*\[.*?\]\s*/g, '').replace(/\s*\{DATE:.*?\}\s*/g, '').trim();
       var stTxt = String(b.Status || 'PENDING').toUpperCase();
       var isIssued = stTxt.indexOf('ISSUED') !== -1 || stTxt.indexOf('CONFIRM') !== -1;
       var docHeading = isIssued ? 'ELECTRONIC TICKET' : 'BOOKING RESERVATION';
@@ -1485,7 +1488,7 @@ renderBookingsTable(res.isAdmin);
       var refLabel = isIssued ? 'E-TICKET / PNR NO.' : 'BOOKING REF NO.';
       var dtStr = String(b.CreatedAt || '');
       var fareNum = Number(b.FarePKR || 0);
-      var w = window.open('', '_blank', 'width=850,height=760');
+      var w = window.open('', '_blank', 'width=860,height=760');
       w.document.write('<!DOCTYPE html><html><head><title>' + docHeading + ' - ' + (b.BookingID || '') + '</title><style>' +
         '*{box-sizing:border-box;font-family:"Segoe UI",Arial,sans-serif;}' +
         'body{margin:0;padding:16px;background:#fff;color:#111827;font-size:12px;}' +
@@ -1501,9 +1504,9 @@ renderBookingsTable(res.isAdmin);
         '.meta-val{font-size:13px;font-weight:800;color:#0b1f44;margin-top:2px;}' +
         '.sec-hdr{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:#0b1f44;margin:16px 0 6px;display:flex;align-items:center;gap:8px;}' +
         '.sec-hdr:after{content:"";flex:1;height:1px;background:#cbd5e1;}' +
-        'table{width:100%;border-collapse:collapse;font-size:12px;}' +
-        'th{background:#f1f5f9;color:#0f172a;text-align:left;padding:8px 10px;border:1px solid #cbd5e1;font-size:11px;text-transform:uppercase;}' +
-        'td{padding:9px 10px;border:1px solid #cbd5e1;color:#1e293b;}' +
+        'table{width:100%;border-collapse:collapse;font-size:11.5px;}' +
+        'th{background:#f1f5f9;color:#0f172a;text-align:left;padding:7px 9px;border:1px solid #cbd5e1;font-size:10.5px;text-transform:uppercase;}' +
+        'td{padding:8px 9px;border:1px solid #cbd5e1;color:#1e293b;}' +
         '.status-tag{padding:3px 9px;border-radius:4px;font-size:11px;font-weight:800;background:' + (isIssued ? '#dcfce7' : '#fef3c7') + ';color:' + (isIssued ? '#166534' : '#92400e') + ';}' +
         '.bottom-split{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-top:16px;}' +
         '.rules{border:1px solid #cbd5e1;padding:10px 12px;font-size:11px;color:#475569;line-height:1.55;background:#fafafa;}' +
@@ -1523,9 +1526,9 @@ renderBookingsTable(res.isAdmin);
         '<div class="sec-hdr">Passenger &amp; Travel Document</div>' +
         '<table><thead><tr><th>Passenger Name</th><th>Passport Number</th><th>Service Category</th><th>' + refLabel + '</th></tr></thead>' +
         '<tbody><tr><td><strong style="font-size:13px;">' + (b.PassengerName || '') + '</strong></td><td style="font-family:monospace;font-weight:700;">' + (b.PassportNo || '—') + '</td><td>' + (b.Category || 'Airline Booking') + '</td><td style="font-family:monospace;font-weight:700;">' + (b.BookingID || '') + '</td></tr></tbody></table>' +
-        '<div class="sec-hdr">Booking Itinerary &amp; Baggage Allowance</div>' +
-        '<table><thead><tr><th>Flight / Service Description</th><th>Sector</th><th>Class</th><th>Baggage Allowance</th><th>Status</th></tr></thead>' +
-        '<tbody><tr><td><strong>' + cleanTitle + '</strong></td><td><strong>' + (orig && dest ? orig + ' → ' + dest : 'As per booking') + '</strong></td><td>Economy</td><td><strong>' + bagTxt + '</strong></td><td><span class="status-tag">' + stTxt + '</span></td></tr></tbody></table>' +
+        '<div class="sec-hdr">Booking Itinerary, Schedule &amp; Baggage</div>' +
+        '<table><thead><tr><th>Flight / Service</th><th>Sector</th><th>Travel Date</th><th>Departure</th><th>Arrival</th><th>Baggage</th></tr></thead>' +
+        '<tbody><tr><td><strong>' + cleanTitle + '</strong></td><td><strong>' + (orig && dest ? orig + ' → ' + dest : 'As per booking') + '</strong></td><td><strong>' + travelDate + '</strong></td><td><strong>' + depTime + '</strong></td><td><strong>' + arrTime + '</strong></td><td>' + bagTxt + '</td></tr></tbody></table>' +
         '<div class="bottom-split">' +
         '<div class="rules"><strong style="color:#0b1f44;display:block;margin-bottom:4px;">IMPORTANT BOOKING INFORMATION:</strong>' +
         '• ' + (isIssued ? 'This ticket is officially ISSUED by Head Office. Please carry valid passport (6+ months validity).' : 'This is a provisional BOOKING reservation. Final E-Ticket will be issued upon Head Office approval.') + '<br>' +
@@ -1539,7 +1542,7 @@ renderBookingsTable(res.isAdmin);
         '</div><script>window.onload=function(){window.print();};<\/script></body></html>');
       w.document.close();
     };
- 
+
  
 
        
@@ -1563,6 +1566,28 @@ renderBookingsTable(res.isAdmin);
             if (pe && pe.value) payload.passengerEmail = pe.value.trim();
           }
           return origCall.apply(this, arguments);
+        };
+      }
+    })();
+    (function() {
+      var origCall2 = window.callBackend;
+      if (typeof origCall2 === 'function') {
+        window.callBackend = function(payload) {
+          if (payload && payload.action === 'addBooking' && payload.itemTitle && payload.itemTitle.indexOf('{DATE:') === -1) {
+            var oEl = document.getElementById('fltFrom') || document.getElementById('originSelect');
+            var dEl = document.getElementById('fltTo') || document.getElementById('destSelect');
+            var dtEl = document.getElementById('fltDate') || document.querySelector('input[type="date"]');
+            var oCode = oEl ? String(oEl.value || '').slice(0, 3).toUpperCase() : '';
+            var dCode = dEl ? String(dEl.value || '').slice(0, 3).toUpperCase() : '';
+            var tDate = (dtEl && dtEl.value) ? dtEl.value : new Date().toISOString().slice(0, 10);
+            var sumTxt = (document.getElementById('gdsSummaryBox') || {}).innerText || '';
+            var times = sumTxt.match(/\b([0-2]?\d:[0-5]\d(?:\s?[AP]M)?)\b/gi) || [];
+            var depT = times[0] || 'As per airline';
+            var arrT = times[1] || 'As per airline';
+            if (oCode && dCode) payload.itemTitle = payload.itemTitle.replace('(-)', '(' + oCode + ' - ' + dCode + ')');
+            payload.itemTitle += ' {DATE:' + tDate + '|DEP:' + depT + '|ARR:' + arrT + '}';
+          }
+          return origCall2.apply(this, arguments);
         };
       }
     })();

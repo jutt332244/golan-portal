@@ -1471,9 +1471,11 @@ renderBookingsTable(res.isAdmin);
       var logoSrc = (logoEl && logoEl.src) ? logoEl.src : '';
       var itemTxt = String(b.ItemTitle || '');
       var routeMatch = itemTxt.match(/\(([A-Z]{3})\s*-\s*([A-Z]{3})\)/);
-      var orig = routeMatch ? routeMatch : '';
-      var dest = routeMatch ? routeMatch : '';
+       var orig = routeMatch ? routeMatch[1] : '';
+      var dest = routeMatch ? routeMatch[2] : '';
       var bagMatch = itemTxt.match(/\[(.*?)\]/);
+      var bagTxt = bagMatch ? bagMatch[1] : '30 KG Checked + 7 KG Cabin';
+
       var bagTxt = bagMatch ? bagMatch : '30 KG Checked + 7 KG Cabin';
       var cleanTitle = itemTxt.replace(/\s*\(-\)\s*/g, ' ').replace(/\s*\[.*?\]\s*/g, '').trim();
       var stTxt = String(b.Status || 'CONFIRMED').toUpperCase();

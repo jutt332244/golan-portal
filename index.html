@@ -1464,6 +1464,18 @@ renderBookingsTable(res.isAdmin);
     window.openLedgerTab = function(btnEl) {
       window.switchTab('ledger', btnEl || document.querySelector('.side-btn[onclick*="openLedgerTab"]'));
     };
+        window.printSingleGolanTicket = function(bookingId) {
+      var b = (window.__ALL_BOOKINGS__ || []).find(function(x) { return String(x.BookingID) === String(bookingId); });
+      if (!b) return;
+      var logoEl = document.getElementById('mainHeaderLogo');
+      var logoSrc = (logoEl && logoEl.src) ? logoEl.src : '';
+      var itemTxt = String(b.ItemTitle || '');
+      var routeMatch = itemTxt.match(/\(([A-Z]{3})\s*-\s*([A-Z]{3})\)/);
+      var orig = routeMatch ? routeMatch[1] : '';
+      var dest = routeMatch ? routeMatch[2] : '';
+      var bagMatch = itemTxt.match(/\[(.*?)\]/);
+      var bagTxt = bagMatch ? bagMatch[1] : '30 KG Checked + 7 KG Cabin';
+
       var cleanTitle = itemTxt.replace(/\s*\([A-Z]{3}\s*-\s*[A-Z]{3}\)\s*/g, ' ').replace(/\s*\[.*?\]\s*/g, '').trim();
       var stTxt = String(b.Status || 'PENDING').toUpperCase();
       var isIssued = stTxt.indexOf('ISSUED') !== -1 || stTxt.indexOf('CONFIRM') !== -1;

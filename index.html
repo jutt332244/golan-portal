@@ -1523,14 +1523,7 @@ renderBookingsTable(res.isAdmin);
       w.document.close();
     };
 
-        '<div class="sec-title">Account Details</div><div class="box" style="padding:0;"><table><thead><tr><th>Date</th><th>Service Type</th><th>Trans. no.</th><th>Branch</th><th>Booked by</th></tr></thead><tbody><tr><td>' + dtStr + '</td><td>' + (b.Category || 'Flight') + '</td><td>' + (b.BookingID || '') + '</td><td>HeadOffice (Toba Tek Singh)</td><td><strong>SHAN CHAIRMAN</strong></td></tr><tr><td colspan="5"><strong>Company Name:</strong> Golan International Travel And Tours</td></tr></tbody></table></div>' +
-        '<div class="sec-title">Electronic ticket</div><div class="box" style="padding:0;"><table><thead><tr><th>Name</th><th>Ticket / Ref Number</th><th>Origin - Destination</th><th>Status</th><th>Date of issue</th></tr></thead><tbody><tr><td>' + (b.PassengerName || '') + '</td><td><strong>' + (b.BookingID || '') + '</strong></td><td>' + itemTxt + '</td><td>' + stTxt + '</td><td>' + dtStr + '</td></tr></tbody></table></div>' +
-        '<div class="sec-title">Price Info ( in PKR )</div><div class="box" style="padding:0;"><table><thead><tr><th>Pax Name</th><th>Ticket No</th><th>Base + Taxes (PKR)</th><th>Service Fee</th><th>Discount</th><th>Total (PKR)</th></tr></thead><tbody><tr><td>' + (b.PassengerName || '') + '</td><td>' + (b.BookingID || '') + '</td><td>' + fareNum.toLocaleString() + '.00</td><td>0.00</td><td>0.00</td><td><strong>' + fareNum.toLocaleString() + '.00</strong></td></tr><tr><td colspan="5" style="text-align:right;"><strong>Grand Total</strong></td><td><strong style="color:#15803d;font-size:13px;">PKR ' + fareNum.toLocaleString() + '.00</strong></td></tr></tbody></table></div>' +
-        '<div class="sec-title">Contact Details</div><div class="box" style="margin-bottom:14px;"><div class="contact-grid"><div>🏢 Golan International Travel &amp; Tours</div><div>✉️ golaninternational@gmail.com</div><div>📞 +92 345 3326318 (Shan Chairman)</div><div>📍 Head Office: Toba Tek Singh, Pakistan</div></div></div>' +
-        '</div><script>window.onload=function(){window.print();};<\/script></body></html>');
-      w.document.close();
-    };
-
+       
 
   </script>
   <div onclick="openCeoWhatsApp()" title="WhatsApp CEO Shan Chairman" style="position:fixed; bottom:25px; right:25px; width:60px; height:60px; background-color:#25D366; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(0,0,0,0.28); z-index:2147483647; cursor:pointer;">

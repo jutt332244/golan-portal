@@ -1476,49 +1476,61 @@ renderBookingsTable(res.isAdmin);
       var bagMatch = itemTxt.match(/\[(.*?)\]/);
       var bagTxt = bagMatch ? bagMatch : '30 KG Checked + 7 KG Cabin';
       var cleanTitle = itemTxt.replace(/\s*\(-\)\s*/g, ' ').replace(/\s*\[.*?\]\s*/g, '').trim();
-      var stTxt = String(b.Status || 'PENDING');
-      var isHold = stTxt.toUpperCase().indexOf('PEND') !== -1 || stTxt.toUpperCase().indexOf('HOLD') !== -1;
+      var stTxt = String(b.Status || 'CONFIRMED').toUpperCase();
+      var isHold = stTxt.indexOf('PEND') !== -1 || stTxt.indexOf('HOLD') !== -1;
       var dtStr = String(b.CreatedAt || '');
       var fareNum = Number(b.FarePKR || 0);
-      var w = window.open('', '_blank', 'width=840,height=740');
-      w.document.write('<!DOCTYPE html><html><head><title>Golan E-Ticket - ' + (b.BookingID || '') + '</title><style>' +
-        '*{box-sizing:border-box;font-family:"Segoe UI",system-ui,sans-serif;}' +
-        'body{margin:0;padding:14px;background:#fff;color:#0f172a;font-size:12px;}' +
-        '.ticket{max-width:760px;margin:0 auto;border:2px solid #0b1f44;border-radius:14px;overflow:hidden;}' +
-        '.g-head{background:linear-gradient(135deg,#0b1f44 0%,#163b7a 100%);color:#fff;padding:16px 22px;display:flex;justify-content:space-between;align-items:center;border-bottom:4px solid #d97706;}' +
-        '.g-brand{display:flex;align-items:center;gap:12px;}' +
-        '.g-brand img{width:52px;height:52px;border-radius:10px;background:#fff;padding:3px;border:2px solid #d97706;object-fit:contain;}' +
-        '.g-badge{background:rgba(217,119,6,0.22);border:1px solid #fbbf24;color:#fbbf24;padding:3px 10px;border-radius:99px;font-size:10.5px;font-weight:800;display:inline-block;margin-bottom:4px;}' +
-        '.g-body{padding:16px 22px;}' +
-        '.greet{background:#f8fafc;border-left:4px solid #d97706;padding:9px 14px;border-radius:6px;font-size:12px;color:#334155;margin-bottom:14px;}' +
-        '.flight-strip{background:linear-gradient(180deg,#f8fafc,#eff6ff);border:1.5px solid #bfdbfe;border-radius:12px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}' +
-        '.st-pill{padding:4px 12px;border-radius:99px;font-size:11px;font-weight:800;background:' + (isHold ? '#fef3c7' : '#dcfce7') + ';color:' + (isHold ? '#92400e' : '#166534') + ';border:1px solid ' + (isHold ? '#fcd34d' : '#86efac') + ';}' +
-        '.sec{font-size:11.5px;font-weight:800;color:#0b1f44;text-transform:uppercase;letter-spacing:0.6px;margin:12px 0 6px;padding-bottom:4px;border-bottom:1.5px solid #e2e8f0;}' +
-        'table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px;}' +
-        'th{background:#0b1f44;color:#fff;text-align:left;padding:7px 10px;font-size:11px;}' +
-        'td{padding:8px 10px;border-bottom:1px solid #e2e8f0;}' +
-        '.fare-box{background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:10px;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;margin-top:8px;}' +
-        '.g-foot{background:#061229;color:#cbd5e1;padding:11px 22px;font-size:11px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}' +
+      var w = window.open('', '_blank', 'width=850,height=760');
+      w.document.write('<!DOCTYPE html><html><head><title>E-Ticket Itinerary - ' + (b.BookingID || '') + '</title><style>' +
+        '*{box-sizing:border-box;font-family:"Segoe UI",Arial,sans-serif;}' +
+        'body{margin:0;padding:16px;background:#fff;color:#111827;font-size:12px;}' +
+        '.sheet{max-width:760px;margin:0 auto;border:1.5px solid #1e293b;padding:20px 24px;background:#fff;}' +
+        '.top-row{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:14px;border-bottom:2px solid #0b1f44;}' +
+        '.brand{display:flex;align-items:center;gap:12px;}' +
+        '.brand img{width:54px;height:54px;object-fit:contain;border:1px solid #cbd5e1;border-radius:8px;padding:3px;}' +
+        '.barcode{font-family:"Courier New",monospace;letter-spacing:2px;font-size:11px;background:#f8fafc;border:1px solid #cbd5e1;padding:4px 10px;display:inline-block;margin-top:4px;font-weight:700;}' +
+        '.meta-grid{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #cbd5e1;margin-top:14px;background:#f8fafc;}' +
+        '.meta-cell{padding:8px 12px;border-right:1px solid #cbd5e1;}' +
+        '.meta-cell:last-child{border-right:none;}' +
+        '.meta-lbl{font-size:10px;text-transform:uppercase;color:#64748b;font-weight:700;letter-spacing:0.5px;}' +
+        '.meta-val{font-size:13px;font-weight:800;color:#0b1f44;margin-top:2px;}' +
+        '.sec-hdr{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:#0b1f44;margin:16px 0 6px;display:flex;align-items:center;gap:8px;}' +
+        '.sec-hdr:after{content:"";flex:1;height:1px;background:#cbd5e1;}' +
+        'table{width:100%;border-collapse:collapse;font-size:12px;}' +
+        'th{background:#f1f5f9;color:#0f172a;text-align:left;padding:8px 10px;border:1px solid #cbd5e1;font-size:11px;text-transform:uppercase;}' +
+        'td{padding:9px 10px;border:1px solid #cbd5e1;color:#1e293b;}' +
+        '.status-tag{padding:3px 9px;border-radius:4px;font-size:11px;font-weight:800;background:' + (isHold ? '#fef3c7' : '#dcfce7') + ';color:' + (isHold ? '#92400e' : '#166534') + ';}' +
+        '.bottom-split{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-top:16px;}' +
+        '.rules{border:1px solid #cbd5e1;padding:10px 12px;font-size:11px;color:#475569;line-height:1.55;background:#fafafa;}' +
+        '.fare-tbl td{padding:6px 10px;font-size:12px;}' +
+        '.fare-total td{background:#0b1f44;color:#fff;font-weight:800;font-size:13px;}' +
+        '.sign-row{display:flex;justify-content:space-between;align-items:flex-end;margin-top:18px;padding-top:12px;border-top:1px dashed #94a3b8;font-size:11px;color:#475569;}' +
         '@media print{@page{margin:8mm;} body{padding:0;}}' +
-        '</style></head><body><div class="ticket">' +
-        '<div class="g-head"><div class="g-brand">' + (logoSrc ? '<img src="' + logoSrc + '" />' : '') + '<div><h1 style="margin:0;font-size:19px;letter-spacing:0.5px;">GOLAN INTERNATIONAL</h1><div style="font-size:11px;color:#fbbf24;font-weight:700;">TRAVEL &amp; TOURS • AIRLINE TICKETING &amp; UMRAH SERVICES</div></div></div>' +
-        '<div style="text-align:right;"><div class="g-badge">OFFICIAL B2B E-VOUCHER</div><div style="font-size:14px;font-weight:900;font-family:monospace;">' + (b.BookingID || '') + '</div><div style="font-size:10.5px;color:#cbd5e1;">Issued: ' + dtStr + '</div></div></div>' +
-        '<div class="g-body">' +
-        '<div class="greet">Dear <strong>' + (b.PassengerName || 'VALUED PASSENGER') + '</strong>, thank you for booking with <strong>Golan International Travel &amp; Tours</strong>. Your reservation details are below:</div>' +
-        '<div class="flight-strip">' +
-        '<div><div style="font-size:10.5px;color:#64748b;font-weight:700;">SELECTED SERVICE / FLIGHT</div><div style="font-size:16px;font-weight:900;color:#0b1f44;margin:2px 0;">' + cleanTitle + (orig && dest ? ' (' + orig + ' → ' + dest + ')' : '') + '</div><div style="font-size:11.5px;color:#15803d;font-weight:700;">🧳 Baggage: ' + bagTxt + '</div></div>' +
-        '<div style="text-align:right;"><span class="st-pill">' + (isHold ? '⏳ ON HOLD (' + stTxt + ')' : '✓ CONFIRMED (' + stTxt + ')') + '</span><div style="font-size:11px;color:#475569;margin-top:6px;">Ref PNR: <strong style="color:#0b1f44;">' + (b.BookingID || '') + '</strong></div></div>' +
+        '</style></head><body><div class="sheet">' +
+        '<div class="top-row"><div class="brand">' + (logoSrc ? '<img src="' + logoSrc + '" />' : '') + '<div><div style="font-size:19px;font-weight:900;color:#0b1f44;letter-spacing:0.4px;">GOLAN INTERNATIONAL</div><div style="font-size:11px;font-weight:700;color:#475569;">TRAVEL &amp; TOURS • TOBA TEK SINGH, PAKISTAN</div><div style="font-size:11px;color:#64748b;">Tel / WhatsApp: +92 345 3326318 • golaninternational@gmail.com</div></div></div>' +
+        '<div style="text-align:right;"><div style="font-size:15px;font-weight:900;color:#0b1f44;letter-spacing:0.5px;">ELECTRONIC TICKET</div><div style="font-size:11px;color:#64748b;font-weight:600;">PASSENGER ITINERARY / RECEIPT</div><div class="barcode">|||| ||| || |||| | ' + (b.BookingID || '') + '</div></div></div>' +
+        '<div class="meta-grid">' +
+        '<div class="meta-cell"><div class="meta-lbl">Booking / PNR Ref</div><div class="meta-val" style="font-family:monospace;">' + (b.BookingID || '') + '</div></div>' +
+        '<div class="meta-cell"><div class="meta-lbl">Date of Issue</div><div class="meta-val">' + dtStr + '</div></div>' +
+        '<div class="meta-cell"><div class="meta-lbl">Reservation Status</div><div class="meta-val"><span class="status-tag">' + stTxt + '</span></div></div>' +
+        '<div class="meta-cell"><div class="meta-lbl">Issuing Office</div><div class="meta-val">Golan Head Office</div></div>' +
         '</div>' +
-        '<div class="sec">Passenger &amp; Document Details</div>' +
-        '<table><thead><tr><th>Passenger Full Name</th><th>Passport Number</th><th>Service Category</th><th>Baggage Allowance</th><th>Status</th></tr></thead>' +
-        '<tbody><tr><td><strong>' + (b.PassengerName || '') + '</strong></td><td style="font-family:monospace;font-weight:700;">' + (b.PassportNo || '—') + '</td><td>' + (b.Category || 'Airline Ticket') + '</td><td>' + bagTxt + '</td><td><strong>' + stTxt + '</strong></td></tr></tbody></table>' +
-        '<div class="sec">Agency &amp; Billing Summary</div>' +
-        '<table><thead><tr><th>Issuing Agency</th><th>Head Office</th><th>Booking Reference</th><th>Booking Date &amp; Time</th></tr></thead>' +
-        '<tbody><tr><td><strong>Golan International Travel &amp; Tours</strong></td><td>Toba Tek Singh, Pakistan</td><td style="font-family:monospace;">' + (b.BookingID || '') + '</td><td>' + dtStr + '</td></tr></tbody></table>' +
-        '<div class="fare-box"><div><div style="font-size:11px;color:#166534;font-weight:700;">TOTAL B2B NET AMOUNT (INCL. TAXES)</div><div style="font-size:11px;color:#475569;">Please report at airport counter 3 hours prior to departure.</div></div>' +
-        '<div style="font-size:19px;font-weight:900;color:#15803d;">PKR ' + fareNum.toLocaleString() + '.00</div></div>' +
+        '<div class="sec-hdr">Passenger &amp; Travel Document</div>' +
+        '<table><thead><tr><th>Passenger Name</th><th>Passport Number</th><th>Service Category</th><th>E-Ticket / Ref No.</th></tr></thead>' +
+        '<tbody><tr><td><strong style="font-size:13px;">' + (b.PassengerName || '') + '</strong></td><td style="font-family:monospace;font-weight:700;">' + (b.PassportNo || '—') + '</td><td>' + (b.Category || 'Airline Ticket') + '</td><td style="font-family:monospace;font-weight:700;">' + (b.BookingID || '') + '</td></tr></tbody></table>' +
+        '<div class="sec-hdr">Itinerary &amp; Baggage Allowance</div>' +
+        '<table><thead><tr><th>Flight / Service Description</th><th>Sector</th><th>Class</th><th>Baggage Allowance</th><th>Status</th></tr></thead>' +
+        '<tbody><tr><td><strong>' + cleanTitle + '</strong></td><td><strong>' + (orig && dest ? orig + ' → ' + dest : 'As per itinerary') + '</strong></td><td>Economy</td><td><strong>' + bagTxt + '</strong></td><td><span class="status-tag">' + stTxt + '</span></td></tr></tbody></table>' +
+        '<div class="bottom-split">' +
+        '<div class="rules"><strong style="color:#0b1f44;display:block;margin-bottom:4px;">IMPORTANT TRAVEL INFORMATION:</strong>' +
+        '• Please carry a valid passport (minimum 6 months validity) and printed copy of this itinerary.<br>' +
+        '• International check-in counters open 4 hours and close 1 hour prior to scheduled departure.<br>' +
+        '• Date change &amp; cancellation charges apply as per airline fare rules.</div>' +
+        '<table class="fare-tbl"><tr><td>Base Fare &amp; Carrier Charges</td><td style="text-align:right;">PKR ' + fareNum.toLocaleString() + '.00</td></tr>' +
+        '<tr><td>Taxes &amp; Airport Fees</td><td style="text-align:right;">Included</td></tr>' +
+        '<tr class="fare-total"><td>TOTAL AMOUNT (PKR)</td><td style="text-align:right;">PKR ' + fareNum.toLocaleString() + '.00</td></tr></table>' +
         '</div>' +
-        '<div class="g-foot"><div><strong>Chief Executive: Shan Chairman</strong> • 📞 0345-3326318 (WhatsApp)</div><div>Head Office: Toba Tek Singh • golaninternational@gmail.com</div></div>' +
+        '<div class="sign-row"><div><strong>Authorized Signatory:</strong> Shan Chairman (Chief Executive)<br>Golan International Travel &amp; Tours • Toba Tek Singh</div><div style="text-align:right;">Computer Generated Electronic Receipt<br>No Signature Required</div></div>' +
         '</div><script>window.onload=function(){window.print();};<\/script></body></html>');
       w.document.close();
     };

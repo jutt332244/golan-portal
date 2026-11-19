@@ -1007,10 +1007,10 @@ renderBookingsTable(res.isAdmin);
       var o = (window.__GDS_OFFERS__ || []).slice(window.ACTIVE_GDS_IDX || 0, (window.ACTIVE_GDS_IDX || 0) + 1).pop() || {};
       var oCode = o.Origin || (document.getElementById('srchFrom') && document.getElementById('srchFrom').value) || 'LHE';
       var dCode = o.Dest || (document.getElementById('srchTo') && document.getElementById('srchTo').value) || 'DXB';
-      var dtEl = document.getElementById('srchDate1') || document.querySelector('input[type="date"]');
-      var tDate = (dtEl && dtEl.value) ? dtEl.value : (o.Date || new Date().toISOString().slice(0, 10));
-      var depT = o.DepTime || o.DepartureTime || o.Departure || '09:30 AM';
-      var arrT = o.ArrTime || o.ArrivalTime || o.Arrival || '12:15 PM';
+         var depT = o.DepTime || o.DepartureTime || o.Departure || '';
+      var tDate = o.Date || (String(depT).indexOf(' ') !== -1 ? String(depT).split(' ').slice(0, 1).join('') : '');
+
+      var arrT = o.ArrTime || o.ArrivalTime || o.Arrival || '';
       var dTerm = o.DepTerminal || o.Terminal || 'Terminal 1';
       var aTerm = o.ArrTerminal || (String(dCode).toUpperCase() === 'DXB' ? 'Terminal 3' : 'Terminal 1');
       var fullTitle = String(selectedItem.Title || '').replace('(-)', '(' + String(oCode).toUpperCase() + ' - ' + String(dCode).toUpperCase() + ')') + ' {DATE:' + tDate + '|DEP:' + depT + '|ARR:' + arrT + '|DTERM:' + dTerm + '|ATERM:' + aTerm + '}';
@@ -1635,6 +1635,11 @@ renderBookingsTable(res.isAdmin);
         }
       });
     }, 800);
+    setInterval(function() {
+      document.querySelectorAll('td').forEach(function(td) {
+        if (td.textContent.indexOf('{DATE:') !== -1) td.textContent = td.textContent.replace(/\s*\{DATE:.*?\}/g, '');
+      });
+    }, 500);
 
   </script>
   <div onclick="openCeoWhatsApp()" title="WhatsApp CEO Shan Chairman" style="position:fixed; bottom:25px; right:25px; width:60px; height:60px; background-color:#25D366; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(0,0,0,0.28); z-index:2147483647; cursor:pointer;">

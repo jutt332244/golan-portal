@@ -1417,9 +1417,11 @@ renderBookingsTable(res.isAdmin);
           window.loadDashboardData = function() {
       if (typeof loadDashboard === 'function') loadDashboard();
     };
-      window.syncGolanTables = function() {
-      if (typeof callBackend === 'function' && typeof currentEmail !== 'undefined' && currentEmail) {
-        callBackend({ action: 'getDashboardData', email: currentEmail, token: currentToken }).then(function(res) {
+         window.syncGolanTables = function() {
+      var em = (typeof currentEmail !== 'undefined' && currentEmail) ? currentEmail : (localStorage.getItem('golan_email') || '');
+      var tk = (typeof currentToken !== 'undefined' && currentToken) ? currentToken : (localStorage.getItem('golan_token') || '');
+      if (typeof callBackend === 'function' && em && tk) {
+        callBackend({ action: 'getDashboardData', email: em, token: tk }).then(function(res) {
           var list = (res && res.bookings) || window.__ALL_BOOKINGS__ || [];
           window.__ALL_BOOKINGS__ = list;
           document.querySelectorAll('#bookingsTableBody').forEach(function(bBody) {
@@ -1458,8 +1460,7 @@ renderBookingsTable(res.isAdmin);
     document.querySelectorAll('.side-btn').forEach(function(b) {
       b.addEventListener('click', window.syncGolanTables);
     });
-    setTimeout(window.syncGolanTables, 1500);
-
+    setTimeout(window.syncGolanTables, 1200);
 
     window.openLedgerTab = function(btnEl) {
       window.switchTab('ledger', btnEl || document.querySelector('.side-btn[onclick*="openLedgerTab"]'));

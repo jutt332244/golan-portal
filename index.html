@@ -1471,18 +1471,19 @@ renderBookingsTable(res.isAdmin);
       var logoEl = document.getElementById('mainHeaderLogo');
       var logoSrc = (logoEl && logoEl.src) ? logoEl.src : '';
       var itemTxt = String(b.ItemTitle || '');
-           var routeMatch = itemTxt.match(/\(([A-Z]{3})\s*[-→]\s*([A-Z]{3})\)/);
-               var orig = routeMatch ? routeMatch : 'LHE';
-      var dest = routeMatch ? routeMatch : 'DXB';
+                var routeMatch = itemTxt.match(/\(([A-Z]{3})\s*[-→]\s*([A-Z]{3})\)/);
+      var orig = routeMatch ? routeMatch.slice(1, 2).join('') : 'LHE';
+      var dest = routeMatch ? routeMatch.slice(2, 3).join('') : 'DXB';
       var bagMatch = itemTxt.match(/\[(.*?)\]/);
-      var bagTxt = bagMatch ? bagMatch : '30 KG Checked + 7 KG Cabin';
+      var bagTxt = bagMatch ? bagMatch.slice(1, 2).join('') : '30 KG Checked + 7 KG Cabin';
       var dtMatch = itemTxt.match(/\{DATE:(.*?)\|DEP:(.*?)\|ARR:(.*?)\|DTERM:(.*?)\|ATERM:(.*?)\}/);
       var dtOld = itemTxt.match(/\{DATE:(.*?)\|DEP:(.*?)\|ARR:(.*?)\}/);
-      var travelDate = dtMatch ? dtMatch : (dtOld ? dtOld : 'As per airline schedule');
-      var depTime = dtMatch ? dtMatch : (dtOld ? dtOld : '');
-      var arrTime = dtMatch ? dtMatch : (dtOld ? dtOld : '');
-      var depTerm = dtMatch ? dtMatch : 'Terminal 1';
-      var arrTerm = dtMatch ? dtMatch : 'Terminal 3';
+      var travelDate = dtMatch ? dtMatch.slice(1, 2).join('') : (dtOld ? dtOld.slice(1, 2).join('') : 'As per airline schedule');
+      var depTime = dtMatch ? dtMatch.slice(2, 3).join('') : (dtOld ? dtOld.slice(2, 3).join('') : '');
+      var arrTime = dtMatch ? dtMatch.slice(3, 4).join('') : (dtOld ? dtOld.slice(3, 4).join('') : '');
+      var depTerm = dtMatch ? dtMatch.slice(4, 5).join('') : 'Terminal 1';
+      var arrTerm = dtMatch ? dtMatch.slice(5, 6).join('') : 'Terminal 3';
+
 
 
       var cleanTitle = itemTxt.replace(/\s*\(-\)\s*/g, ' ').replace(/\s*\([A-Z]{3}\s*[-→]\s*[A-Z]{3}\)\s*/g, ' ').replace(/\s*\[.*?\]\s*/g, '').replace(/\s*\{DATE:.*?\}\s*/g, '').trim();

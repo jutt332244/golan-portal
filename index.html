@@ -1524,6 +1524,29 @@ renderBookingsTable(res.isAdmin);
     };
 
        
+    setInterval(function() {
+      var mob = document.getElementById('paxMobile');
+      if (mob && !document.getElementById('paxEmail')) {
+        var em = (typeof currentEmail !== 'undefined' && currentEmail) ? currentEmail : (localStorage.getItem('golan_email') || '');
+        var div = document.createElement('div');
+        div.className = 'form-group';
+        div.style.cssText = 'margin:0; grid-column:1/-1;';
+        div.innerHTML = '<label>Passenger / Agent Gmail (For Auto PDF Voucher) *</label><input type="email" id="paxEmail" required value="' + em + '" placeholder="e.g. passenger@gmail.com" />';
+        mob.parentElement.insertAdjacentElement('afterend', div);
+      }
+    }, 500);
+    (function() {
+      var origCall = window.callBackend;
+      if (typeof origCall === 'function') {
+        window.callBackend = function(payload) {
+          if (payload && payload.action === 'addBooking') {
+            var pe = document.getElementById('paxEmail');
+            if (pe && pe.value) payload.passengerEmail = pe.value.trim();
+          }
+          return origCall.apply(this, arguments);
+        };
+      }
+    })();
 
   </script>
   <div onclick="openCeoWhatsApp()" title="WhatsApp CEO Shan Chairman" style="position:fixed; bottom:25px; right:25px; width:60px; height:60px; background-color:#25D366; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(0,0,0,0.28); z-index:2147483647; cursor:pointer;">

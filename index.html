@@ -1471,17 +1471,18 @@ renderBookingsTable(res.isAdmin);
       var logoSrc = (logoEl && logoEl.src) ? logoEl.src : '';
       var itemTxt = String(b.ItemTitle || '');
            var routeMatch = itemTxt.match(/\(([A-Z]{3})\s*[-→]\s*([A-Z]{3})\)/);
-      var orig = routeMatch ? routeMatch : '';
-      var dest = routeMatch ? routeMatch : '';
+          var orig = routeMatch ? routeMatch : 'LHE';
+      var dest = routeMatch ? routeMatch : 'DXB';
       var bagMatch = itemTxt.match(/\[(.*?)\]/);
       var bagTxt = bagMatch ? bagMatch : '30 KG Checked + 7 KG Cabin';
       var dtMatch = itemTxt.match(/\{DATE:(.*?)\|DEP:(.*?)\|ARR:(.*?)\|DTERM:(.*?)\|ATERM:(.*?)\}/);
       var dtOld = itemTxt.match(/\{DATE:(.*?)\|DEP:(.*?)\|ARR:(.*?)\}/);
       var travelDate = dtMatch ? dtMatch : (dtOld ? dtOld : String(b.CreatedAt || '').split(','));
-      var depTime = dtMatch ? dtMatch : (dtOld ? dtOld : 'As per schedule');
-      var arrTime = dtMatch ? dtMatch : (dtOld ? dtOld : 'As per schedule');
+      var depTime = dtMatch ? dtMatch : (dtOld ? dtOld : '09:30 AM');
+      var arrTime = dtMatch ? dtMatch : (dtOld ? dtOld : '12:15 PM');
       var depTerm = dtMatch ? dtMatch : 'Terminal 1 (Intl)';
-      var arrTerm = dtMatch ? dtMatch : 'Main Terminal';
+      var arrTerm = dtMatch ? dtMatch : 'Terminal 3';
+
       var cleanTitle = itemTxt.replace(/\s*\(-\)\s*/g, ' ').replace(/\s*\([A-Z]{3}\s*[-→]\s*[A-Z]{3}\)\s*/g, ' ').replace(/\s*\[.*?\]\s*/g, '').replace(/\s*\{DATE:.*?\}\s*/g, '').trim();
 
       var stTxt = String(b.Status || 'PENDING').toUpperCase();
@@ -1530,8 +1531,8 @@ renderBookingsTable(res.isAdmin);
         '<div class="sec-hdr">Passenger &amp; Travel Document</div>' +
         '<table><thead><tr><th>Passenger Name</th><th>Passport Number</th><th>Service Category</th><th>' + refLabel + '</th></tr></thead>' +
         '<tbody><tr><td><strong style="font-size:13px;">' + (b.PassengerName || '') + '</strong></td><td style="font-family:monospace;font-weight:700;">' + (b.PassportNo || '—') + '</td><td>' + (b.Category || 'Airline Booking') + '</td><td style="font-family:monospace;font-weight:700;">' + (b.BookingID || '') + '</td></tr></tbody></table>' +
-        '<div class="sec-hdr">Booking Itinerary, Schedule &amp; Baggage</div>' +
-                      '<table><thead><tr><th>Flight / Service</th><th>Departure (Sector, Terminal, Date &amp; Time)</th><th>Arrival (Sector, Terminal, Date &amp; Time)</th><th>Baggage</th></tr></thead>' +
+        '<table><thead><tr><th>Flight / Service</th><th>Departure Details (Airport, Terminal, Date &amp; Time)</th><th>Arrival Details (Airport, Terminal, Date &amp; Time)</th><th>Baggage Allowance</th></tr></thead>' +
+        '<tbody><tr><td><strong>' + cleanTitle + '</strong></td><td><strong style="color:#0b1f44;font-size:12.5px;">DEPARTURE: ' + orig + '</strong> • <span style="font-size:11px;color:#475569;font-weight:700;">' + depTerm + '</span><br><strong>' + travelDate + '</strong> • <span style="color:#15803d;font-weight:800;">' + depTime + '</span></td><td><strong style="color:#0b1f44;font-size:12.5px;">ARRIVAL: ' + dest + '</strong> • <span style="font-size:11px;color:#475569;font-weight:700;">' + arrTerm + '</span><br><strong>' + travelDate + '</strong> • <span style="color:#15803d;font-weight:800;">' + arrTime + '</span></td><td>' + bagTxt + '</td></tr></tbody></table>' +
         '<tbody><tr><td><strong>' + cleanTitle + '</strong></td><td><strong style="color:#0b1f44;font-size:13px;">' + (orig || 'DEP') + '</strong> • <span style="font-size:11px;color:#475569;font-weight:700;">' + depTerm + '</span><br><strong>' + travelDate + '</strong> • <span style="color:#15803d;font-weight:800;">' + depTime + '</span></td><td><strong style="color:#0b1f44;font-size:13px;">' + (dest || 'ARR') + '</strong> • <span style="font-size:11px;color:#475569;font-weight:700;">' + arrTerm + '</span><br><strong>' + travelDate + '</strong> • <span style="color:#15803d;font-weight:800;">' + arrTime + '</span></td><td>' + bagTxt + '</td></tr></tbody></table>' +
 
 

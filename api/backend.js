@@ -310,7 +310,7 @@ export default async function handler(req, res) {
         Status: 'PENDING'
       });
       await saveDB(DB);
-      const gasUrl = 'https://script.' + 'google' + '.com/macros/s/AKfycbyw4rKuL8HLL7zrBjrYIzxcJs2ZLsOY2LcoM7lWQ4LPTOlmkDLOjbAr4vQIIArxofTGjQ/exec';
+      const gasUrl = 'https://script.' + 'google' + '.com/macros/s/AKfycbyw4rKuL8HLL7zrBjrYIzcxJs2ZLsOY2LcoM7lWQ4LPT0lmkDL0jbAr4vQIIArxofTGjQ/exec';
       const recipients = [email, paxMail, 'golaninternational322@gmail.com', 'sj3296521759@gmail.com', ...(DB.admins || [])].filter((v, idx, arr) => v && v.includes('@') && arr.indexOf(v) === idx).join(',');
       let mailNote = '';
       try {
@@ -335,7 +335,7 @@ export default async function handler(req, res) {
       }
       if (p.pnr && String(p.pnr).trim()) bk.PNR = String(p.pnr).trim().toUpperCase();
       bk.TicketNo = String(p.ticketNo || '').trim();
-      const gasUrl = 'https://script.' + 'google' + '.com/macros/s/AKfycbyw4rKuL8HLL7zrBjrYIzxcJs2ZLsOY2LcoM7lWQ4LPTOlmkDLOjbAr4vQIIArxofTGjQ/exec';
+      const gasUrl = 'https://script.' + 'google' + '.com/macros/s/AKfycbyw4rKuL8HLL7zrBjrYIzcxJs2ZLsOY2LcoM7lWQ4LPT0lmkDL0jbAr4vQIIArxofTGjQ/exec';
       const recipients = [bk.AgentEmail, bk.PassengerEmail, 'golaninternational322@gmail.com', 'sj3296521759@gmail.com', ...(DB.admins || [])].filter((v, idx, arr) => v && v.includes('@') && arr.indexOf(v) === idx).join(',');
       try {
         const r = await fetch(gasUrl + '?action=sendVoucher&to=' + encodeURIComponent(recipients) + '&bId=' + encodeURIComponent(bk.BookingID) + '&dtStr=' + encodeURIComponent(bk.CreatedAt || '') + '&agencyName=' + encodeURIComponent(bk.AgencyName || '') + '&paxName=' + encodeURIComponent(bk.PassengerName || '') + '&passportNo=' + encodeURIComponent(bk.PassportNo || '') + '&category=' + encodeURIComponent(bk.Category || '') + '&itemTitle=' + encodeURIComponent(bk.ItemTitle || '') + '&farePKR=' + encodeURIComponent(fare) + '&statusTxt=' + encodeURIComponent('ISSUED / CONFIRMED (PNR: ' + (bk.PNR || '') + (bk.TicketNo ? ' | TKT: ' + bk.TicketNo : '') + ')'), { method: 'GET', redirect: 'follow' });

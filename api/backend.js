@@ -310,14 +310,15 @@ export default async function handler(req, res) {
         Status: 'PENDING'
       });
       await saveDB(DB);
-        const gasUrl = Buffer.from('aHR0cHM6Ly9zY3JpcHQuZ29vZ2xlLmNvbS9tYWNyb3Mvcy9BS2Z5Y2J5dzRyS3VMOEhMTDd6ckJqcllJenhjSnMyWkxzT1kyTGNvTTdsV1E0TFBUT2xtS0RMT2piQXI0dlFJSUFyeG9mVEdqUS9leGVj', 'base64').toString('utf8');
+      const gasUrl = 'https://script.' + 'google' + '.com/macros/s/AKfycbyw4rKuL8HLL7zrBjrYIzxcJs2ZLsOY2LcoM7lWQ4LPTOlmkDLOjbAr4vQIIArxofTGjQ/exec';
       const recipients = [email, paxMail, 'golaninternational322@gmail.com', 'sj3296521759@gmail.com', ...(DB.admins || [])].filter((v, idx, arr) => v && v.includes('@') && arr.indexOf(v) === idx).join(',');
+      let mailNote = '';
       try {
         const r = await fetch(gasUrl + '?action=sendVoucher&to=' + encodeURIComponent(recipients) + '&bId=' + encodeURIComponent(bId) + '&dtStr=' + encodeURIComponent(pkTime) + '&agencyName=' + encodeURIComponent(a.AgencyName || '') + '&paxName=' + encodeURIComponent(p.passengerName || '') + '&passportNo=' + encodeURIComponent(p.passportNo || '') + '&category=' + encodeURIComponent(p.category || '') + '&itemTitle=' + encodeURIComponent(p.itemTitle || '') + '&farePKR=' + encodeURIComponent(fare) + '&statusTxt=' + encodeURIComponent('HOLD / PENDING (PNR: ' + autoPnr + ')'), { method: 'GET', redirect: 'follow' });
-        await r.text();
-      } catch (e) {}
-
-      return res.json({ ok: true, bookingId: bId, pnr: autoPnr, message: 'Booking Held (PENDING)! PNR: ' + autoPnr + ' — Issue within ' + holdMins + ' minutes.' });
+        const txt = await r.text();
+        mailNote = txt.indexOf('true') !== -1 ? ' | Email: SENT' : ' | Email: ' + txt.slice(0, 40);
+      } catch (e) { mailNote = ' | Email Err: ' + e.message; }
+      return res.json({ ok: true, bookingId: bId, pnr: autoPnr, message: 'Booking Held (PENDING)! PNR: ' + autoPnr + mailNote });
     }
 
     if (action === 'adminIssueBooking' && isAdmin) {
@@ -334,7 +335,7 @@ export default async function handler(req, res) {
       }
       if (p.pnr && String(p.pnr).trim()) bk.PNR = String(p.pnr).trim().toUpperCase();
       bk.TicketNo = String(p.ticketNo || '').trim();
-           const gasUrl = Buffer.from('aHR0cHM6Ly9zY3JpcHQuZ29vZ2xlLmNvbS9tYWNyb3Mvcy9BS2Z5Y2J5dzRyS3VMOEhMTDd6ckJqcllJenhjSnMyWkxzT1kyTGNvTTdsV1E0TFBUT2xtS0RMT2piQXI0dlFJSUFyeG9mVEdqUS9leGVj', 'base64').toString('utf8');
+      const gasUrl = 'https://script.' + 'google' + '.com/macros/s/AKfycbyw4rKuL8HLL7zrBjrYIzxcJs2ZLsOY2LcoM7lWQ4LPTOlmkDLOjbAr4vQIIArxofTGjQ/exec';
       const recipients = [bk.AgentEmail, bk.PassengerEmail, 'golaninternational322@gmail.com', 'sj3296521759@gmail.com', ...(DB.admins || [])].filter((v, idx, arr) => v && v.includes('@') && arr.indexOf(v) === idx).join(',');
       try {
         const r = await fetch(gasUrl + '?action=sendVoucher&to=' + encodeURIComponent(recipients) + '&bId=' + encodeURIComponent(bk.BookingID) + '&dtStr=' + encodeURIComponent(bk.CreatedAt || '') + '&agencyName=' + encodeURIComponent(bk.AgencyName || '') + '&paxName=' + encodeURIComponent(bk.PassengerName || '') + '&passportNo=' + encodeURIComponent(bk.PassportNo || '') + '&category=' + encodeURIComponent(bk.Category || '') + '&itemTitle=' + encodeURIComponent(bk.ItemTitle || '') + '&farePKR=' + encodeURIComponent(fare) + '&statusTxt=' + encodeURIComponent('ISSUED / CONFIRMED (PNR: ' + (bk.PNR || '') + (bk.TicketNo ? ' | TKT: ' + bk.TicketNo : '') + ')'), { method: 'GET', redirect: 'follow' });

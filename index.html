@@ -1516,49 +1516,53 @@ renderBookingsTable(res.isAdmin);
           window.__ALL_BOOKINGS__ = list;
           document.querySelectorAll('#bookingsTableBody').forEach(function(bBody) {
             bBody.innerHTML = list.length ? list.map(function(b) {
-              var st = String(b.Status || 'PENDING').split(' ')[0];
-                  var cleanItin = String(b.ItemTitle || '').replace(/\{DATE:.*?\}/g, '').trim();
+          var rawItin = String(b.ItemTitle || '').replace(/\{DATE:.*?\}/g, '').replace(/\(\-\)/g, '').trim();
+          var bagMatch = rawItin.match(/\[(.*?)\]/);
+          var bagTxt = bagMatch ? bagMatch[1] : '';
+          var flightMain = rawItin.replace(/\[.*?\]/g, '').trim();
+          var dtParts = String(b.CreatedAt || '').split(',');
+          var dtDate = (dtParts[0] || '').trim();
+          var dtTime = (dtParts[1] || '').trim();
           var stUp = String(b.Status || 'PENDING').toUpperCase();
           var isExp = (stUp.indexOf('EXPIR') !== -1) || (stUp === 'PENDING' && b.HoldUntil && Date.now() > Number(b.HoldUntil));
           var secLeft = (b.HoldUntil && Date.now() < Number(b.HoldUntil)) ? Math.floor((Number(b.HoldUntil) - Date.now()) / 1000) : 0;
           var mm = Math.floor(secLeft / 60), ss = secLeft % 60;
-          var timeTxt = secLeft > 0 ? ' (' + String(mm).padStart(2, '0') + ':' + String(ss).padStart(2, '0') + ')' : '';
+          var timeTxt = secLeft > 0 ? String(mm).padStart(2, '0') + ':' + String(ss).padStart(2, '0') : '';
           var statusHtml = (stUp === 'CONFIRMED' || stUp === 'ISSUED')
-            ? '<span class="badge" style="background:#dcfce7;color:#166534;font-weight:800;">✓ CONFIRMED</span>'
+            ? '<span style="display:inline-block;white-space:nowrap;background:#dcfce7;color:#15803d;border:1px solid #86efac;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:800;">✓ ISSUED</span>'
             : (isExp
-                ? '<span class="badge" style="background:#fee2e2;color:#b91c1c;font-weight:800;">BOOKING EXPIRED</span>'
-                : '<span class="badge golan-live-timer" data-hold="' + (b.HoldUntil || 0) + '" style="background:#fef3c7;color:#92400e;font-weight:800;font-family:monospace;">PENDING' + timeTxt + '</span>');
-          var dt = b.CreatedAt ? String(b.CreatedAt).split('T')[0] : '';
-          return '<tr>' +
-
-                            '<td><strong style="font-family:monospace;color:#0b1f44;">' + (b.BookingID || '') + '</strong></td>' +
-              '<td>' + dt + '</td>' +
-              '<td><strong>' + (b.PassengerName || '') + '</strong><br><small style="color:#64748b;">PP: ' + (b.PassportNo || '') + '</small></td>' +
-              '<td>' + cleanItin + '</td>' +
-              '<td><strong style="font-family:monospace;color:#0b1f44;letter-spacing:0.6px;">' + (b.PNR || b.BookingID || '-') + '</strong>' + (b.TicketNo ? '<br><small style="color:#15803d;font-weight:700;">TKT: ' + b.TicketNo + '</small>' : '') + '</td>' +
-              '<td style="font-weight:800;color:#15803d;">PKR ' + Number(b.FarePKR || 0).toLocaleString() + '</td>' +
-              '<td>' + statusHtml + '</td>' +
-              '<td><button type="button" class="btn btn-sm btn-primary" onclick="window.printSingleGolanTicket(\'' + (b.BookingID || '') + '\')">Print PDF</button></td>' +
-            '</tr>';
-
-            }).join('') : '<tr><td colspan="8" style="text-align:center;color:#64748b;padding:20px;">No bookings found yet.</td></tr>';
+                ? '<span style="display:inline-block;white-space:nowrap;background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:800;">✕ EXPIRED</span>'
+                : '<span class="golan-live-timer" data-hold="' + (b.HoldUntil || 0) + '" style="display:inline-block;white-space:nowrap;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:800;font-family:monospace;">⏳ ' + (timeTxt || 'HOLD') + '</span>');
+          return '<tr style="border-bottom:1px solid #e2e8f0;transition:background 0.15s;" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'#ffffff\'">' +
+            '<td style="white-space:nowrap;padding:12px 10px;"><span style="background:#f1f5f9;color:#0b1f44;border:1px solid #cbd5e1;padding:4px 8px;border-radius:6px;font-family:monospace;font-weight:800;font-size:12px;">' + (b.BookingID || '') + '</span></td>' +
+            '<td style="white-space:nowrap;padding:12px 10px;"><div style="font-weight:700;color:#0f172a;font-size:12px;">' + dtDate + '</div>' + (dtTime ? '<div style="font-size:11px;color:#64748b;font-family:monospace;">' + dtTime + ' PKT</div>' : '') + '</td>' +
+            '<td style="padding:12px 10px;"><div style="font-weight:800;color:#0f172a;font-size:12.5px;text-transform:uppercase;">' + (b.PassengerName || '') + '</div><div style="font-size:11px;color:#64748b;font-family:monospace;">PP: ' + (b.PassportNo || '-') + '</div></td>' +
+            '<td style="padding:12px 10px;"><div style="font-weight:700;color:#0b1f44;font-size:12.5px;">' + flightMain + '</div>' + (bagTxt ? '<span style="display:inline-block;margin-top:3px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;padding:1px 7px;border-radius:4px;font-size:10.5px;font-weight:700;">🧳 ' + bagTxt + '</span>' : '') + '</td>' +
+            '<td style="white-space:nowrap;padding:12px 10px;"><span style="background:#0b1f44;color:#fbbf24;padding:4px 9px;border-radius:6px;font-family:monospace;font-weight:900;font-size:12.5px;letter-spacing:1px;">' + (b.PNR || b.BookingID || '-') + '</span>' + (b.TicketNo ? '<div style="margin-top:3px;font-size:10.5px;color:#15803d;font-weight:800;font-family:monospace;">TKT: ' + b.TicketNo + '</div>' : '') + '</td>' +
+            '<td style="white-space:nowrap;padding:12px 10px;font-weight:900;color:#15803d;font-size:13px;">PKR ' + Number(b.FarePKR || 0).toLocaleString() + '</td>' +
+            '<td style="white-space:nowrap;padding:12px 10px;">' + statusHtml + '</td>' +
+            '<td style="white-space:nowrap;padding:12px 10px;"><button type="button" onclick="window.printSingleGolanTicket(\'' + (b.BookingID || '') + '\')" style="background:linear-gradient(135deg,#0b1f44,#1e3a8a);color:#fff;border:none;padding:6px 12px;border-radius:7px;font-size:11.5px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 2px 6px rgba(11,31,68,0.2);">🖨 E-Ticket</button></td>' +
+          '</tr>';
+        }).join('') : '<tr><td colspan="8" style="text-align:center;color:#64748b;padding:24px;">No bookings found yet.</td></tr>';
+      });
+      if (!window._golanLiveTicker) {
+        window._golanLiveTicker = setInterval(function() {
+          document.querySelectorAll('.golan-live-timer').forEach(function(el) {
+            var hu = Number(el.getAttribute('data-hold') || 0);
+            if (!hu) return;
+            var rem = Math.floor((hu - Date.now()) / 1000);
+            if (rem <= 0) {
+              el.className = '';
+              el.style.cssText = 'display:inline-block;white-space:nowrap;background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:800;';
+              el.textContent = '✕ EXPIRED';
+            } else {
+              var m = Math.floor(rem / 60), s = rem % 60;
+              el.textContent = '⏳ ' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+            }
           });
-                 if (!window._golanLiveTicker) {
-          window._golanLiveTicker = setInterval(function() {
-            document.querySelectorAll('.golan-live-timer').forEach(function(el) {
-              var hu = Number(el.getAttribute('data-hold') || 0);
-              if (!hu) return;
-              var rem = Math.floor((hu - Date.now()) / 1000);
-              if (rem <= 0) {
-                el.className = 'badge';
-                el.style.cssText = 'background:#fee2e2;color:#b91c1c;font-weight:800;';
-                el.textContent = 'BOOKING EXPIRED';
-              } else {
-                var m = Math.floor(rem / 60), s = rem % 60;
-                el.textContent = 'PENDING (' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0') + ')';
-              }
-            });
-          }, 1000);
+        }, 1000);
+      }
+
         }
 
           document.querySelectorAll('#ledgerTableBody').forEach(function(lBody) {

@@ -1520,12 +1520,14 @@ renderBookingsTable(res.isAdmin);
                   var cleanItin = String(b.ItemTitle || '').replace(/\{DATE:.*?\}/g, '').trim();
           var stUp = String(b.Status || 'PENDING').toUpperCase();
           var isExp = (stUp.indexOf('EXPIR') !== -1) || (stUp === 'PENDING' && b.HoldUntil && Date.now() > Number(b.HoldUntil));
-          var minsLeft = (b.HoldUntil && Date.now() < Number(b.HoldUntil)) ? Math.ceil((Number(b.HoldUntil) - Date.now()) / 60000) : 0;
+          var secLeft = (b.HoldUntil && Date.now() < Number(b.HoldUntil)) ? Math.floor((Number(b.HoldUntil) - Date.now()) / 1000) : 0;
+          var mm = Math.floor(secLeft / 60), ss = secLeft % 60;
+          var timeTxt = secLeft > 0 ? ' (' + String(mm).padStart(2, '0') + ':' + String(ss).padStart(2, '0') + ')' : '';
           var statusHtml = (stUp === 'CONFIRMED' || stUp === 'ISSUED')
             ? '<span class="badge" style="background:#dcfce7;color:#166534;font-weight:800;">✓ CONFIRMED</span>'
             : (isExp
                 ? '<span class="badge" style="background:#fee2e2;color:#b91c1c;font-weight:800;">BOOKING EXPIRED</span>'
-                : '<span class="badge" style="background:#fef3c7;color:#92400e;font-weight:800;">PENDING' + (minsLeft > 0 ? ' (' + minsLeft + 'm)' : '') + '</span>');
+                : '<span class="badge golan-live-timer" data-hold="' + (b.HoldUntil || 0) + '" style="background:#fef3c7;color:#92400e;font-weight:800;font-family:monospace;">PENDING' + timeTxt + '</span>');
           var dt = b.CreatedAt ? String(b.CreatedAt).split('T')[0] : '';
           return '<tr>' +
 
@@ -1541,6 +1543,24 @@ renderBookingsTable(res.isAdmin);
 
             }).join('') : '<tr><td colspan="8" style="text-align:center;color:#64748b;padding:20px;">No bookings found yet.</td></tr>';
           });
+                 if (!window._golanLiveTicker) {
+          window._golanLiveTicker = setInterval(function() {
+            document.querySelectorAll('.golan-live-timer').forEach(function(el) {
+              var hu = Number(el.getAttribute('data-hold') || 0);
+              if (!hu) return;
+              var rem = Math.floor((hu - Date.now()) / 1000);
+              if (rem <= 0) {
+                el.className = 'badge';
+                el.style.cssText = 'background:#fee2e2;color:#b91c1c;font-weight:800;';
+                el.textContent = 'BOOKING EXPIRED';
+              } else {
+                var m = Math.floor(rem / 60), s = rem % 60;
+                el.textContent = 'PENDING (' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0') + ')';
+              }
+            });
+          }, 1000);
+        }
+
           document.querySelectorAll('#ledgerTableBody').forEach(function(lBody) {
             lBody.innerHTML = list.length ? list.map(function(b) {
               var st = String(b.Status || 'PENDING').split(' ')[0];

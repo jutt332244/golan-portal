@@ -1063,12 +1063,7 @@ renderBookingsTable(res.isAdmin);
         if (typeof loadDashboard === 'function') loadDashboard();
         if (typeof loadDashboardData === 'function') loadDashboardData();
       });
-
-        setTimeout(function() {
-          if (typeof loadDashboardData === 'function') loadDashboardData();
-        }, 1200);
-      });
-
+ 
     }
           function openFareCategoryTab(catName, btnEl) {
       switchTab('fares', btnEl);

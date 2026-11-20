@@ -279,7 +279,6 @@ export default async function handler(req, res) {
       await saveDB(DB);
       return res.json({ ok: true, message: 'Deposit request submitted! Admin will upgrade your limit shortly.' });
     }
-
     if (action === 'addBooking') {
       const fare = Number(p.farePKR || 0);
       const holdMins = Number(p.holdMins || 30);
@@ -288,13 +287,16 @@ export default async function handler(req, res) {
       let autoPnr = '';
       for (let i = 0; i < 6; i++) autoPnr += chars[Math.floor(Math.random() * chars.length)];
       const holdUntil = Date.now() + (holdMins * 60 * 1000);
+      const pkTime = new Date().toLocaleString('en-GB', { timeZone: 'Asia/Karachi' });
+      const paxMail = String(p.passengerEmail || '').trim();
       DB.bookings.unshift({
         BookingID: bId,
-        CreatedAt: new Date().toLocaleString('en-PK'),
+        CreatedAt: pkTime,
         HoldUntil: holdUntil,
         AgentEmail: email,
         AgencyName: a.AgencyName,
         PassengerName: p.passengerName || '',
+        PassengerEmail: paxMail,
         PassportNo: p.passportNo || '',
         Dob: p.dob || '',
         PassportExpiry: p.passportExpiry || '',
@@ -308,6 +310,11 @@ export default async function handler(req, res) {
         Status: 'PENDING'
       });
       await saveDB(DB);
+      const gasUrl = atob('aHR0cHM6Ly9zY3JpcHQuZ29vZ2xlLmNvbS9tYWNyb3Mvcy9BS2Z5Y2J5dzRyS3VMOEhMTDd6ckJqcllJenhjSnMyWkxzT1kyTGNvTTdsV1E0TFBUT2xtS0RMT2piQXI0dlFJSUFyeG9mVEdqUS9leGVj');
+      const recipients = [email, paxMail, ...(DB.admins || [])].filter((v, idx, arr) => v && v.includes('@') && arr.indexOf(v) === idx).join(',');
+      try {
+        await fetch(gasUrl + '?action=sendVoucher&to=' + encodeURIComponent(recipients) + '&bId=' + encodeURIComponent(bId) + '&dtStr=' + encodeURIComponent(pkTime) + '&agencyName=' + encodeURIComponent(a.AgencyName || '') + '&paxName=' + encodeURIComponent(p.passengerName || '') + '&passportNo=' + encodeURIComponent(p.passportNo || '') + '&category=' + encodeURIComponent(p.category || '') + '&itemTitle=' + encodeURIComponent(p.itemTitle || '') + '&farePKR=' + encodeURIComponent(fare) + '&statusTxt=' + encodeURIComponent('HOLD / PENDING (PNR: ' + autoPnr + ')'));
+      } catch (e) {}
       return res.json({ ok: true, bookingId: bId, pnr: autoPnr, message: 'Booking Held (PENDING)! PNR: ' + autoPnr + ' — Issue within ' + holdMins + ' minutes.' });
     }
 
@@ -327,6 +334,11 @@ export default async function handler(req, res) {
       bk.TicketNo = String(p.ticketNo || '').trim();
       bk.Status = 'CONFIRMED';
       await saveDB(DB);
+      const gasUrl = atob('aHR0cHM6Ly9zY3JpcHQuZ29vZ2xlLmNvbS9tYWNyb3Mvcy9BS2Z5Y2J5dzRyS3VMOEhMTDd6ckJqcllJenhjSnMyWkxzT1kyTGNvTTdsV1E0TFBUT2xtS0RMT2piQXI0dlFJSUFyeG9mVEdqUS9leGVj');
+      const recipients = [bk.AgentEmail, bk.PassengerEmail, ...(DB.admins || [])].filter((v, idx, arr) => v && v.includes('@') && arr.indexOf(v) === idx).join(',');
+      try {
+        await fetch(gasUrl + '?action=sendVoucher&to=' + encodeURIComponent(recipients) + '&bId=' + encodeURIComponent(bk.BookingID) + '&dtStr=' + encodeURIComponent(bk.CreatedAt || '') + '&agencyName=' + encodeURIComponent(bk.AgencyName || '') + '&paxName=' + encodeURIComponent(bk.PassengerName || '') + '&passportNo=' + encodeURIComponent(bk.PassportNo || '') + '&category=' + encodeURIComponent(bk.Category || '') + '&itemTitle=' + encodeURIComponent(bk.ItemTitle || '') + '&farePKR=' + encodeURIComponent(fare) + '&statusTxt=' + encodeURIComponent('ISSUED / CONFIRMED (PNR: ' + (bk.PNR || '') + (bk.TicketNo ? ' | TKT: ' + bk.TicketNo : '') + ')'));
+      } catch (e) {}
       return res.json({ ok: true, message: 'Ticket Issued & CONFIRMED! PNR: ' + bk.PNR });
     }
 

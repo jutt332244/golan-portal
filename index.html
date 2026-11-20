@@ -1007,14 +1007,17 @@ renderBookingsTable(res.isAdmin);
       var rawTitle = String(selectedItem.Title || '');
       var titleSec = rawTitle.match(/\(([A-Z]{3})\s*[-→]\s*([A-Z]{3})\)/);
       var o = (window.__GDS_OFFERS__ || []).slice(window.ACTIVE_GDS_IDX || 0, (window.ACTIVE_GDS_IDX || 0) + 1).pop() || {};
-      var oCode = (titleSec && titleSec.slice(1, 2).join('')) || o.Origin || '';
-      var dCode = (titleSec && titleSec.slice(2, 3).join('')) || o.Dest || '';
-      var depT = o.DepTime || o.DepartureTime || o.Departure || '';
-      var arrT = o.ArrTime || o.ArrivalTime || o.Arrival || '';
-      var tDate = o.Date || (String(depT).indexOf(' ') !== -1 ? String(depT).split(' ').slice(0, 1).join('') : '');
-      var dTerm = o.DepTerminal || o.Terminal || '';
-      var aTerm = o.ArrTerminal || '';
-      var cleanBase = (oCode && dCode) ? rawTitle.replace('(-)', '(' + oCode + ' - ' + dCode + ')') : rawTitle;
+      var iataInputs = Array.from(document.querySelectorAll('#tab-dashboard input[type="text"], #tab-fares input[type="text"]'))
+        .map(function(el) { return String(el.value || '').trim().toUpperCase(); })
+        .filter(function(v) { return /^[A-Z]{3}$/.test(v); });
+      var oCode = (titleSec && titleSec.slice(1, 2).join('')) || o.Origin || o.origin || o.from || iataInputs.slice(0, 1).join('') || '';
+      var dCode = (titleSec && titleSec.slice(2, 3).join('')) || o.Dest || o.dest || o.to || iataInputs.slice(1, 2).join('') || '';
+      var depT = o.DepTime || o.DepartureTime || o.Departure || o.depTime || '';
+      var arrT = o.ArrTime || o.ArrivalTime || o.Arrival || o.arrTime || '';
+      var tDate = o.Date || o.date || (String(depT).indexOf(' ') !== -1 ? String(depT).split(' ').slice(0, 1).join('') : '');
+      var dTerm = o.DepTerminal || o.Terminal || o.depTerminal || '';
+      var aTerm = o.ArrTerminal || o.arrTerminal || '';
+      var cleanBase = (oCode && dCode) ? rawTitle.replace(/\(\s*-\s*\)/, '(' + oCode + ' - ' + dCode + ')') : rawTitle;
       var fullTitle = cleanBase + ' {DATE:' + tDate + '|DEP:' + depT + '|ARR:' + arrT + '|DTERM:' + dTerm + '|ATERM:' + aTerm + '}';
       callBackend({
         action:'addBooking', email:currentEmail, token:currentToken,
@@ -1027,14 +1030,16 @@ renderBookingsTable(res.isAdmin);
         paxMobile:document.getElementById('paxMobile').value,
         category:selectedItem.Category, itemTitle:fullTitle, farePKR:selectedItem.FarePKR
       }).then(function(res) {
-
         alert(res.message);
         var gm = document.getElementById('gdsDetailsModal');
         if (gm) gm.style.display = 'none';
         if (typeof closeBookingModal === 'function') { try { closeBookingModal(); } catch(e) {} }
-        if (typeof loadDashboardData === 'function') { loadDashboardData(); }
         window.switchTab('bookings');
+        setTimeout(function() {
+          if (typeof loadDashboardData === 'function') loadDashboardData();
+        }, 1200);
       });
+
     }
           function openFareCategoryTab(catName, btnEl) {
       switchTab('fares', btnEl);

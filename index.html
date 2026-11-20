@@ -1095,7 +1095,7 @@ renderBookingsTable(res.isAdmin);
               '<td>' + nowPk + '</td>' +
               '<td><strong>' + fullName + '</strong><br><small>PP: ' + pp + '</small></td>' +
               '<td>' + cleanBase + '</td>' +
-              '<td>' + newId + '</td>' +
+              '<td><strong style="font-family:monospace;color:#0b1f44;">' + showPnr + '</strong></td>' +
               '<td style="font-weight:800;color:#15803d;">PKR ' + Number(selectedItem.FarePKR || 0).toLocaleString() + '</td>' +
               '<td><span class="badge" style="background:#fef3c7;color:#92400e;">PENDING</span></td>' +
               '<td><button type="button" class="btn btn-sm btn-primary" onclick="window.printSingleGolanTicket(\'' + newId + '\')">Print PDF</button></td>';

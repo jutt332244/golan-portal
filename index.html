@@ -1596,86 +1596,116 @@ renderBookingsTable(res.isAdmin);
       var logoEl = document.getElementById('mainHeaderLogo');
       var logoSrc = (logoEl && logoEl.src) ? logoEl.src : '';
       var itemTxt = String(b.ItemTitle || '');
-                 var routeMatch = itemTxt.match(/\(([A-Z]{3})\s*[-→]\s*([A-Z]{3})\)/);
-      var orig = routeMatch ? routeMatch.slice(1, 2).join('') : '';
-      var dest = routeMatch ? routeMatch.slice(2, 3).join('') : '';
+      var routeMatch = itemTxt.match(/\(([A-Z]{3})\s*[-–→]\s*([A-Z]{3})\)/);
+      var orig = routeMatch ? routeMatch[1] : 'ORIGIN';
+      var dest = routeMatch ? routeMatch[2] : 'DEST';
       var bagMatch = itemTxt.match(/\[(.*?)\]/);
-      var bagTxt = bagMatch ? bagMatch.slice(1, 2).join('') : 'As per airline policy';
+      var bagTxt = bagMatch ? bagMatch[1] : '30 KG Checked + 7 KG Cabin';
       var dtMatch = itemTxt.match(/\{DATE:(.*?)\|DEP:(.*?)\|ARR:(.*?)\|DTERM:(.*?)\|ATERM:(.*?)\}/);
-      var dtOld = itemTxt.match(/\{DATE:(.*?)\|DEP:(.*?)\|ARR:(.*?)\}/);
-      var travelDate = dtMatch ? dtMatch.slice(1, 2).join('') : (dtOld ? dtOld.slice(1, 2).join('') : 'As per airline schedule');
-      var depTime = dtMatch ? dtMatch.slice(2, 3).join('') : (dtOld ? dtOld.slice(2, 3).join('') : '');
-      var arrTime = dtMatch ? dtMatch.slice(3, 4).join('') : (dtOld ? dtOld.slice(3, 4).join('') : '');
-      var depTerm = dtMatch ? dtMatch.slice(4, 5).join('') : '';
-      var arrTerm = dtMatch ? dtMatch.slice(5, 6).join('') : '';
-
-
-
-
-      var cleanTitle = itemTxt.replace(/\s*\(-\)\s*/g, ' ').replace(/\s*\([A-Z]{3}\s*[-→]\s*[A-Z]{3}\)\s*/g, ' ').replace(/\s*\[.*?\]\s*/g, '').replace(/\s*\{DATE:.*?\}\s*/g, '').trim();
-
-      var stTxt = String(b.Status || 'PENDING').toUpperCase();
-      var isIssued = stTxt.indexOf('ISSUED') !== -1 || stTxt.indexOf('CONFIRM') !== -1;
-      var docHeading = isIssued ? 'ELECTRONIC TICKET' : 'BOOKING RESERVATION';
-      var docSub = isIssued ? 'PASSENGER ITINERARY / ISSUED RECEIPT' : 'PROVISIONAL BOOKING / HOLD VOUCHER';
-      var dateLabel = isIssued ? 'DATE OF ISSUE' : 'BOOKING DATE';
-      var refLabel = isIssued ? 'E-TICKET / PNR NO.' : 'BOOKING REF NO.';
-      var dtStr = String(b.CreatedAt || '');
+      var fDate = dtMatch ? (dtMatch[1] || '').trim() : '';
+      var depRaw = dtMatch ? (dtMatch[2] || '').trim() : '';
+      var arrRaw = dtMatch ? (dtMatch[3] || '').trim() : '';
+      var dTerm = dtMatch && dtMatch[4] ? 'Terminal ' + dtMatch[4] : 'Main Terminal';
+      var aTerm = dtMatch && dtMatch[5] ? 'Terminal ' + dtMatch[5] : 'Main Terminal';
+      if (fDate && depRaw.indexOf(fDate) === 0) depRaw = depRaw.slice(fDate.length).trim();
+      if (fDate && arrRaw.indexOf(fDate) === 0) arrRaw = arrRaw.slice(fDate.length).trim();
+      var flightName = itemTxt.replace(/\{DATE:.*?\}/g, '').replace(/\[.*?\]/g, '').replace(/\(\-\)/g, '').trim() || 'Scheduled Airline Service';
+      var stUp = String(b.Status || 'PENDING').toUpperCase();
+      var isIssued = (stUp === 'CONFIRMED' || stUp === 'ISSUED');
+      var isExpired = (stUp.indexOf('EXPIR') !== -1) || (!isIssued && b.HoldUntil && Date.now() > Number(b.HoldUntil));
+      var statusLabel = isIssued ? 'Confirmed / Issued' : (isExpired ? 'Booking Expired' : 'On Hold (Pending)');
+      var statusBg = isIssued ? '#dcfce7' : (isExpired ? '#fee2e2' : '#fef3c7');
+      var statusColor = isIssued ? '#15803d' : (isExpired ? '#b91c1c' : '#b45309');
+      var pnrCode = b.PNR || b.BookingID || '-';
       var fareNum = Number(b.FarePKR || 0);
-      var w = window.open('', '_blank', 'width=860,height=760');
-      w.document.write('<!DOCTYPE html><html><head><title>' + docHeading + ' - ' + (b.BookingID || '') + '</title><style>' +
-        '*{box-sizing:border-box;font-family:"Segoe UI",Arial,sans-serif;}' +
-        'body{margin:0;padding:16px;background:#fff;color:#111827;font-size:12px;}' +
-        '.sheet{max-width:760px;margin:0 auto;border:1.5px solid #1e293b;padding:20px 24px;background:#fff;}' +
-        '.top-row{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:14px;border-bottom:2px solid #0b1f44;}' +
+      var holdExpStr = b.HoldUntil ? new Date(Number(b.HoldUntil)).toLocaleString('en-GB', { timeZone: 'Asia/Karachi' }) + ' PKT' : 'As per airline policy';
+
+      var w = window.open('', '_blank', 'width=920,height=980');
+      if (!w) { alert('Please allow pop-ups to print E-Ticket PDF.'); return; }
+      w.document.write(
+        '<!DOCTYPE html><html><head><title>Service Voucher - ' + (b.BookingID || '') + '</title>' +
+        '<style>' +
+        '*{box-sizing:border-box;margin:0;padding:0;}' +
+        'body{font-family:"Segoe UI",Arial,sans-serif;background:#f1f5f9;color:#1e293b;padding:20px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
+        '.page{max-width:820px;margin:auto;background:#ffffff;border:1px solid #cbd5e1;border-radius:10px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.08);}' +
+        '.top-bar{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;background:#ffffff;border-bottom:1px solid #e2e8f0;}' +
         '.brand{display:flex;align-items:center;gap:12px;}' +
-        '.brand img{width:54px;height:54px;object-fit:contain;border:1px solid #cbd5e1;border-radius:8px;padding:3px;}' +
-        '.barcode{font-family:"Courier New",monospace;letter-spacing:2px;font-size:11px;background:#f8fafc;border:1px solid #cbd5e1;padding:4px 10px;display:inline-block;margin-top:4px;font-weight:700;}' +
-        '.meta-grid{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #cbd5e1;margin-top:14px;background:#f8fafc;}' +
-        '.meta-cell{padding:8px 12px;border-right:1px solid #cbd5e1;}' +
-        '.meta-cell:last-child{border-right:none;}' +
-        '.meta-lbl{font-size:10px;text-transform:uppercase;color:#64748b;font-weight:700;letter-spacing:0.5px;}' +
-        '.meta-val{font-size:13px;font-weight:800;color:#0b1f44;margin-top:2px;}' +
-        '.sec-hdr{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:#0b1f44;margin:16px 0 6px;display:flex;align-items:center;gap:8px;}' +
-        '.sec-hdr:after{content:"";flex:1;height:1px;background:#cbd5e1;}' +
-        'table{width:100%;border-collapse:collapse;font-size:11.5px;}' +
-        'th{background:#f1f5f9;color:#0f172a;text-align:left;padding:7px 9px;border:1px solid #cbd5e1;font-size:10.5px;text-transform:uppercase;}' +
-        'td{padding:8px 9px;border:1px solid #cbd5e1;color:#1e293b;}' +
-        '.status-tag{padding:3px 9px;border-radius:4px;font-size:11px;font-weight:800;background:' + (isIssued ? '#dcfce7' : '#fef3c7') + ';color:' + (isIssued ? '#166534' : '#92400e') + ';}' +
-        '.bottom-split{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-top:16px;}' +
-        '.rules{border:1px solid #cbd5e1;padding:10px 12px;font-size:11px;color:#475569;line-height:1.55;background:#fafafa;}' +
-        '.fare-tbl td{padding:6px 10px;font-size:12px;}' +
-        '.fare-total td{background:#0b1f44;color:#fff;font-weight:800;font-size:13px;}' +
-        '.sign-row{display:flex;justify-content:space-between;align-items:flex-end;margin-top:18px;padding-top:12px;border-top:1px dashed #94a3b8;font-size:11px;color:#475569;}' +
-        '@media print{@page{margin:8mm;} body{padding:0;}}' +
-        '</style></head><body><div class="sheet">' +
-        '<div class="top-row"><div class="brand">' + (logoSrc ? '<img src="' + logoSrc + '" />' : '') + '<div><div style="font-size:19px;font-weight:900;color:#0b1f44;letter-spacing:0.4px;">GOLAN INTERNATIONAL</div><div style="font-size:11px;font-weight:700;color:#475569;">TRAVEL &amp; TOURS • TOBA TEK SINGH, PAKISTAN</div><div style="font-size:11px;color:#64748b;">Tel / WhatsApp: +92 345 3326318 • golaninternational322@gmail.com</div></div></div>' +
-        '<div style="text-align:right;"><div style="font-size:15px;font-weight:900;color:#0b1f44;letter-spacing:0.5px;">' + docHeading + '</div><div style="font-size:11px;color:#64748b;font-weight:600;">' + docSub + '</div><div class="barcode">|||| ||| || |||| | ' + (b.BookingID || '') + '</div></div></div>' +
-        '<div class="meta-grid">' +
-        '<div class="meta-cell"><div class="meta-lbl">BOOKING / PNR REF</div><div class="meta-val" style="font-family:monospace;">' + (b.BookingID || '') + '</div></div>' +
-        '<div class="meta-cell"><div class="meta-lbl">' + dateLabel + '</div><div class="meta-val">' + dtStr + '</div></div>' +
-        '<div class="meta-cell"><div class="meta-lbl">BOOKING STATUS</div><div class="meta-val"><span class="status-tag">' + stTxt + '</span></div></div>' +
-        '<div class="meta-cell"><div class="meta-lbl">BOOKING OFFICE</div><div class="meta-val">Golan Head Office</div></div>' +
+        '.brand img{height:44px;width:44px;object-fit:contain;border-radius:8px;}' +
+        '.hero{background:linear-gradient(135deg,#0b1f44 0%,#163570 100%);color:#ffffff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;border-bottom:4px solid #d97706;}' +
+        '.hero h1{font-size:17px;font-weight:700;margin-bottom:4px;}' +
+        '.hero p{font-size:12px;color:#cbd5e1;}' +
+        '.pnr-box{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.28);padding:8px 14px;border-radius:8px;text-align:right;}' +
+        '.pnr-box small{display:block;font-size:10px;color:#fbbf24;text-transform:uppercase;letter-spacing:0.8px;font-weight:700;}' +
+        '.pnr-box strong{font-size:19px;font-family:monospace;letter-spacing:1.5px;color:#ffffff;}' +
+        '.sec{padding:16px 24px;border-bottom:1px solid #e2e8f0;}' +
+        '.sec-title{font-size:13px;font-weight:800;color:#0b1f44;margin-bottom:10px;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:0.5px;}' +
+        '.sec-title:after{content:"";flex:1;height:1px;background:#e2e8f0;}' +
+        '.flt-card{border:1px solid #cbd5e1;border-radius:10px;padding:16px 20px;background:#f8fafc;display:grid;grid-template-columns:1fr 1.2fr 1fr;align-items:center;gap:12px;}' +
+        '.iata{font-size:26px;font-weight:900;color:#0b1f44;letter-spacing:1px;}' +
+        '.ftime{font-size:13px;font-weight:700;color:#0f172a;margin-top:3px;}' +
+        '.fterm{font-size:11px;color:#64748b;margin-top:2px;}' +
+        '.mid-col{text-align:center;border-left:1px dashed #cbd5e1;border-right:1px dashed #cbd5e1;padding:0 12px;}' +
+        '.st-pill{display:inline-block;padding:4px 12px;border-radius:99px;font-size:11px;font-weight:800;background:' + statusBg + ';color:' + statusColor + ';margin-top:6px;}' +
+        '.info-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:11px 14px;font-size:12px;line-height:1.6;color:#334155;}' +
+        'table{width:100%;border-collapse:collapse;font-size:12px;}' +
+        'th{background:#f1f5f9;color:#0b1f44;text-align:left;padding:8px 10px;border:1px solid #cbd5e1;font-size:11px;font-weight:800;text-transform:uppercase;}' +
+        'td{padding:8px 10px;border:1px solid #cbd5e1;color:#1e293b;}' +
+        '.price-wrap{display:flex;justify-content:flex-end;}' +
+        '.price-tbl{width:320px;}' +
+        '.price-tbl td{border:none;border-bottom:1px solid #e2e8f0;padding:6px 4px;}' +
+        '.price-total td{border-bottom:none;font-size:14px;font-weight:900;color:#0b1f44;padding-top:10px;}' +
+        '.footer{background:#0b1f44;color:#cbd5e1;padding:14px 24px;font-size:11px;display:flex;justify-content:space-between;align-items:center;}' +
+        '@media print{body{background:#fff;padding:0;}.page{box-shadow:none;border:1px solid #cbd5e1;}}' +
+        '</style></head><body><div class="page">' +
+        '<div class="top-bar">' +
+          '<div class="brand">' + (logoSrc ? '<img src="' + logoSrc + '" />' : '') +
+            '<div><div style="font-size:16px;font-weight:900;color:#0b1f44;">GOLAN INTERNATIONAL TRAVEL &amp; TOURS</div>' +
+            '<div style="font-size:11px;color:#64748b;">IATA / B2B Global Reservation Desk • Toba Tek Singh, Pakistan</div></div>' +
+          '</div>' +
+          '<div style="text-align:right;font-size:11.5px;color:#475569;"><strong>SERVICE(S) VOUCHER</strong><br>Ref ID: <span style="font-family:monospace;font-weight:800;color:#0b1f44;">' + (b.BookingID || '') + '</span></div>' +
         '</div>' +
-               '<div class="sec-hdr">Passenger &amp; Travel Document</div>' +
-        '<table><thead><tr><th>Passenger Name</th><th>Passport Number</th><th>Service Category</th><th>' + refLabel + '</th></tr></thead>' +
-        '<tbody><tr><td><strong style="font-size:13px;">' + (b.PassengerName || '') + '</strong></td><td style="font-family:monospace;font-weight:700;">' + (b.PassportNo || '—') + '</td><td>' + (b.Category || 'Airline Booking') + '</td><td style="font-family:monospace;font-weight:700;">' + (b.BookingID || '') + '</td></tr></tbody></table>' +
-        '<div class="sec-hdr">Booking Itinerary, Schedule &amp; Baggage</div>' +
-        '<table><thead><tr><th>Flight / Service</th><th>Departure Details (Airport, Terminal, Date &amp; Time)</th><th>Arrival Details (Airport, Terminal, Date &amp; Time)</th><th>Baggage Allowance</th></tr></thead>' +
-        '<tbody><tr><td><strong>' + cleanTitle + '</strong></td><td><strong style="color:#0b1f44;font-size:12.5px;">DEPARTURE: ' + (orig || 'As per ticket') + '</strong>' + (depTerm ? ' • <span style="font-size:11px;color:#475569;font-weight:700;">' + depTerm + '</span>' : '') + '<br><strong>' + (travelDate || 'As per airline schedule') + '</strong>' + (depTime ? ' • <span style="color:#15803d;font-weight:800;">' + depTime + '</span>' : '') + '</td><td><strong style="color:#0b1f44;font-size:12.5px;">ARRIVAL: ' + (dest || 'As per ticket') + '</strong>' + (arrTerm ? ' • <span style="font-size:11px;color:#475569;font-weight:700;">' + arrTerm + '</span>' : '') + '<br><strong>' + (travelDate || 'As per airline schedule') + '</strong>' + (arrTime ? ' • <span style="color:#15803d;font-weight:800;">' + arrTime + '</span>' : '') + '</td><td>' + bagTxt + '</td></tr></tbody></table>' +
-
-
-        '<div class="bottom-split">' +
-        '<div class="rules"><strong style="color:#0b1f44;display:block;margin-bottom:4px;">IMPORTANT BOOKING INFORMATION:</strong>' +
-        '• ' + (isIssued ? 'This ticket is officially ISSUED by Head Office. Please carry valid passport (6+ months validity).' : 'This is a provisional BOOKING reservation. Final E-Ticket will be issued upon Head Office approval.') + '<br>' +
-        '• International check-in counters open 4 hours and close 1 hour prior to scheduled departure.<br>' +
-        '• Date change &amp; cancellation charges apply as per airline fare rules.</div>' +
-        '<table class="fare-tbl"><tr><td>Base Fare &amp; Carrier Charges</td><td style="text-align:right;">PKR ' + fareNum.toLocaleString() + '.00</td></tr>' +
-        '<tr><td>Taxes &amp; Airport Fees</td><td style="text-align:right;">Included</td></tr>' +
-        '<tr class="fare-total"><td>TOTAL BOOKING AMOUNT</td><td style="text-align:right;">PKR ' + fareNum.toLocaleString() + '.00</td></tr></table>' +
+        '<div class="hero">' +
+          '<div><h1>Hi ' + (b.PassengerName || 'Valued Passenger') + ', thank you for booking with us</h1>' +
+          '<p>Your reservation details &amp; electronic travel itinerary are confirmed below.</p></div>' +
+          '<div class="pnr-box"><small>Airline / GDS PNR</small><strong>' + pnrCode + '</strong></div>' +
         '</div>' +
-        '<div class="sign-row"><div><strong>Authorized Signatory:</strong> Shan Chairman (Chief Executive)<br>Golan International Travel &amp; Tours • Toba Tek Singh</div><div style="text-align:right;">Computer Generated ' + (isIssued ? 'Electronic Ticket' : 'Booking Voucher') + '<br>No Signature Required</div></div>' +
-        '</div><script>window.onload=function(){window.print();};<\/script></body></html>');
+        '<div class="sec">' +
+          '<div class="sec-title">Flight Itinerary Details</div>' +
+          '<div class="flt-card">' +
+            '<div><div style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;">Departure</div><div class="iata">' + orig + '</div><div class="ftime">' + (fDate || 'Scheduled') + (depRaw ? ' • ' + depRaw : '') + '</div><div class="fterm">' + dTerm + '</div></div>' +
+            '<div class="mid-col"><div style="font-size:13px;font-weight:800;color:#0b1f44;">' + flightName + '</div><div style="font-size:11px;color:#64748b;margin-top:3px;">Direct / Connecting GDS Class</div><div class="st-pill">' + statusLabel + '</div></div>' +
+            '<div style="text-align:right;"><div style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;">Arrival</div><div class="iata">' + dest + '</div><div class="ftime">' + (fDate || 'Scheduled') + (arrRaw ? ' • ' + arrRaw : '') + '</div><div class="fterm">' + aTerm + '</div></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="sec">' +
+          '<div class="sec-title">Fare Family &amp; Baggage Allowance</div>' +
+          '<div class="info-box"><strong>Included Baggage &amp; Cabin Rules:</strong> ' + bagTxt + ' • Standard 7 KG Hand Carry allowed. Check-in counters open 4 hours and close 1 hour prior to departure.</div>' +
+          (!isIssued && !isExpired ? '<div class="info-box" style="margin-top:8px;background:#fffbeb;border-color:#fde68a;color:#92400e;"><strong>Important Airline Hold Notice:</strong> This reservation is currently ON HOLD. Ticket must be issued before <strong>' + holdExpStr + '</strong> to avoid automatic airline cancellation.</div>' : '') +
+        '</div>' +
+        '<div class="sec">' +
+          '<div class="sec-title">Passenger Information</div>' +
+          '<table><tr><th>Passenger Name</th><th>Passport No.</th><th>Sector</th><th>Baggage</th><th>Booking Status</th></tr>' +
+          '<tr><td><strong>' + (b.PassengerName || '-') + '</strong></td><td style="font-family:monospace;">' + (b.PassportNo || '-') + '</td><td>' + orig + ' - ' + dest + '</td><td>' + bagTxt + '</td><td><strong>' + statusLabel + '</strong></td></tr></table>' +
+        '</div>' +
+        '<div class="sec">' +
+          '<div class="sec-title">Electronic Ticket &amp; Account Details</div>' +
+          '<table><tr><th>Booking Date (PKT)</th><th>Agency Name</th><th>Booked By</th><th>PNR</th><th>Ticket Number</th></tr>' +
+          '<tr><td>' + (b.CreatedAt || '-') + '</td><td>' + (b.AgencyName || 'Golan International') + '</td><td>' + (b.AgentEmail || '-') + '</td><td style="font-family:monospace;font-weight:800;">' + pnrCode + '</td><td style="font-family:monospace;font-weight:800;color:#15803d;">' + (b.TicketNo || (isIssued ? 'ISSUED' : 'PENDING ISSUANCE')) + '</td></tr></table>' +
+        '</div>' +
+        '<div class="sec">' +
+          '<div class="sec-title">Price Information (in PKR)</div>' +
+          '<div class="price-wrap"><table class="price-tbl">' +
+          '<tr><td>Base Fare &amp; Airline YQ</td><td style="text-align:right;font-weight:700;">PKR ' + fareNum.toLocaleString() + '</td></tr>' +
+          '<tr><td>Airport Taxes &amp; Fees</td><td style="text-align:right;font-weight:700;">Included</td></tr>' +
+          '<tr class="price-total"><td>Grand Total</td><td style="text-align:right;color:#15803d;">PKR ' + fareNum.toLocaleString() + '.00</td></tr>' +
+          '</table></div>' +
+        '</div>' +
+        '<div class="footer">' +
+          '<div><strong style="color:#ffffff;">Golan International Travel &amp; Tours</strong> • Head Office: Toba Tek Singh, Pakistan</div>' +
+          '<div>Helpline: <strong style="color:#fbbf24;">+92 345 3326318</strong> • golaninternational322@gmail.com</div>' +
+        '</div>' +
+        '</div><script>window.onload=function(){window.print();};<\/script></body></html>'
+      );
       w.document.close();
     };
 

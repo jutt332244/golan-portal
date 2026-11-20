@@ -1451,9 +1451,9 @@ renderBookingsTable(res.isAdmin);
                 '<td>' + dt + '</td>' +
                 '<td><strong>' + (b.PassengerName || '') + '</strong><br><small style="color:#64748b;">PP: ' + (b.PassportNo || '') + '</small></td>' +
                 '<td>' + (b.ItemTitle || '') + '</td>' +
-                '<td><span style="font-family:monospace;font-weight:800;color:#0b1f44;">' + (b.BookingID || 'PENDING') + '</span></td>' +
+            '<td><span style="font-family:monospace;font-weight:800;color:#0b1f44;">' + (b.BookingID || 'PENDING') + '</span></td>' +
                 '<td style="font-weight:800;color:#15803d;">PKR ' + Number(b.FarePKR || 0).toLocaleString() + '</td>' +
-                '<td><button type="button" class="btn btn-sm btn-primary" onclick="window.printSingleGolanTicket(\'' + (b.BookingID || '') + '\')">Print PDF</button></td>' +
+            '<td><button type="button" class="btn btn-sm btn-primary" onclick="window.printSingleGolanTicket(\'' + (b.BookingID || '') + '\')">Print PDF</button></td></tr>';
                  '</tr>';
             }).join('') : '<tr><td colspan="8" style="text-align:center;color:#64748b;padding:20px;">No bookings found yet.</td></tr>';
           });

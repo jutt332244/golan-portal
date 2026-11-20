@@ -1517,16 +1517,28 @@ renderBookingsTable(res.isAdmin);
           document.querySelectorAll('#bookingsTableBody').forEach(function(bBody) {
             bBody.innerHTML = list.length ? list.map(function(b) {
               var st = String(b.Status || 'PENDING').split(' ')[0];
-              var dt = b.CreatedAt ? String(b.CreatedAt).split('T')[0] : '';
-              return '<tr>' +
-                '<td><strong>' + (b.BookingID || '') + '</strong></td>' +
-                '<td>' + dt + '</td>' +
-                '<td><strong>' + (b.PassengerName || '') + '</strong><br><small style="color:#64748b;">PP: ' + (b.PassportNo || '') + '</small></td>' +
-                '<td>' + (b.ItemTitle || '') + '</td>' +
-            '<td><span style="font-family:monospace;font-weight:800;color:#0b1f44;">' + (b.BookingID || 'PENDING') + '</span></td>' +
-                '<td style="font-weight:800;color:#15803d;">PKR ' + Number(b.FarePKR || 0).toLocaleString() + '</td>' +
-            '<td><button type="button" class="btn btn-sm btn-primary" onclick="window.printSingleGolanTicket(\'' + (b.BookingID || '') + '\')">Print PDF</button></td></tr>';
-                 '</tr>';
+                  var cleanItin = String(b.ItemTitle || '').replace(/\{DATE:.*?\}/g, '').trim();
+          var stUp = String(b.Status || 'PENDING').toUpperCase();
+          var isExp = (stUp.indexOf('EXPIR') !== -1) || (stUp === 'PENDING' && b.HoldUntil && Date.now() > Number(b.HoldUntil));
+          var minsLeft = (b.HoldUntil && Date.now() < Number(b.HoldUntil)) ? Math.ceil((Number(b.HoldUntil) - Date.now()) / 60000) : 0;
+          var statusHtml = (stUp === 'CONFIRMED' || stUp === 'ISSUED')
+            ? '<span class="badge" style="background:#dcfce7;color:#166534;font-weight:800;">✓ CONFIRMED</span>'
+            : (isExp
+                ? '<span class="badge" style="background:#fee2e2;color:#b91c1c;font-weight:800;">BOOKING EXPIRED</span>'
+                : '<span class="badge" style="background:#fef3c7;color:#92400e;font-weight:800;">PENDING' + (minsLeft > 0 ? ' (' + minsLeft + 'm)' : '') + '</span>');
+          var dt = b.CreatedAt ? String(b.CreatedAt).split('T')[0] : '';
+          return '<tr>' +
+
+                            '<td><strong style="font-family:monospace;color:#0b1f44;">' + (b.BookingID || '') + '</strong></td>' +
+              '<td>' + dt + '</td>' +
+              '<td><strong>' + (b.PassengerName || '') + '</strong><br><small style="color:#64748b;">PP: ' + (b.PassportNo || '') + '</small></td>' +
+              '<td>' + cleanItin + '</td>' +
+              '<td><strong style="font-family:monospace;color:#0b1f44;letter-spacing:0.6px;">' + (b.PNR || b.BookingID || '-') + '</strong>' + (b.TicketNo ? '<br><small style="color:#15803d;font-weight:700;">TKT: ' + b.TicketNo + '</small>' : '') + '</td>' +
+              '<td style="font-weight:800;color:#15803d;">PKR ' + Number(b.FarePKR || 0).toLocaleString() + '</td>' +
+              '<td>' + statusHtml + '</td>' +
+              '<td><button type="button" class="btn btn-sm btn-primary" onclick="window.printSingleGolanTicket(\'' + (b.BookingID || '') + '\')">Print PDF</button></td>' +
+            '</tr>';
+
             }).join('') : '<tr><td colspan="8" style="text-align:center;color:#64748b;padding:20px;">No bookings found yet.</td></tr>';
           });
           document.querySelectorAll('#ledgerTableBody').forEach(function(lBody) {

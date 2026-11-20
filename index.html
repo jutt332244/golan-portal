@@ -1002,7 +1002,7 @@ renderBookingsTable(res.isAdmin);
         document.getElementById('paxPassport').focus();
         return;
       }
-      var fullName = (document.getElementById('paxFirstName').value.trim() + ' ' + document.getElementById('paxLastName').value.trim());
+        var fullName = (document.getElementById('paxFirstName').value.trim() + ' ' + document.getElementById('paxLastName').value.trim());
       var paxEm = (document.getElementById('paxEmail') || {}).value || '';
       var rawTitle = String(selectedItem.Title || '');
       var titleSec = rawTitle.match(/\(([A-Z]{3})\s*[-→]\s*([A-Z]{3})\)/);
@@ -1034,7 +1034,36 @@ renderBookingsTable(res.isAdmin);
         var gm = document.getElementById('gdsDetailsModal');
         if (gm) gm.style.display = 'none';
         if (typeof closeBookingModal === 'function') { try { closeBookingModal(); } catch(e) {} }
+        if (res && res.ok) {
+          var newId = res.bookingId || 'PENDING';
+          var nowPk = new Date().toLocaleString('en-GB', { timeZone: 'Asia/Karachi' });
+          window.__ALL_BOOKINGS__ = window.__ALL_BOOKINGS__ || [];
+          window.__ALL_BOOKINGS__.unshift({
+            BookingID: newId, CreatedAt: nowPk, PassengerName: fullName,
+            PassportNo: pp, Category: selectedItem.Category, ItemTitle: fullTitle,
+            FarePKR: selectedItem.FarePKR, Status: 'PENDING'
+          });
+          var tb = document.querySelector('#tab-bookings tbody');
+          if (tb) {
+            if (tb.textContent.indexOf('No bookings found') !== -1) tb.innerHTML = '';
+            var tr = document.createElement('tr');
+            tr.innerHTML =
+              '<td><span style="font-family:monospace;font-weight:800;color:#0b1f44;">' + newId + '</span></td>' +
+              '<td>' + nowPk + '</td>' +
+              '<td><strong>' + fullName + '</strong><br><small>PP: ' + pp + '</small></td>' +
+              '<td>' + cleanBase + '</td>' +
+              '<td>' + newId + '</td>' +
+              '<td style="font-weight:800;color:#15803d;">PKR ' + Number(selectedItem.FarePKR || 0).toLocaleString() + '</td>' +
+              '<td><span class="badge" style="background:#fef3c7;color:#92400e;">PENDING</span></td>' +
+              '<td><button type="button" class="btn btn-sm btn-primary" onclick="window.printSingleGolanTicket(\'' + newId + '\')">Print PDF</button></td>';
+            tb.insertBefore(tr, tb.firstChild);
+          }
+        }
         window.switchTab('bookings');
+        if (typeof loadDashboard === 'function') loadDashboard();
+        if (typeof loadDashboardData === 'function') loadDashboardData();
+      });
+
         setTimeout(function() {
           if (typeof loadDashboardData === 'function') loadDashboardData();
         }, 1200);

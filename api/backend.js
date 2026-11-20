@@ -342,7 +342,7 @@ export default async function handler(req, res) {
       } catch (e) {}
 
         await fetch(gasUrl + '?action=sendVoucher&to=' + encodeURIComponent(recipients) + '&bId=' + encodeURIComponent(bk.BookingID) + '&dtStr=' + encodeURIComponent(bk.CreatedAt || '') + '&agencyName=' + encodeURIComponent(bk.AgencyName || '') + '&paxName=' + encodeURIComponent(bk.PassengerName || '') + '&passportNo=' + encodeURIComponent(bk.PassportNo || '') + '&category=' + encodeURIComponent(bk.Category || '') + '&itemTitle=' + encodeURIComponent(bk.ItemTitle || '') + '&farePKR=' + encodeURIComponent(fare) + '&statusTxt=' + encodeURIComponent('ISSUED / CONFIRMED (PNR: ' + (bk.PNR || '') + (bk.TicketNo ? ' | TKT: ' + bk.TicketNo : '') + ')'));
-      } catch (e) {}
+      } 
       return res.json({ ok: true, message: 'Ticket Issued & CONFIRMED! PNR: ' + bk.PNR });
     }
 

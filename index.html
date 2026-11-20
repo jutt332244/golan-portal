@@ -1030,7 +1030,50 @@ renderBookingsTable(res.isAdmin);
         paxMobile:document.getElementById('paxMobile').value,
         category:selectedItem.Category, itemTitle:fullTitle, farePKR:selectedItem.FarePKR
       }).then(function(res) {
-        alert(res.message);
+        if (!res || !res.ok) { alert((res && res.message) || 'Booking failed.'); return; }
+        var pnrMatch = String(res.message || '').match(/PNR:\s*([A-Z0-9]+)/i);
+        var showPnr = res.pnr || (pnrMatch ? pnrMatch.pop() : 'CONFIRMED');
+        var showId = res.bookingId || 'GI-BOOKED';
+        var mailSent = String(res.message || '').indexOf('Email: SENT') !== -1;
+        var oldPop = document.getElementById('golanProBookingCard');
+        if (oldPop) oldPop.remove();
+        var pop = document.createElement('div');
+        pop.id = 'golanProBookingCard';
+        pop.style.cssText = 'position:fixed;inset:0;background:rgba(11,31,68,0.75);z-index:999999;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);';
+        pop.innerHTML =
+          '<div style="background:#ffffff;max-width:480px;width:100%;border-radius:16px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,0.35);font-family:system-ui,-apple-system,sans-serif;border:2px solid #0b1f44;">' +
+            '<div style="background:linear-gradient(135deg,#0b1f44 0%,#163570 100%);color:#fff;padding:20px 22px;text-align:center;border-bottom:4px solid #d97706;">' +
+              '<div style="width:48px;height:48px;background:#16a34a;color:#fff;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;margin-bottom:8px;box-shadow:0 4px 12px rgba(22,163,74,0.4);">✓</div>' +
+              '<div style="font-size:18px;font-weight:800;letter-spacing:0.4px;">BOOKING RESERVED SUCCESSFULLY</div>' +
+              '<div style="font-size:11.5px;color:#fbbf24;margin-top:3px;">GOLAN INTERNATIONAL TRAVEL &amp; TOURS • B2B DESK</div>' +
+            '</div>' +
+            '<div style="padding:18px 22px;color:#0f172a;font-size:13px;">' +
+              '<div style="display:flex;gap:10px;margin-bottom:14px;">' +
+                '<div style="flex:1;background:#f8fafc;border:1.5px solid #cbd5e1;border-radius:10px;padding:10px;text-align:center;">' +
+                  '<div style="font-size:10px;color:#64748b;font-weight:700;text-transform:uppercase;">AIRLINE / GDS PNR</div>' +
+                  '<div style="font-size:20px;font-weight:900;color:#0b1f44;font-family:monospace;letter-spacing:1.5px;">' + showPnr + '</div>' +
+                '</div>' +
+                '<div style="flex:1;background:#f8fafc;border:1.5px solid #cbd5e1;border-radius:10px;padding:10px;text-align:center;">' +
+                  '<div style="font-size:10px;color:#64748b;font-weight:700;text-transform:uppercase;">BOOKING REF ID</div>' +
+                  '<div style="font-size:16px;font-weight:800;color:#b45309;font-family:monospace;margin-top:3px;">' + showId + '</div>' +
+                '</div>' +
+              '</div>' +
+              '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;line-height:1.65;">' +
+                '<div><span style="color:#64748b;">Passenger:</span> <strong>' + fullName + '</strong> <small style="color:#475569;">(PP: ' + pp + ')</small></div>' +
+                '<div><span style="color:#64748b;">Itinerary:</span> <strong>' + cleanBase + '</strong></div>' +
+                '<div><span style="color:#64748b;">Total Net Fare:</span> <strong style="color:#15803d;font-size:14px;">PKR ' + Number(selectedItem.FarePKR || 0).toLocaleString() + '</strong></div>' +
+                '<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;">' +
+                  '<span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700;">STATUS: HOLD / PENDING</span>' +
+                  (mailSent ? '<span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700;">✓ PDF E-VOUCHER EMAILED</span>' : '') +
+                '</div>' +
+              '</div>' +
+              '<div style="display:flex;gap:10px;margin-top:16px;">' +
+                '<button type="button" onclick="document.getElementById(\'golanProBookingCard\').remove(); if(window.printSingleGolanTicket) window.printSingleGolanTicket(\'' + showId + '\');" style="flex:1;background:#0b1f44;color:#fff;border:none;padding:11px;border-radius:9px;font-weight:700;font-size:13px;cursor:pointer;">🖨 Print PDF Voucher</button>' +
+                '<button type="button" onclick="document.getElementById(\'golanProBookingCard\').remove();" style="flex:1;background:#d97706;color:#fff;border:none;padding:11px;border-radius:9px;font-weight:700;font-size:13px;cursor:pointer;">Done / View Bookings</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+        document.body.appendChild(pop);
         var gm = document.getElementById('gdsDetailsModal');
         if (gm) gm.style.display = 'none';
         if (typeof closeBookingModal === 'function') { try { closeBookingModal(); } catch(e) {} }

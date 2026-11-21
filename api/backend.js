@@ -281,7 +281,17 @@ export default async function handler(req, res) {
     }
     if (action === 'addBooking') {
       const fare = Number(p.farePKR || 0);
-      const holdMins = Number(p.holdMins || 30);
+      const itStr = String(p.itemTitle || '');
+      const dMatch = itStr.match(/\{DATE:(\d{4}-\d{2}-\d{2})/);
+      const depMs = dMatch ? Date.parse(dMatch + 'T12:00:00Z') : (Date.now() + 10 * 86400000);
+      const hrsToDep = (depMs - Date.now()) / 3600000;
+      const isLCC = /flyjinnah|airsial|airblue|serene|flydubai|airarabia|jazeera|salam/i.test(itStr);
+      let holdMins = 1440;
+      if (hrsToDep <= 6) holdMins = 30;
+      else if (hrsToDep <= 24) holdMins = 120;
+      else if (isLCC) holdMins = hrsToDep <= 72 ? 120 : 360;
+      else if (hrsToDep <= 72) holdMins = 720;
+      if (p.holdMins) holdMins = Number(p.holdMins);
       const bId = 'GI-' + Math.floor(100000 + Math.random() * 900000);
       const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
       let autoPnr = '';
@@ -318,7 +328,7 @@ export default async function handler(req, res) {
         const txt = await r.text();
         mailNote = txt.indexOf('true') !== -1 ? ' | Email: SENT' : ' | Email: ' + txt.slice(0, 40);
       } catch (e) { mailNote = ' | Email Err: ' + e.message; }
-      return res.json({ ok: true, bookingId: bId, pnr: autoPnr, message: 'Booking Held (PENDING)! PNR: ' + autoPnr + mailNote });
+      return res.json({ ok: true, bookingId: bId, pnr: autoPnr, holdUntil: holdUntil, message: 'Booking Held (PENDING)! PNR: ' + autoPnr + mailNote });
     }
 
     if (action === 'adminIssueBooking' && isAdmin) {

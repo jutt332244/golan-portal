@@ -458,6 +458,40 @@
           document.head.appendChild(s);
         }
       };
+           window.handleInstantSlipUpload = function(e) {
+        if (e) e.preventDefault();
+        var amt = Number(document.getElementById('depAmount').value || 0);
+        var ref = (document.getElementById('depRef').value || ('SLIP-' + Date.now().toString().slice(-6))).trim();
+        var bank = (document.getElementById('depBank').value || 'UBL (384263615)').trim();
+        var fileInp = document.getElementById('depSlipFile');
+        var file = fileInp && fileInp.files && fileInp.files.item(0);
+        var st = document.getElementById('slipScanStatus');
+        if (amt < 100) { alert('Please enter valid amount (minimum PKR 100).'); return; }
+        if (st) { st.style.color = '#1d4ed8'; st.textContent = '⏳ Uploading slip & crediting wallet...'; }
+        var sendDep = function(slipImg) {
+          var em = (typeof currentEmail !== 'undefined' && currentEmail) ? currentEmail : (localStorage.getItem('golan_email') || '');
+          var tk = (typeof currentToken !== 'undefined' && currentToken) ? currentToken : (localStorage.getItem('golan_token') || '');
+          callBackend({ action: 'submitDeposit', email: em, token: tk, amountPKR: amt, bankName: bank, refNo: ref, slipBase64: slipImg }).then(function(r) {
+            if (r && r.ok) {
+              alert('✅ ' + (r.message || ('PKR ' + amt.toLocaleString() + ' Slip Submitted & Credited!')));
+              document.getElementById('depAmount').value = '';
+              if (fileInp) fileInp.value = '';
+              if (st) { st.style.color = '#15803d'; st.textContent = '✅ Slip Uploaded Successfully!'; }
+              if (typeof window.syncGolanTables === 'function') window.syncGolanTables();
+              if (typeof loadDashboard === 'function') loadDashboard();
+            } else {
+              alert('❌ ' + ((r && r.message) || 'Could not upload slip.'));
+              if (st) { st.style.color = '#dc2626'; st.textContent = '❌ Upload failed. Please try again.'; }
+            }
+          });
+        };
+        if (file) {
+          var reader = new FileReader();
+          reader.onload = function(ev) { sendDep(ev.target.result || ''); };
+          reader.readAsDataURL(file);
+        } else { sendDep(''); }
+      };
+
     </script>
 
       </div>      <div id="tab-ledger" class="card hidden" style="font-size:12px;">

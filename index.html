@@ -1083,29 +1083,44 @@ renderBookingsTable(res.isAdmin);
         if (gm) gm.style.display = 'none';
         if (typeof closeBookingModal === 'function') { try { closeBookingModal(); } catch(e) {} }
         if (res && res.ok) {
-          var newId = res.bookingId || 'PENDING';
-          var nowPk = new Date().toLocaleString('en-GB', { timeZone: 'Asia/Karachi' });
-          window.__ALL_BOOKINGS__ = window.__ALL_BOOKINGS__ || [];
-          window.__ALL_BOOKINGS__.unshift({
-            BookingID: newId, CreatedAt: nowPk, PassengerName: fullName,
-            PassportNo: pp, Category: selectedItem.Category, ItemTitle: fullTitle,
-            FarePKR: selectedItem.FarePKR, Status: 'PENDING'
-          });
-          var tb = document.querySelector('#tab-bookings tbody');
-          if (tb) {
-            if (tb.textContent.indexOf('No bookings found') !== -1) tb.innerHTML = '';
-            var tr = document.createElement('tr');
-            tr.innerHTML =
-              '<td><span style="font-family:monospace;font-weight:800;color:#0b1f44;">' + newId + '</span></td>' +
-              '<td>' + nowPk + '</td>' +
-              '<td><strong>' + fullName + '</strong><br><small>PP: ' + pp + '</small></td>' +
-              '<td>' + cleanBase + '</td>' +
-              '<td><strong style="font-family:monospace;color:#0b1f44;">' + showPnr + '</strong></td>' +
-              '<td style="font-weight:800;color:#15803d;">PKR ' + Number(selectedItem.FarePKR || 0).toLocaleString() + '</td>' +
-              '<td><span class="badge" style="background:#fef3c7;color:#92400e;">PENDING</span></td>' +
-              '<td><button type="button" class="btn btn-sm btn-primary" onclick="window.printSingleGolanTicket(\'' + newId + '\')">Print PDF</button></td>';
-            tb.insertBefore(tr, tb.firstChild);
-          }
+            var newId = res.bookingId || 'PENDING';
+        var nowPk = new Date().toLocaleString('en-GB', { timeZone: 'Asia/Karachi' });
+        var isLCC = /flyjinnah|airsial|airblue|serene|flydubai|airarabia|jazeera|salam/i.test(cleanBase);
+        var holdMs = Number(res.holdUntil || (Date.now() + (isLCC ? 6 : 24) * 3600 * 1000));
+        window.__ALL_BOOKINGS__ = window.__ALL_BOOKINGS__ || [];
+        window.__ALL_BOOKINGS__.unshift({
+          BookingID: newId, CreatedAt: nowPk, HoldUntil: holdMs, PassengerName: fullName,
+          PassportNo: pp, Category: selectedItem.Category, ItemTitle: fullTitle,
+          FarePKR: selectedItem.FarePKR, PNR: showPnr, Status: 'PENDING'
+        });
+        if (typeof window.updateGolanHomeStats === 'function') window.updateGolanHomeStats();
+        var tb = document.querySelector('#tab-bookings tbody');
+        if (tb) {
+          if (tb.textContent.indexOf('No bookings found') !== -1) tb.innerHTML = '';
+          var rawItin = String(cleanBase || '').replace(/\{DATE:.*?\}/g, '').replace(/\(\-\)/g, '').trim();
+          var bagMatch = rawItin.match(/\[(.*?)\]/);
+          var bagTxt = bagMatch ? bagMatch[1] : '';
+          var flightMain = rawItin.replace(/\[.*?\]/g, '').trim();
+          var dtParts = String(nowPk).split(',');
+          var dtDate = (dtParts[0] || '').trim();
+          var dtTime = (dtParts[1] || '').trim();
+          var remSec = Math.max(1, Math.floor((holdMs - Date.now()) / 1000));
+          var hh = Math.floor(remSec / 3600), mm = Math.floor((remSec % 3600) / 60), ss = remSec % 60;
+          var timeTxt = (hh > 0 ? String(hh).padStart(2, '0') + ':' : '') + String(mm).padStart(2, '0') + ':' + String(ss).padStart(2, '0');
+          var tr = document.createElement('tr');
+          tr.style.cssText = 'border-bottom:1px solid #e2e8f0;transition:background 0.15s;';
+          tr.innerHTML =
+            '<td style="white-space:nowrap;padding:12px 10px;"><span style="background:#f1f5f9;color:#0b1f44;border:1px solid #cbd5e1;padding:4px 8px;border-radius:6px;font-family:monospace;font-weight:800;font-size:12px;">' + newId + '</span></td>' +
+            '<td style="white-space:nowrap;padding:12px 10px;"><div style="font-weight:700;color:#0f172a;font-size:12px;">' + dtDate + '</div>' + (dtTime ? '<div style="font-size:11px;color:#64748b;font-family:monospace;">' + dtTime + ' PKT</div>' : '') + '</td>' +
+            '<td style="padding:12px 10px;"><div style="font-weight:800;color:#0f172a;font-size:12.5px;text-transform:uppercase;">' + fullName + '</div><div style="font-size:11px;color:#64748b;font-family:monospace;">PP: ' + pp + '</div></td>' +
+            '<td style="padding:12px 10px;"><div style="font-weight:700;color:#0b1f44;font-size:12.5px;">' + flightMain + '</div>' + (bagTxt ? '<span style="display:inline-block;margin-top:3px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;padding:1px 7px;border-radius:4px;font-size:10.5px;font-weight:700;">🧳 ' + bagTxt + '</span>' : '') + '</td>' +
+            '<td style="white-space:nowrap;padding:12px 10px;"><span style="background:#0b1f44;color:#fbbf24;padding:4px 9px;border-radius:6px;font-family:monospace;font-weight:900;font-size:12.5px;letter-spacing:1px;">' + showPnr + '</span></td>' +
+            '<td style="white-space:nowrap;padding:12px 10px;font-weight:900;color:#15803d;font-size:13px;">PKR ' + Number(selectedItem.FarePKR || 0).toLocaleString() + '</td>' +
+            '<td style="white-space:nowrap;padding:12px 10px;"><span class="golan-live-timer" data-hold="' + holdMs + '" style="display:inline-block;white-space:nowrap;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:800;font-family:monospace;">⏳ ' + timeTxt + '</span></td>' +
+            '<td style="white-space:nowrap;padding:12px 10px;"><button type="button" onclick="window.printSingleGolanTicket(\'' + newId + '\')" style="background:linear-gradient(135deg,#0b1f44,#1e3a8a);color:#fff;border:none;padding:6px 12px;border-radius:7px;font-size:11.5px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 2px 6px rgba(11,31,68,0.2);">🖨 E-Ticket</button></td>';
+          tb.insertBefore(tr, tb.firstChild);
+        }
+
         }
         window.switchTab('bookings');
         if (typeof loadDashboard === 'function') loadDashboard();
@@ -1113,28 +1128,9 @@ renderBookingsTable(res.isAdmin);
       });
  
     }
-          function openFareCategoryTab(catName, btnEl) {
-      switchTab('fares', btnEl);
-      var mapKeys = {
-        DXB: ['DXB', 'SHJ', 'AUH', 'UAE', 'DUBAI', 'SHARJAH', 'ABU DHABI'],
-        JED: ['JED', 'RUH', 'DMM', 'MED', 'KSA', 'SAUDI', 'JEDDAH', 'RIYADH', 'DAMMAM'],
-        MCT: ['MCT', 'SLL', 'MUSCAT', 'OMAN'],
-        BAH: ['BAH', 'BAHRAIN'],
-        LHR: ['LHR', 'MAN', 'BHX', 'UK', 'LONDON', 'MANCHESTER']
-      };
-          var titles = {
-        ALL: '🌐 All Live Flights, Packages & Visas',
-        'Group Flight': '🛫 Live Group Flights',
-        'Umrah Package': '🕋 Live Umrah Packages',
-        'Visit Visa': '🛂 Live Visit Visas',
-        DXB: '✈️ UAE & Dubai Live Flights & Groups',
-        JED: '✈️ KSA (Jeddah / Riyadh) Live Flights & Groups',
-        MCT: '✈️ Muscat & Oman Live Flights & Groups',
-        BAH: '✈️ Bahrain Live Flights & Groups',
-        LHR: '✈️ UK & London Live Flights & Visas'
-      };
-      var hd = document.getElementById('faresTabHeading');
-      if (hd) hd.textContent = titles[catName] || ('🛫 ' + catName);
+
+
+    
       var rows = document.querySelectorAll('#faresTableBody tr');
       var shown = 0;
       rows.forEach(function(tr) {

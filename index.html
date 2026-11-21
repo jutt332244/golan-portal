@@ -1826,23 +1826,36 @@ renderBookingsTable(res.isAdmin);
       setInterval(window.syncAdminTables, 25000);
          
 
-          document.querySelectorAll('#ledgerTableBody').forEach(function(lBody) {
-            lBody.innerHTML = list.length ? list.map(function(b) {
-              var st = String(b.Status || 'PENDING').split(' ')[0];
-              var dt = b.CreatedAt ? String(b.CreatedAt).split('T')[0] : '';
-              return '<tr>' +
-                '<td>' + dt + '</td>' +
-                '<td><strong>' + (b.BookingID || '') + '</strong></td>' +
-                '<td>' + (b.ItemTitle || '') + ' (' + (b.PassengerName || '') + ')</td>' +
-                '<td style="color:#b91c1c;font-weight:800;">- PKR ' + Number(b.FarePKR || 0).toLocaleString() + '</td>' +
-                '<td>—</td>' +
-                '<td><span class="status-badge st-' + st + '">' + (b.Status || 'PENDING') + '</span></td>' +
-                '</tr>';
-            }).join('') : '<tr><td colspan="6" style="text-align:center;color:#64748b;padding:20px;">No ledger entries yet.</td></tr>';
-          });
+                    var deps = (res && res.deposits) || [];
+        var totCredit = 0, totDebit = 0, totRefund = 0;
+        var rowsHtml = [];
+        deps.forEach(function(d) {
+          var dst = String(d.Status || 'PENDING').toUpperCase();
+          var damt = Number(d.AmountPKR || 0);
+          if (dst === 'APPROVED') totCredit += damt;
+          var badge = dst === 'APPROVED' ? '<span style="background:#dcfce7;color:#15803d;padding:3px 9px;border-radius:99px;font-size:10.5px;font-weight:800;">✓ APPROVED</span>' : '<span style="background:#fef3c7;color:#b45309;padding:3px 9px;border-radius:99px;font-size:10.5px;font-weight:800;">⏳ PENDING</span>';
+          rowsHtml.push('<tr><td>' + (d.CreatedAt || '') + '</td><td><strong>' + (d.DepositID || '') + '</strong></td><td>Bank Deposit — ' + (d.BankName || '') + ' (' + (d.TxRef || '') + ')</td><td style="color:#15803d;font-weight:800;">DEPOSIT</td><td>—</td><td style="color:#15803d;font-weight:900;">+ PKR ' + damt.toLocaleString() + '</td><td>' + badge + '</td></tr>');
         });
-      }
-    };
+        list.forEach(function(b) {
+          var st = String(b.Status || 'PENDING').toUpperCase();
+          var dt = b.CreatedAt ? String(b.CreatedAt).split('T').at(0) : '';
+          var famt = Number(b.FarePKR || 0);
+          var isCan = st.indexOf('CANCEL') !== -1;
+          if (isCan) { totRefund += famt; } else { totDebit += famt; }
+          rowsHtml.push('<tr><td>' + dt + '</td><td><strong>' + (b.BookingID || '') + '</strong></td><td>' + (b.ItemTitle || '') + ' (' + (b.PassengerName || '') + ')</td><td style="font-weight:700;color:#0b1f44;">' + (isCan ? 'REFUND' : 'TICKET') + '</td><td style="color:#b91c1c;font-weight:800;">- PKR ' + famt.toLocaleString() + '</td><td style="color:#15803d;font-weight:800;">' + (isCan ? '+ PKR ' + famt.toLocaleString() : '—') + '</td><td><span class="status-badge st-' + st.split(' ').at(0) + '">' + (b.Status || 'PENDING') + '</span></td></tr>');
+        });
+        var liveBal = (res && typeof res.balancePKR !== 'undefined') ? Number(res.balancePKR || 0) : (totCredit - totDebit + totRefund);
+        var elCr = document.getElementById('ldgTotalCredit'); if (elCr) elCr.textContent = 'PKR ' + totCredit.toLocaleString();
+        var elDb = document.getElementById('ldgTotalDebit'); if (elDb) elDb.textContent = 'PKR ' + totDebit.toLocaleString();
+        var elRf = document.getElementById('ldgTotalRefund'); if (elRf) elRf.textContent = 'PKR ' + totRefund.toLocaleString();
+        var elNet = document.getElementById('ldgNetBalance'); if (elNet) elNet.textContent = 'PKR ' + liveBal.toLocaleString();
+        document.querySelectorAll('#ledgerTableBody').forEach(function(lBody) {
+          lBody.innerHTML = rowsHtml.length ? rowsHtml.join('') : '<tr><td colspan="7" style="text-align:center;color:#64748b;padding:20px;">No ledger entries yet.</td></tr>';
+        });
+
+        });
+      };
+              
     document.querySelectorAll('.side-btn').forEach(function(b) {
       b.addEventListener('click', window.syncGolanTables);
     });

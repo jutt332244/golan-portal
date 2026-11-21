@@ -1634,6 +1634,26 @@ renderBookingsTable(res.isAdmin);
         callBackend({ action: 'getDashboardData', email: em, token: tk }).then(function(res) {
           var list = (res && res.bookings) || window.__ALL_BOOKINGS__ || [];
         window.__ALL_BOOKINGS__ = list; window.__IS_ADMIN__ = !!(res && res.isAdmin);
+                 var depBody = document.getElementById('adminDepositsBody');
+        if (depBody) {
+          var deps = (res && res.deposits) || [];
+          depBody.innerHTML = deps.length ? deps.map(function(d) {
+            var st = String(d.Status || 'PENDING').toUpperCase();
+            var badge = st === 'APPROVED' ? '<span style="background:#dcfce7;color:#15803d;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:800;">✓ APPROVED</span>' : '<span style="background:#fef3c7;color:#b45309;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:800;">⏳ PENDING</span>';
+            var act = st === 'PENDING' ? '<button type="button" onclick="window.adminApproveDepositReq(\'' + (d.DepositID || '') + '\')" style="background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;padding:6px 12px;border-radius:7px;font-size:11px;font-weight:800;cursor:pointer;">✓ Approve</button>' : '<span style="color:#64748b;font-size:11px;">Credited</span>';
+            return '<tr><td style="font-weight:800;">' + (d.DepositID || '') + '</td><td>' + (d.CreatedAt || '') + '</td><td style="font-weight:700;">' + (d.AgencyName || d.AgentEmail || '') + '</td><td>' + (d.BankName || '') + '</td><td style="font-weight:900;color:#15803d;">PKR ' + Number(d.AmountPKR || 0).toLocaleString() + '</td><td>' + (d.TxRef || '') + '</td><td>' + badge + '</td><td>' + act + '</td></tr>';
+          }).join('') : '<tr><td colspan="8" style="text-align:center;color:#64748b;padding:16px;">No deposit requests yet.</td></tr>';
+        }
+        var agBody = document.getElementById('adminAgentsBody');
+        if (agBody) {
+          var ags = (res && res.agents) || [];
+          agBody.innerHTML = ags.length ? ags.map(function(ag) {
+            var st = String(ag.Status || 'APPROVED').toUpperCase();
+            var badge = st === 'APPROVED' ? '<span style="background:#dcfce7;color:#15803d;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:800;">ACTIVE</span>' : '<span style="background:#fee2e2;color:#b91c1c;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:800;">' + st + '</span>';
+            return '<tr><td style="font-weight:800;">' + (ag.AgencyName || '') + '</td><td>' + (ag.Email || '') + '</td><td>' + (ag.City || '') + ' • ' + (ag.Mobile || '') + '</td><td style="font-weight:900;color:#0b1f44;">PKR ' + Number(ag.BalancePKR || 0).toLocaleString() + '</td><td>' + badge + '</td><td style="white-space:nowrap;"><button type="button" onclick="window.adminAgentCtrl(\'' + (ag.Email || '') + '\',\'APPROVE\')" style="background:#16a34a;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;margin-right:3px;">Approve</button><button type="button" onclick="window.adminAgentCtrl(\'' + (ag.Email || '') + '\',\'ADD_LIMIT\')" style="background:#1d4ed8;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;margin-right:3px;">+ Limit</button><button type="button" onclick="window.adminAgentCtrl(\'' + (ag.Email || '') + '\',\'BLOCK\')" style="background:#dc2626;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">Block</button></td></tr>';
+          }).join('') : '<tr><td colspan="6" style="text-align:center;color:#64748b;padding:16px;">No sub-agents found.</td></tr>';
+        }
+
           document.querySelectorAll('#bookingsTableBody').forEach(function(bBody) {
             bBody.innerHTML = list.length ? list.map(function(b) {
           var rawItin = String(b.ItemTitle || '').replace(/\{DATE:.*?\}/g, '').replace(/\(\-\)/g, '').trim();

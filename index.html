@@ -379,20 +379,89 @@
         <div style="overflow-x:auto; margin-top:12px;"><table><thead><tr><th>Booking ID</th><th>Date</th><th>Passenger & Passport Details</th><th>Package / Flight</th><th>PNR / Ticket</th><th>Fare (PKR)</th><th>Status & Hold Timer</th><th>PDF / Action</th></tr></thead><tbody id="bookingsTableBody"></tbody></table></div>
       </div>
 
-      <div id="tab-banks" class="card hidden">
-        <h3>🏦 Official Payment Deposit Accounts</h3>
-        <div id="banksGrid" class="bank-grid" style="margin-top:12px;"></div>
-              <div style="margin-top:20px; padding-top:18px; border-top:1px solid var(--border); max-width:520px;">
-          <h3>📎 Upload Transaction Slip (Instant Wallet &amp; Ledger Credit)</h3>
-          <form onsubmit="handleInstantSlipUpload(event)" style="margin-top:12px;">
-            <div class="form-group"><label>Amount Deposited (PKR)</label><input type="number" id="depAmount" placeholder="e.g. 100000" min="100" required /></div>
-            <div class="form-group"><label>Transaction ID / Slip Reference</label><input type="text" id="depRef" placeholder="e.g. TID-98234712" required /></div>
-            <div class="form-group"><label>Attach Transaction Slip (Image / Receipt)</label><input type="file" id="depSlipFile" accept="image/*,.pdf" required style="padding:8px; border:1px dashed #94a3b8; border-radius:8px; width:100%; background:#f8fafc;" /></div>
-            <input type="hidden" id="depBank" value="UBL (384263615)" />
-            <button type="submit" class="btn btn-green">Upload Slip &amp; Credit Wallet Instantly</button>
-          </form>
+    <div id="tab-banks" class="card hidden" style="border-top:4px solid #d97706;">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding-bottom:14px;border-bottom:1px solid #e2e8f0;">
+        <div>
+          <span style="display:inline-block;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;padding:3px 10px;border-radius:99px;font-size:10.5px;font-weight:800;letter-spacing:0.5px;margin-bottom:5px;">VERIFIED CORPORATE TREASURY • SMART SLIP OCR</span>
+          <h3 style="margin:0;font-size:20px;color:#0b1f44;">🏦 Official Payment Deposit Accounts</h3>
         </div>
+        <div style="background:#f8fafc;border:1px solid #cbd5e1;padding:8px 14px;border-radius:10px;text-align:right;">
+          <div style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;">Settlement Currency</div>
+          <div style="font-size:13.5px;font-weight:900;color:#0b1f44;">PKR (Pakistani Rupee)</div>
+        </div>
+      </div>
 
+      <div id="banksGrid" class="bank-grid" style="margin-top:16px;"></div>
+
+      <div style="margin-top:22px;background:linear-gradient(135deg,#f8fafc,#eff6ff);border:1.5px solid #bfdbfe;border-top:4px solid #163b7a;border-radius:14px;padding:20px;max-width:560px;box-shadow:0 8px 20px rgba(11,31,68,0.06);">
+        <h3 style="margin:0 0 4px;font-size:17px;color:#0b1f44;">📎 Smart Slip Upload (Auto-Amount &amp; Instant Wallet Credit)</h3>
+        <p style="margin:0 0 14px;font-size:12px;color:#475569;">Slip tasveer select karte hi <strong>Amount (PKR)</strong> aur <strong>TID</strong> khud-ba-khud likhe jayenge.</p>
+        <form onsubmit="handleInstantSlipUpload(event)">
+          <div class="form-group">
+            <label>1. Attach Transaction Slip (Image / Receipt)</label>
+            <input type="file" id="depSlipFile" accept="image/*" onchange="window.autoScanBankSlip(this)" required style="padding:9px;background:#fff;border:1.5px dashed #163b7a;" />
+            <div id="slipScanStatus" style="margin-top:6px;font-size:12px;font-weight:700;color:#1d4ed8;"></div>
+          </div>
+          <div class="form-group">
+            <label>2. Amount Deposited (PKR) — <span style="color:#15803d;">Auto-Filled from Slip</span></label>
+            <input type="number" id="depAmount" placeholder="Slip attach karein — Amount khud likhi jayegi" min="100" required />
+          </div>
+          <div class="form-group">
+            <label>3. Transaction ID / Slip Reference</label>
+            <input type="text" id="depRef" placeholder="e.g. TID-98234712" required />
+          </div>
+          <input type="hidden" id="depBank" value="UBL (384263615)" />
+          <button type="submit" class="btn btn-green">✅ Upload Slip &amp; Credit Wallet Instantly</button>
+        </form>
+      </div>
+    </div>
+    <script>
+        window.autoScanBankSlip = function(inp) {
+        var file = inp && inp.files && inp.files.item(0);
+        var st = document.getElementById('slipScanStatus');
+        var amtInp = document.getElementById('depAmount');
+        var refInp = document.getElementById('depRef');
+        if (!file) return;
+        if (st) { st.style.color = '#1d4ed8'; st.textContent = '⏳ Slip parhi ja rahi hai... Amount auto-detect ho rahi hai...'; }
+        var runOcr = function() {
+          window.Tesseract.recognize(file, 'eng').then(function(res) {
+            var txt = (res && res.data && res.data.text) ? res.data.text : '';
+            var amt = 0;
+            var m1 = txt.match(/(?:PKR|Rs\.?|Amount|Total)\s*[:\-]?\s*([1-9]\d{0,2}(?:,\d{3})*(?:\.\d{1,2})?|[1-9]\d{2,7}(?:\.\d{1,2})?)/i);
+            if (m1 && m1.at(1)) {
+              amt = Math.round(parseFloat(m1.at(1).replace(/,/g, '')));
+            } else {
+              var allNums = txt.match(/\b\d{1,3}(?:,\d{3})+(?:\.\d{2})?\b/g) || [];
+              allNums.forEach(function(n) {
+                var v = Math.round(parseFloat(n.replace(/,/g, '')));
+                if (v >= 100 && v <= 50000000 && v > amt) amt = v;
+              });
+            }
+            var mTid = txt.match(/(?:TID|Ref(?:erence)?|Trans(?:action)?\s*(?:ID|No)|Auth\s*Code)\s*[:#\-]?\s*([A-Z0-9\-]{6,22})/i);
+            if (mTid && mTid.at(1) && refInp && !refInp.value) {
+              refInp.value = mTid.at(1).trim();
+            }
+            if (amt >= 100 && amtInp) {
+              amtInp.value = amt;
+              amtInp.style.background = '#f0fdf4';
+              amtInp.style.borderColor = '#16a34a';
+              if (st) { st.style.color = '#15803d'; st.textContent = '✅ Auto-Detected Amount: PKR ' + amt.toLocaleString() + ' (Check kar ke Submit dabayein)'; }
+            } else {
+              if (st) { st.style.color = '#b45309'; st.textContent = '⚠️ Slip thori dhundli hai — baraye meharbani Amount khud likh dein.'; }
+            }
+          }).catch(function() {
+            if (st) { st.style.color = '#b45309'; st.textContent = '⚠️ Auto-scan nahi ho saka — Amount khud likh dein.'; }
+          });
+        };
+        if (window.Tesseract) { runOcr(); }
+        else {
+          var s = document.createElement('script');
+          s.src = 'https://' + 'cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+          s.onload = runOcr;
+          document.head.appendChild(s);
+        }
+      };
+    </script>
       </div>      <div id="tab-ledger" class="card hidden" style="font-size:12px;">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
           <div>

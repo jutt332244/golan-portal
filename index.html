@@ -2060,6 +2060,176 @@ renderBookingsTable(res.isAdmin);
   <div onclick="openCeoWhatsApp()" title="WhatsApp CEO Shan Chairman" style="position:fixed; bottom:25px; right:25px; width:60px; height:60px; background-color:#25D366; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(0,0,0,0.28); z-index:2147483647; cursor:pointer;">
     <svg xmlns="http://w3.org" width="34" height="34" viewBox="0 0 24 24" fill="#ffffff"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824z"/></svg>
   </div>
+<script>
+(function() {
+  window.openLedgerTab = function(btnEl) {
+    if (typeof window.switchTab === 'function') {
+      window.switchTab('ledger', btnEl || document.querySelector('.side-btn[onclick*="openLedgerTab"]'));
+    }
+    window.golanMasterSync();
+  };
+
+  function getAuth() {
+    var em = (typeof currentEmail !== 'undefined' && currentEmail) ? currentEmail : (localStorage.getItem('golan_email') || '');
+    var tk = (typeof currentToken !== 'undefined' && currentToken) ? currentToken : (localStorage.getItem('golan_token') || '');
+    return { em: em, tk: tk };
+  }
+
+  function postApi(payload) {
+    if (typeof callBackend === 'function') return callBackend(payload);
+    return fetch('/api/backend', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).then(function(r) { return r.json(); });
+  }
+
+  window.adminIssueGolanTicket = function(bookingId) {
+    var b = (window.__ALL_BOOKINGS__ || []).find(function(x) { return String(x.BookingID) === String(bookingId); });
+    if (!b) return;
+    var pnr = prompt('Enter Real Airline PNR (e.g. HJGQTK):', b.PNR || '');
+    if (pnr === null) return;
+    var tkt = prompt('Enter 13-Digit Airline Ticket Number (e.g. 176-2481920451):', b.TicketNo || '');
+    if (tkt === null) return;
+    var a = getAuth();
+    postApi({ action: 'adminIssueBooking', email: a.em, token: a.tk, bookingId: bookingId, realPnr: pnr.trim().toUpperCase(), ticketNo: tkt.trim() }).then(function(r) {
+      if (r && r.ok) {
+        alert('✅ ' + (r.message || 'Ticket ISSUED & Confirmed PDF Sent!'));
+        window.golanMasterSync();
+      } else {
+        alert('❌ ' + ((r && r.message) || 'Could not issue ticket.'));
+      }
+    });
+  };
+
+  window.adminCancelGolanTicket = function(bookingId) {
+    var b = (window.__ALL_BOOKINGS__ || []).find(function(x) { return String(x.BookingID) === String(bookingId); });
+    if (!b) return;
+    if (!confirm('Are you sure you want to CANCEL booking ' + bookingId + ' (' + (b.PassengerName || '') + ')?')) return;
+    var a = getAuth();
+    postApi({ action: 'adminCancelBooking', email: a.em, token: a.tk, bookingId: bookingId }).then(function(r) {
+      if (r && r.ok) {
+        alert('✅ ' + (r.message || 'Booking CANCELED!'));
+        window.golanMasterSync();
+      } else {
+        alert('❌ ' + ((r && r.message) || 'Could not cancel booking.'));
+      }
+    });
+  };
+
+  window.adminApproveDepositReq = function(depId) {
+    if (!confirm('Approve deposit ' + depId + ' and credit amount to Sub-Agent wallet?')) return;
+    var a = getAuth();
+    postApi({ action: 'adminApproveDeposit', email: a.em, token: a.tk, depositId: depId }).then(function(r) {
+      if (r && r.ok) {
+        alert('✅ ' + (r.message || 'Deposit Approved & Credited to Sub-Agent Wallet!'));
+        window.golanMasterSync();
+      } else {
+        alert('❌ ' + ((r && r.message) || 'Could not approve deposit.'));
+      }
+    });
+  };
+
+  window.adminAgentCtrl = function(targetEmail, subAction) {
+    var amt = 0;
+    if (subAction === 'ADD_LIMIT') {
+      var v = prompt('Enter PKR Amount to Add to ' + targetEmail + ' Wallet:', '50000');
+      if (v === null) return;
+      amt = Number(v || 0);
+      if (amt <= 0) return;
+    }
+    var a = getAuth();
+    postApi({ action: 'adminManageAgent', email: a.em, token: a.tk, targetEmail: targetEmail, subAction: subAction, amountPKR: amt }).then(function(r) {
+      if (r && r.ok) {
+        alert('✅ ' + (r.message || 'Agent Updated!'));
+        window.golanMasterSync();
+      } else {
+        alert('❌ ' + ((r && r.message) || 'Action failed.'));
+      }
+    });
+  };
+
+  window.golanMasterSync = function() {
+    var a = getAuth();
+    if (!a.em || !a.tk) return;
+    postApi({ action: 'getDashboard', email: a.em, token: a.tk }).then(function(res) {
+      if (!res || !res.ok) return;
+      var list = res.bookings || [];
+      window.__ALL_BOOKINGS__ = list;
+      window.__IS_ADMIN__ = !!res.isAdmin;
+
+      var bkBody = document.getElementById('bookingsTableBody');
+      if (bkBody) {
+        bkBody.innerHTML = list.length ? list.map(function(b) {
+          var stUp = String(b.Status || 'PENDING').toUpperCase();
+          var dt = b.CreatedAt ? String(b.CreatedAt).split('T').at(0) : '';
+          var tktStr = b.TicketNo ? ('<div style="font-size:10.5px;color:#15803d;font-weight:700;">TKT: ' + b.TicketNo + '</div>') : '';
+          var issBtn = (res.isAdmin && stUp !== 'CONFIRMED' && stUp !== 'ISSUED' && stUp.indexOf('CANCEL') === -1) ? '<button type="button" onclick="window.adminIssueGolanTicket(\'' + (b.BookingID || '') + '\')" style="background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;padding:6px 9px;border-radius:7px;font-size:11px;font-weight:800;cursor:pointer;margin-right:4px;white-space:nowrap;">✓ Issue</button>' : '';
+          var canBtn = (res.isAdmin && stUp.indexOf('CANCEL') === -1) ? '<button type="button" onclick="window.adminCancelGolanTicket(\'' + (b.BookingID || '') + '\')" style="background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;border:none;padding:6px 9px;border-radius:7px;font-size:11px;font-weight:800;cursor:pointer;margin-right:4px;white-space:nowrap;">✕ Cancel</button>' : '';
+          var prtBtn = '<button type="button" onclick="if(typeof window.printSingleGolanTicket===\'function\')window.printSingleGolanTicket(\'' + (b.BookingID || '') + '\')" style="background:linear-gradient(135deg,#0b1f44,#1e3a8a);color:#fff;border:none;padding:6px 9px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🖨 E-Ticket</button>';
+          return '<tr><td><strong>' + (b.BookingID || '') + '</strong><div style="font-size:11px;color:#64748b;">' + dt + '</div></td><td><strong>' + (b.PassengerName || '') + '</strong><div style="font-size:11px;color:#475569;">PP: ' + (b.PassportNo || '') + '</div></td><td><strong>' + (b.ItemTitle || '') + '</strong><div style="font-size:11px;color:#0369a1;">PNR: ' + (b.PNR || '') + '</div>' + tktStr + '</td><td style="font-weight:800;color:#0b1f44;">PKR ' + Number(b.FarePKR || 0).toLocaleString() + '</td><td><span class="status-badge st-' + stUp.split(' ').at(0) + '">' + (b.Status || 'PENDING') + '</span></td><td style="white-space:nowrap;">' + issBtn + canBtn + prtBtn + '</td></tr>';
+        }).join('') : '<tr><td colspan="6" style="text-align:center;color:#64748b;padding:20px;">No bookings found.</td></tr>';
+      }
+
+      var deps = res.deposits || [];
+      var totCredit = 0, totDebit = 0, totRefund = 0;
+      var rowsHtml = [];
+      deps.forEach(function(d) {
+        var dst = String(d.Status || 'PENDING').toUpperCase();
+        var damt = Number(d.AmountPKR || 0);
+        if (dst === 'APPROVED') totCredit += damt;
+        var badge = dst === 'APPROVED' ? '<span style="background:#dcfce7;color:#15803d;padding:3px 9px;border-radius:99px;font-size:10.5px;font-weight:800;">✓ APPROVED</span>' : '<span style="background:#fef3c7;color:#b45309;padding:3px 9px;border-radius:99px;font-size:10.5px;font-weight:800;">⏳ PENDING</span>';
+        rowsHtml.push('<tr><td>' + (d.CreatedAt || '') + '</td><td><strong>' + (d.DepositID || '') + '</strong></td><td>Bank Deposit — ' + (d.BankName || '') + ' (' + (d.TxRef || '') + ')</td><td style="color:#15803d;font-weight:800;">DEPOSIT</td><td>—</td><td style="color:#15803d;font-weight:900;">+ PKR ' + damt.toLocaleString() + '</td><td>' + badge + '</td></tr>');
+      });
+      list.forEach(function(b) {
+        var st = String(b.Status || 'PENDING').toUpperCase();
+        var dt = b.CreatedAt ? String(b.CreatedAt).split('T').at(0) : '';
+        var famt = Number(b.FarePKR || 0);
+        var isCan = st.indexOf('CANCEL') !== -1;
+        if (isCan) { totRefund += famt; } else { totDebit += famt; }
+        rowsHtml.push('<tr><td>' + dt + '</td><td><strong>' + (b.BookingID || '') + '</strong></td><td>' + (b.ItemTitle || '') + ' (' + (b.PassengerName || '') + ')</td><td style="font-weight:700;color:#0b1f44;">' + (isCan ? 'REFUND' : 'TICKET') + '</td><td style="color:#b91c1c;font-weight:800;">- PKR ' + famt.toLocaleString() + '</td><td style="color:#15803d;font-weight:800;">' + (isCan ? '+ PKR ' + famt.toLocaleString() : '—') + '</td><td><span class="status-badge st-' + st.split(' ').at(0) + '">' + (b.Status || 'PENDING') + '</span></td></tr>');
+      });
+      var liveBal = (typeof res.balancePKR !== 'undefined') ? Number(res.balancePKR || 0) : (totCredit - totDebit + totRefund);
+      var elCr = document.getElementById('ldgTotalCredit'); if (elCr) elCr.textContent = 'PKR ' + totCredit.toLocaleString();
+      var elDb = document.getElementById('ldgTotalDebit'); if (elDb) elDb.textContent = 'PKR ' + totDebit.toLocaleString();
+      var elRf = document.getElementById('ldgTotalRefund'); if (elRf) elRf.textContent = 'PKR ' + totRefund.toLocaleString();
+      var elNet = document.getElementById('ldgNetBalance'); if (elNet) elNet.textContent = 'PKR ' + liveBal.toLocaleString();
+      var lBody = document.getElementById('ledgerTableBody');
+      if (lBody) lBody.innerHTML = rowsHtml.length ? rowsHtml.join('') : '<tr><td colspan="7" style="text-align:center;color:#64748b;padding:20px;">No ledger entries yet.</td></tr>';
+
+      var depBody = document.getElementById('adminDepositsBody');
+      if (depBody) {
+        depBody.innerHTML = deps.length ? deps.map(function(d) {
+          var st = String(d.Status || 'PENDING').toUpperCase();
+          var badge = st === 'APPROVED' ? '<span style="background:#dcfce7;color:#15803d;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:800;">✓ APPROVED</span>' : '<span style="background:#fef3c7;color:#b45309;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:800;">⏳ PENDING</span>';
+          var act = st === 'PENDING' ? '<button type="button" onclick="window.adminApproveDepositReq(\'' + (d.DepositID || '') + '\')" style="background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;padding:6px 12px;border-radius:7px;font-size:11px;font-weight:800;cursor:pointer;">✓ Approve</button>' : '<span style="color:#64748b;font-size:11px;">Credited</span>';
+          return '<tr><td style="font-weight:800;">' + (d.DepositID || '') + '</td><td>' + (d.CreatedAt || '') + '</td><td style="font-weight:700;">' + (d.AgencyName || d.AgentEmail || '') + '</td><td>' + (d.BankName || '') + '</td><td style="font-weight:900;color:#15803d;">PKR ' + Number(d.AmountPKR || 0).toLocaleString() + '</td><td>' + (d.TxRef || '') + '</td><td>' + badge + '</td><td>' + act + '</td></tr>';
+        }).join('') : '<tr><td colspan="8" style="text-align:center;color:#64748b;padding:16px;">No deposit requests yet.</td></tr>';
+      }
+
+      var agBody = document.getElementById('adminAgentsBody');
+      if (agBody) {
+        var ags = res.agents || [];
+        agBody.innerHTML = ags.length ? ags.map(function(ag) {
+          var st = String(ag.Status || 'APPROVED').toUpperCase();
+          var badge = st === 'APPROVED' ? '<span style="background:#dcfce7;color:#15803d;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:800;">ACTIVE</span>' : '<span style="background:#fee2e2;color:#b91c1c;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:800;">' + st + '</span>';
+          return '<tr><td style="font-weight:800;">' + (ag.AgencyName || '') + '</td><td>' + (ag.Email || '') + '</td><td>' + (ag.City || '') + ' • ' + (ag.Mobile || '') + '</td><td style="font-weight:900;color:#0b1f44;">PKR ' + Number(ag.BalancePKR || 0).toLocaleString() + '</td><td>' + badge + '</td><td style="white-space:nowrap;"><button type="button" onclick="window.adminAgentCtrl(\'' + (ag.Email || '') + '\',\'APPROVE\')" style="background:#16a34a;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;margin-right:3px;">Approve</button><button type="button" onclick="window.adminAgentCtrl(\'' + (ag.Email || '') + '\',\'ADD_LIMIT\')" style="background:#1d4ed8;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;margin-right:3px;">+ Limit</button><button type="button" onclick="window.adminAgentCtrl(\'' + (ag.Email || '') + '\',\'BLOCK\')" style="background:#dc2626;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">Block</button></td></tr>';
+        }).join('') : '<tr><td colspan="6" style="text-align:center;color:#64748b;padding:16px;">No sub-agents found.</td></tr>';
+      }
+    });
+  };
+
+  document.addEventListener('click', function(ev) {
+    if (ev.target && ev.target.closest('.side-btn')) {
+      setTimeout(window.golanMasterSync, 150);
+    }
+  });
+  setTimeout(window.golanMasterSync, 800);
+  setInterval(window.golanMasterSync, 20000);
+})();
+</script>
+</body>
+</html>
 
 </body>
 </html>

@@ -266,7 +266,7 @@ export default async function handler(req, res) {
       return res.json({ ok: true, offers });
     }
 
-    if (action === 'requestDeposit') {
+    if (action === 'requestDeposit' || action === 'submitDeposit') {
       const amt = Number(p.amountPKR || 0);
       if (amt <= 0) return res.json({ ok: false, message: 'Enter valid PKR amount.' });
       DB.deposits = DB.deposits || [];
@@ -274,10 +274,10 @@ export default async function handler(req, res) {
         DepositID: 'DEP-' + Math.floor(10000 + Math.random() * 90000),
         CreatedAt: new Date().toLocaleString('en-PK'),
         AgentEmail: email, AgencyName: a.AgencyName,
-        BankName: p.bankName || 'UBL', AmountPKR: amt, TxRef: p.txRef || '', Status: 'PENDING'
+        BankName: p.bankName || 'UBL', AmountPKR: amt, TxRef: p.txRef || p.refNo || '', Status: 'PENDING'
       });
       await saveDB(DB);
-      return res.json({ ok: true, message: 'Deposit request submitted! Admin will upgrade your limit shortly.' });
+      return res.json({ ok: true, message: 'Please contact us Head Office' });
     }
     if (action === 'addBooking') {
       const fare = Number(p.farePKR || 0);

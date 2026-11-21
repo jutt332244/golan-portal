@@ -2062,27 +2062,63 @@ renderBookingsTable(res.isAdmin);
   </div>
 <script>
 (function() {
+  var savedAuth = { em: '', tk: '' };
+
+  function detectAuth() {
+    if (savedAuth.em && savedAuth.tk) return savedAuth;
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        var v = localStorage.getItem(k) || '';
+        if (v.indexOf('@') !== -1 && v.length < 80) savedAuth.em = v.replace(/"/g, '').trim();
+        if (k.toLowerCase().indexOf('token') !== -1 && v.length > 8) savedAuth.tk = v.replace(/"/g, '').trim();
+      }
+    } catch (e) {}
+    return savedAuth;
+  }
+
+  var origFetch = window.fetch;
+  window.fetch = function(url, opts) {
+    try {
+      if (opts && opts.body && typeof opts.body === 'string' && String(url).indexOf('backend') !== -1) {
+        var parsed = JSON.parse(opts.body);
+        if (parsed.email) savedAuth.em = parsed.email;
+        if (parsed.token) savedAuth.tk = parsed.token;
+      }
+    } catch (e) {}
+    return origFetch.apply(this, arguments).then(function(response) {
+      try {
+        if (String(url).indexOf('backend') !== -1) {
+          response.clone().json().then(function(data) {
+            if (data && data.token) savedAuth.tk = data.token;
+            if (data && data.email) savedAuth.em = data.email;
+            if (data && data.ok && (data.bookings || data.deposits || data.agents)) {
+              window.renderGolanAllData(data);
+            }
+          }).catch(function() {});
+        }
+      } catch (e) {}
+      return response;
+    });
+  };
+
+  function callApi(payload) {
+    var a = detectAuth();
+    payload.email = payload.email || a.em;
+    payload.token = payload.token || a.tk;
+    return origFetch('/api/backend', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).then(function(r) { return r.json(); });
+  }
+
   window.openLedgerTab = function(btnEl) {
     if (typeof window.switchTab === 'function') {
       window.switchTab('ledger', btnEl || document.querySelector('.side-btn[onclick*="openLedgerTab"]'));
     }
     window.golanMasterSync();
   };
-
-  function getAuth() {
-    var em = (typeof currentEmail !== 'undefined' && currentEmail) ? currentEmail : (localStorage.getItem('golan_email') || '');
-    var tk = (typeof currentToken !== 'undefined' && currentToken) ? currentToken : (localStorage.getItem('golan_token') || '');
-    return { em: em, tk: tk };
-  }
-
-  function postApi(payload) {
-    if (typeof callBackend === 'function') return callBackend(payload);
-    return fetch('/api/backend', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    }).then(function(r) { return r.json(); });
-  }
 
   window.adminIssueGolanTicket = function(bookingId) {
     var b = (window.__ALL_BOOKINGS__ || []).find(function(x) { return String(x.BookingID) === String(bookingId); });
@@ -2091,14 +2127,9 @@ renderBookingsTable(res.isAdmin);
     if (pnr === null) return;
     var tkt = prompt('Enter 13-Digit Airline Ticket Number (e.g. 176-2481920451):', b.TicketNo || '');
     if (tkt === null) return;
-    var a = getAuth();
-    postApi({ action: 'adminIssueBooking', email: a.em, token: a.tk, bookingId: bookingId, realPnr: pnr.trim().toUpperCase(), ticketNo: tkt.trim() }).then(function(r) {
-      if (r && r.ok) {
-        alert('✅ ' + (r.message || 'Ticket ISSUED & Confirmed PDF Sent!'));
-        window.golanMasterSync();
-      } else {
-        alert('❌ ' + ((r && r.message) || 'Could not issue ticket.'));
-      }
+    callApi({ action: 'adminIssueBooking', bookingId: bookingId, realPnr: pnr.trim().toUpperCase(), ticketNo: tkt.trim() }).then(function(r) {
+      if (r && r.ok) { alert('✅ ' + (r.message || 'Ticket ISSUED!')); window.golanMasterSync(); }
+      else { alert('❌ ' + ((r && r.message) || 'Failed to issue ticket.')); }
     });
   };
 
@@ -2106,27 +2137,17 @@ renderBookingsTable(res.isAdmin);
     var b = (window.__ALL_BOOKINGS__ || []).find(function(x) { return String(x.BookingID) === String(bookingId); });
     if (!b) return;
     if (!confirm('Are you sure you want to CANCEL booking ' + bookingId + ' (' + (b.PassengerName || '') + ')?')) return;
-    var a = getAuth();
-    postApi({ action: 'adminCancelBooking', email: a.em, token: a.tk, bookingId: bookingId }).then(function(r) {
-      if (r && r.ok) {
-        alert('✅ ' + (r.message || 'Booking CANCELED!'));
-        window.golanMasterSync();
-      } else {
-        alert('❌ ' + ((r && r.message) || 'Could not cancel booking.'));
-      }
+    callApi({ action: 'adminCancelBooking', bookingId: bookingId }).then(function(r) {
+      if (r && r.ok) { alert('✅ ' + (r.message || 'Booking CANCELED!')); window.golanMasterSync(); }
+      else { alert('❌ ' + ((r && r.message) || 'Failed to cancel booking.')); }
     });
   };
 
   window.adminApproveDepositReq = function(depId) {
     if (!confirm('Approve deposit ' + depId + ' and credit amount to Sub-Agent wallet?')) return;
-    var a = getAuth();
-    postApi({ action: 'adminApproveDeposit', email: a.em, token: a.tk, depositId: depId }).then(function(r) {
-      if (r && r.ok) {
-        alert('✅ ' + (r.message || 'Deposit Approved & Credited to Sub-Agent Wallet!'));
-        window.golanMasterSync();
-      } else {
-        alert('❌ ' + ((r && r.message) || 'Could not approve deposit.'));
-      }
+    callApi({ action: 'adminApproveDeposit', depositId: depId }).then(function(r) {
+      if (r && r.ok) { alert('✅ ' + (r.message || 'Deposit Approved!')); window.golanMasterSync(); }
+      else { alert('❌ ' + ((r && r.message) || 'Failed to approve deposit.')); }
     });
   };
 
@@ -2138,84 +2159,81 @@ renderBookingsTable(res.isAdmin);
       amt = Number(v || 0);
       if (amt <= 0) return;
     }
-    var a = getAuth();
-    postApi({ action: 'adminManageAgent', email: a.em, token: a.tk, targetEmail: targetEmail, subAction: subAction, amountPKR: amt }).then(function(r) {
-      if (r && r.ok) {
-        alert('✅ ' + (r.message || 'Agent Updated!'));
-        window.golanMasterSync();
-      } else {
-        alert('❌ ' + ((r && r.message) || 'Action failed.'));
-      }
+    callApi({ action: 'adminManageAgent', targetEmail: targetEmail, subAction: subAction, amountPKR: amt }).then(function(r) {
+      if (r && r.ok) { alert('✅ ' + (r.message || 'Agent Updated!')); window.golanMasterSync(); }
+      else { alert('❌ ' + ((r && r.message) || 'Action failed.')); }
     });
   };
 
-  window.golanMasterSync = function() {
-    var a = getAuth();
-    if (!a.em || !a.tk) return;
-    postApi({ action: 'getDashboard', email: a.em, token: a.tk }).then(function(res) {
-      if (!res || !res.ok) return;
-      var list = res.bookings || [];
-      window.__ALL_BOOKINGS__ = list;
-      window.__IS_ADMIN__ = !!res.isAdmin;
+  window.renderGolanAllData = function(res) {
+    var list = res.bookings || [];
+    window.__ALL_BOOKINGS__ = list;
+    window.__IS_ADMIN__ = !!res.isAdmin;
 
-      var bkBody = document.getElementById('bookingsTableBody');
-      if (bkBody) {
-        bkBody.innerHTML = list.length ? list.map(function(b) {
-          var stUp = String(b.Status || 'PENDING').toUpperCase();
-          var dt = b.CreatedAt ? String(b.CreatedAt).split('T').at(0) : '';
-          var tktStr = b.TicketNo ? ('<div style="font-size:10.5px;color:#15803d;font-weight:700;">TKT: ' + b.TicketNo + '</div>') : '';
-          var issBtn = (res.isAdmin && stUp !== 'CONFIRMED' && stUp !== 'ISSUED' && stUp.indexOf('CANCEL') === -1) ? '<button type="button" onclick="window.adminIssueGolanTicket(\'' + (b.BookingID || '') + '\')" style="background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;padding:6px 9px;border-radius:7px;font-size:11px;font-weight:800;cursor:pointer;margin-right:4px;white-space:nowrap;">✓ Issue</button>' : '';
-          var canBtn = (res.isAdmin && stUp.indexOf('CANCEL') === -1) ? '<button type="button" onclick="window.adminCancelGolanTicket(\'' + (b.BookingID || '') + '\')" style="background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;border:none;padding:6px 9px;border-radius:7px;font-size:11px;font-weight:800;cursor:pointer;margin-right:4px;white-space:nowrap;">✕ Cancel</button>' : '';
-          var prtBtn = '<button type="button" onclick="if(typeof window.printSingleGolanTicket===\'function\')window.printSingleGolanTicket(\'' + (b.BookingID || '') + '\')" style="background:linear-gradient(135deg,#0b1f44,#1e3a8a);color:#fff;border:none;padding:6px 9px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🖨 E-Ticket</button>';
-          return '<tr><td><strong>' + (b.BookingID || '') + '</strong><div style="font-size:11px;color:#64748b;">' + dt + '</div></td><td><strong>' + (b.PassengerName || '') + '</strong><div style="font-size:11px;color:#475569;">PP: ' + (b.PassportNo || '') + '</div></td><td><strong>' + (b.ItemTitle || '') + '</strong><div style="font-size:11px;color:#0369a1;">PNR: ' + (b.PNR || '') + '</div>' + tktStr + '</td><td style="font-weight:800;color:#0b1f44;">PKR ' + Number(b.FarePKR || 0).toLocaleString() + '</td><td><span class="status-badge st-' + stUp.split(' ').at(0) + '">' + (b.Status || 'PENDING') + '</span></td><td style="white-space:nowrap;">' + issBtn + canBtn + prtBtn + '</td></tr>';
-        }).join('') : '<tr><td colspan="6" style="text-align:center;color:#64748b;padding:20px;">No bookings found.</td></tr>';
-      }
-
-      var deps = res.deposits || [];
-      var totCredit = 0, totDebit = 0, totRefund = 0;
-      var rowsHtml = [];
-      deps.forEach(function(d) {
-        var dst = String(d.Status || 'PENDING').toUpperCase();
-        var damt = Number(d.AmountPKR || 0);
-        if (dst === 'APPROVED') totCredit += damt;
-        var badge = dst === 'APPROVED' ? '<span style="background:#dcfce7;color:#15803d;padding:3px 9px;border-radius:99px;font-size:10.5px;font-weight:800;">✓ APPROVED</span>' : '<span style="background:#fef3c7;color:#b45309;padding:3px 9px;border-radius:99px;font-size:10.5px;font-weight:800;">⏳ PENDING</span>';
-        rowsHtml.push('<tr><td>' + (d.CreatedAt || '') + '</td><td><strong>' + (d.DepositID || '') + '</strong></td><td>Bank Deposit — ' + (d.BankName || '') + ' (' + (d.TxRef || '') + ')</td><td style="color:#15803d;font-weight:800;">DEPOSIT</td><td>—</td><td style="color:#15803d;font-weight:900;">+ PKR ' + damt.toLocaleString() + '</td><td>' + badge + '</td></tr>');
-      });
-      list.forEach(function(b) {
-        var st = String(b.Status || 'PENDING').toUpperCase();
+    var bkBody = document.getElementById('bookingsTableBody');
+    if (bkBody) {
+      bkBody.innerHTML = list.length ? list.map(function(b) {
+        var stUp = String(b.Status || 'PENDING').toUpperCase();
         var dt = b.CreatedAt ? String(b.CreatedAt).split('T').at(0) : '';
-        var famt = Number(b.FarePKR || 0);
-        var isCan = st.indexOf('CANCEL') !== -1;
-        if (isCan) { totRefund += famt; } else { totDebit += famt; }
-        rowsHtml.push('<tr><td>' + dt + '</td><td><strong>' + (b.BookingID || '') + '</strong></td><td>' + (b.ItemTitle || '') + ' (' + (b.PassengerName || '') + ')</td><td style="font-weight:700;color:#0b1f44;">' + (isCan ? 'REFUND' : 'TICKET') + '</td><td style="color:#b91c1c;font-weight:800;">- PKR ' + famt.toLocaleString() + '</td><td style="color:#15803d;font-weight:800;">' + (isCan ? '+ PKR ' + famt.toLocaleString() : '—') + '</td><td><span class="status-badge st-' + st.split(' ').at(0) + '">' + (b.Status || 'PENDING') + '</span></td></tr>');
-      });
-      var liveBal = (typeof res.balancePKR !== 'undefined') ? Number(res.balancePKR || 0) : (totCredit - totDebit + totRefund);
-      var elCr = document.getElementById('ldgTotalCredit'); if (elCr) elCr.textContent = 'PKR ' + totCredit.toLocaleString();
-      var elDb = document.getElementById('ldgTotalDebit'); if (elDb) elDb.textContent = 'PKR ' + totDebit.toLocaleString();
-      var elRf = document.getElementById('ldgTotalRefund'); if (elRf) elRf.textContent = 'PKR ' + totRefund.toLocaleString();
-      var elNet = document.getElementById('ldgNetBalance'); if (elNet) elNet.textContent = 'PKR ' + liveBal.toLocaleString();
-      var lBody = document.getElementById('ledgerTableBody');
-      if (lBody) lBody.innerHTML = rowsHtml.length ? rowsHtml.join('') : '<tr><td colspan="7" style="text-align:center;color:#64748b;padding:20px;">No ledger entries yet.</td></tr>';
+        var tktStr = b.TicketNo ? ('<div style="font-size:10.5px;color:#15803d;font-weight:700;">TKT: ' + b.TicketNo + '</div>') : '';
+        var issBtn = (res.isAdmin && stUp !== 'CONFIRMED' && stUp !== 'ISSUED' && stUp.indexOf('CANCEL') === -1) ? '<button type="button" onclick="window.adminIssueGolanTicket(\'' + (b.BookingID || '') + '\')" style="background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;padding:6px 9px;border-radius:7px;font-size:11px;font-weight:800;cursor:pointer;margin-right:4px;white-space:nowrap;">✓ Issue</button>' : '';
+        var canBtn = (res.isAdmin && stUp.indexOf('CANCEL') === -1) ? '<button type="button" onclick="window.adminCancelGolanTicket(\'' + (b.BookingID || '') + '\')" style="background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;border:none;padding:6px 9px;border-radius:7px;font-size:11px;font-weight:800;cursor:pointer;margin-right:4px;white-space:nowrap;">✕ Cancel</button>' : '';
+        var prtBtn = '<button type="button" onclick="if(typeof window.printSingleGolanTicket===\'function\')window.printSingleGolanTicket(\'' + (b.BookingID || '') + '\')" style="background:linear-gradient(135deg,#0b1f44,#1e3a8a);color:#fff;border:none;padding:6px 9px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🖨 E-Ticket</button>';
+        return '<tr><td><strong>' + (b.BookingID || '') + '</strong><div style="font-size:11px;color:#64748b;">' + dt + '</div></td><td><strong>' + (b.PassengerName || '') + '</strong><div style="font-size:11px;color:#475569;">PP: ' + (b.PassportNo || '') + '</div></td><td><strong>' + (b.ItemTitle || '') + '</strong><div style="font-size:11px;color:#0369a1;">PNR: ' + (b.PNR || '') + '</div>' + tktStr + '</td><td style="font-weight:800;color:#0b1f44;">PKR ' + Number(b.FarePKR || 0).toLocaleString() + '</td><td><span class="status-badge st-' + stUp.split(' ').at(0) + '">' + (b.Status || 'PENDING') + '</span></td><td style="white-space:nowrap;">' + issBtn + canBtn + prtBtn + '</td></tr>';
+      }).join('') : '<tr><td colspan="6" style="text-align:center;color:#64748b;padding:20px;">No bookings found.</td></tr>';
+    }
 
-      var depBody = document.getElementById('adminDepositsBody');
-      if (depBody) {
-        depBody.innerHTML = deps.length ? deps.map(function(d) {
-          var st = String(d.Status || 'PENDING').toUpperCase();
-          var badge = st === 'APPROVED' ? '<span style="background:#dcfce7;color:#15803d;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:800;">✓ APPROVED</span>' : '<span style="background:#fef3c7;color:#b45309;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:800;">⏳ PENDING</span>';
-          var act = st === 'PENDING' ? '<button type="button" onclick="window.adminApproveDepositReq(\'' + (d.DepositID || '') + '\')" style="background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;padding:6px 12px;border-radius:7px;font-size:11px;font-weight:800;cursor:pointer;">✓ Approve</button>' : '<span style="color:#64748b;font-size:11px;">Credited</span>';
-          return '<tr><td style="font-weight:800;">' + (d.DepositID || '') + '</td><td>' + (d.CreatedAt || '') + '</td><td style="font-weight:700;">' + (d.AgencyName || d.AgentEmail || '') + '</td><td>' + (d.BankName || '') + '</td><td style="font-weight:900;color:#15803d;">PKR ' + Number(d.AmountPKR || 0).toLocaleString() + '</td><td>' + (d.TxRef || '') + '</td><td>' + badge + '</td><td>' + act + '</td></tr>';
-        }).join('') : '<tr><td colspan="8" style="text-align:center;color:#64748b;padding:16px;">No deposit requests yet.</td></tr>';
-      }
+    var deps = res.deposits || [];
+    var totCredit = 0, totDebit = 0, totRefund = 0, rowsHtml = [];
+    deps.forEach(function(d) {
+      var dst = String(d.Status || 'PENDING').toUpperCase();
+      var damt = Number(d.AmountPKR || 0);
+      if (dst === 'APPROVED') totCredit += damt;
+      var badge = dst === 'APPROVED' ? '<span style="background:#dcfce7;color:#15803d;padding:3px 9px;border-radius:99px;font-size:10.5px;font-weight:800;">✓ APPROVED</span>' : '<span style="background:#fef3c7;color:#b45309;padding:3px 9px;border-radius:99px;font-size:10.5px;font-weight:800;">⏳ PENDING</span>';
+      rowsHtml.push('<tr><td>' + (d.CreatedAt || '') + '</td><td><strong>' + (d.DepositID || '') + '</strong></td><td>Bank Deposit — ' + (d.BankName || '') + ' (' + (d.TxRef || '') + ')</td><td style="color:#15803d;font-weight:800;">DEPOSIT</td><td>—</td><td style="color:#15803d;font-weight:900;">+ PKR ' + damt.toLocaleString() + '</td><td>' + badge + '</td></tr>');
+    });
+    list.forEach(function(b) {
+      var st = String(b.Status || 'PENDING').toUpperCase();
+      var dt = b.CreatedAt ? String(b.CreatedAt).split('T').at(0) : '';
+      var famt = Number(b.FarePKR || 0);
+      var isCan = st.indexOf('CANCEL') !== -1;
+      if (isCan) { totRefund += famt; } else { totDebit += famt; }
+      rowsHtml.push('<tr><td>' + dt + '</td><td><strong>' + (b.BookingID || '') + '</strong></td><td>' + (b.ItemTitle || '') + ' (' + (b.PassengerName || '') + ')</td><td style="font-weight:700;color:#0b1f44;">' + (isCan ? 'REFUND' : 'TICKET') + '</td><td style="color:#b91c1c;font-weight:800;">- PKR ' + famt.toLocaleString() + '</td><td style="color:#15803d;font-weight:800;">' + (isCan ? '+ PKR ' + famt.toLocaleString() : '—') + '</td><td><span class="status-badge st-' + st.split(' ').at(0) + '">' + (b.Status || 'PENDING') + '</span></td></tr>');
+    });
+    var liveBal = (typeof res.balancePKR !== 'undefined') ? Number(res.balancePKR || 0) : (totCredit - totDebit + totRefund);
+    var elCr = document.getElementById('ldgTotalCredit'); if (elCr) elCr.textContent = 'PKR ' + totCredit.toLocaleString();
+    var elDb = document.getElementById('ldgTotalDebit'); if (elDb) elDb.textContent = 'PKR ' + totDebit.toLocaleString();
+    var elRf = document.getElementById('ldgTotalRefund'); if (elRf) elRf.textContent = 'PKR ' + totRefund.toLocaleString();
+    var elNet = document.getElementById('ldgNetBalance'); if (elNet) elNet.textContent = 'PKR ' + liveBal.toLocaleString();
+    var lBody = document.getElementById('ledgerTableBody');
+    if (lBody) lBody.innerHTML = rowsHtml.length ? rowsHtml.join('') : '<tr><td colspan="7" style="text-align:center;color:#64748b;padding:20px;">No ledger entries yet.</td></tr>';
 
-      var agBody = document.getElementById('adminAgentsBody');
-      if (agBody) {
-        var ags = res.agents || [];
-        agBody.innerHTML = ags.length ? ags.map(function(ag) {
-          var st = String(ag.Status || 'APPROVED').toUpperCase();
-          var badge = st === 'APPROVED' ? '<span style="background:#dcfce7;color:#15803d;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:800;">ACTIVE</span>' : '<span style="background:#fee2e2;color:#b91c1c;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:800;">' + st + '</span>';
-          return '<tr><td style="font-weight:800;">' + (ag.AgencyName || '') + '</td><td>' + (ag.Email || '') + '</td><td>' + (ag.City || '') + ' • ' + (ag.Mobile || '') + '</td><td style="font-weight:900;color:#0b1f44;">PKR ' + Number(ag.BalancePKR || 0).toLocaleString() + '</td><td>' + badge + '</td><td style="white-space:nowrap;"><button type="button" onclick="window.adminAgentCtrl(\'' + (ag.Email || '') + '\',\'APPROVE\')" style="background:#16a34a;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;margin-right:3px;">Approve</button><button type="button" onclick="window.adminAgentCtrl(\'' + (ag.Email || '') + '\',\'ADD_LIMIT\')" style="background:#1d4ed8;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;margin-right:3px;">+ Limit</button><button type="button" onclick="window.adminAgentCtrl(\'' + (ag.Email || '') + '\',\'BLOCK\')" style="background:#dc2626;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">Block</button></td></tr>';
-        }).join('') : '<tr><td colspan="6" style="text-align:center;color:#64748b;padding:16px;">No sub-agents found.</td></tr>';
-      }
+    var depBody = document.getElementById('adminDepositsBody');
+    if (depBody) {
+      depBody.innerHTML = deps.length ? deps.map(function(d) {
+        var st = String(d.Status || 'PENDING').toUpperCase();
+        var badge = st === 'APPROVED' ? '<span style="background:#dcfce7;color:#15803d;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:800;">✓ APPROVED</span>' : '<span style="background:#fef3c7;color:#b45309;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:800;">⏳ PENDING</span>';
+        var act = st === 'PENDING' ? '<button type="button" onclick="window.adminApproveDepositReq(\'' + (d.DepositID || '') + '\')" style="background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;padding:6px 12px;border-radius:7px;font-size:11px;font-weight:800;cursor:pointer;">✓ Approve</button>' : '<span style="color:#64748b;font-size:11px;">Credited</span>';
+        return '<tr><td style="font-weight:800;">' + (d.DepositID || '') + '</td><td>' + (d.CreatedAt || '') + '</td><td style="font-weight:700;">' + (d.AgencyName || d.AgentEmail || '') + '</td><td>' + (d.BankName || '') + '</td><td style="font-weight:900;color:#15803d;">PKR ' + Number(d.AmountPKR || 0).toLocaleString() + '</td><td>' + (d.TxRef || '') + '</td><td>' + badge + '</td><td>' + act + '</td></tr>';
+      }).join('') : '<tr><td colspan="8" style="text-align:center;color:#64748b;padding:16px;">No deposit requests yet.</td></tr>';
+    }
+
+    var agBody = document.getElementById('adminAgentsBody');
+    if (agBody) {
+      var ags = res.agents || [];
+      agBody.innerHTML = ags.length ? ags.map(function(ag) {
+        var st = String(ag.Status || 'APPROVED').toUpperCase();
+        var badge = st === 'APPROVED' ? '<span style="background:#dcfce7;color:#15803d;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:800;">ACTIVE</span>' : '<span style="background:#fee2e2;color:#b91c1c;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:800;">' + st + '</span>';
+        return '<tr><td style="font-weight:800;">' + (ag.AgencyName || '') + '</td><td>' + (ag.Email || '') + '</td><td>' + (ag.City || '') + ' • ' + (ag.Mobile || '') + '</td><td style="font-weight:900;color:#0b1f44;">PKR ' + Number(ag.BalancePKR || 0).toLocaleString() + '</td><td>' + badge + '</td><td style="white-space:nowrap;"><button type="button" onclick="window.adminAgentCtrl(\'' + (ag.Email || '') + '\',\'APPROVE\')" style="background:#16a34a;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;margin-right:3px;">Approve</button><button type="button" onclick="window.adminAgentCtrl(\'' + (ag.Email || '') + '\',\'ADD_LIMIT\')" style="background:#1d4ed8;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;margin-right:3px;">+ Limit</button><button type="button" onclick="window.adminAgentCtrl(\'' + (ag.Email || '') + '\',\'BLOCK\')" style="background:#dc2626;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">Block</button></td></tr>';
+      }).join('') : '<tr><td colspan="6" style="text-align:center;color:#64748b;padding:16px;">No sub-agents found.</td></tr>';
+    }
+  };
+
+  window.golanMasterSync = function() {
+    var a = detectAuth();
+    if (!a.em || !a.tk) return;
+    callApi({ action: 'getDashboard' }).then(function(res) {
+      if (res && res.ok) window.renderGolanAllData(res);
     });
   };
 
@@ -2225,11 +2243,8 @@ renderBookingsTable(res.isAdmin);
     }
   });
   setTimeout(window.golanMasterSync, 800);
-  setInterval(window.golanMasterSync, 20000);
 })();
 </script>
 </body>
 </html>
 
-</body>
-</html>

@@ -1567,6 +1567,30 @@ renderBookingsTable(res.isAdmin);
           });
         }, 1000);
       }
+      window.updateGolanHomeStats = function() {
+        var list = window.__ALL_BOOKINGS__ || [];
+        var now = Date.now();
+        var todayStr = new Date().toLocaleDateString('en-GB', { timeZone: 'Asia/Karachi' });
+        var todayCnt = 0, soldCnt = 0, holdCnt = 0, expCnt = 0;
+        list.forEach(function(b) {
+          var dt = String(b.CreatedAt || '');
+          if (dt.indexOf(todayStr) !== -1) todayCnt++;
+          var st = String(b.Status || 'PENDING').toUpperCase();
+          var isExp = (st.indexOf('EXPIR') !== -1 || st.indexOf('CANCEL') !== -1) || (st === 'PENDING' && b.HoldUntil && now > Number(b.HoldUntil));
+          if (st === 'CONFIRMED' || st === 'ISSUED') soldCnt++;
+          else if (isExp) expCnt++;
+          else holdCnt++;
+        });
+        var grpCnt = (window.__ALL_GROUPS__ || window.__GROUPS_DATA__ || []).length;
+        var setEl = function(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; };
+        setEl('statTodayBookings', todayCnt);
+        setEl('statTotalBookings', list.length);
+        setEl('statSoldTickets', soldCnt);
+        setEl('statHoldTickets', holdCnt);
+        setEl('statCanceledTickets', expCnt);
+        if (grpCnt > 0) setEl('statAvailGroups', grpCnt);
+      };
+      window.updateGolanHomeStats();
 
           
 

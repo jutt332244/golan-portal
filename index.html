@@ -1531,8 +1531,8 @@ renderBookingsTable(res.isAdmin);
           var stUp = String(b.Status || 'PENDING').toUpperCase();
           var isExp = (stUp.indexOf('EXPIR') !== -1) || (stUp === 'PENDING' && b.HoldUntil && Date.now() > Number(b.HoldUntil));
           var secLeft = (b.HoldUntil && Date.now() < Number(b.HoldUntil)) ? Math.floor((Number(b.HoldUntil) - Date.now()) / 1000) : 0;
-          var mm = Math.floor(secLeft / 60), ss = secLeft % 60;
-          var timeTxt = secLeft > 0 ? String(mm).padStart(2, '0') + ':' + String(ss).padStart(2, '0') : '';
+          var hh = Math.floor(secLeft / 3600), mm = Math.floor((secLeft % 3600) / 60), ss = secLeft % 60;
+          var timeTxt = secLeft > 0 ? (hh > 0 ? String(hh).padStart(2, '0') + ':' : '') + String(mm).padStart(2, '0') + ':' + String(ss).padStart(2, '0') : '';
           var statusHtml = (stUp === 'CONFIRMED' || stUp === 'ISSUED')
             ? '<span style="display:inline-block;white-space:nowrap;background:#dcfce7;color:#15803d;border:1px solid #86efac;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:800;">✓ ISSUED</span>'
             : (isExp
@@ -1561,8 +1561,8 @@ renderBookingsTable(res.isAdmin);
               el.style.cssText = 'display:inline-block;white-space:nowrap;background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:800;';
               el.textContent = '✕ EXPIRED';
             } else {
-              var m = Math.floor(rem / 60), s = rem % 60;
-              el.textContent = '⏳ ' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+              var h = Math.floor(rem / 3600), m = Math.floor((rem % 3600) / 60), s = rem % 60;
+              el.textContent = '⏳ ' + (h > 0 ? String(h).padStart(2, '0') + ':' : '') + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
             }
           });
         }, 1000);

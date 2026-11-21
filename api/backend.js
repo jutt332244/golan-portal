@@ -362,6 +362,20 @@ export default async function handler(req, res) {
       await saveDB(DB);
       return res.json({ ok: true, message: 'Booking deleted permanently!' });
     }
+    if (action === 'adminCancelBooking' && isAdmin) {
+      const bk = DB.bookings.find(b => b.BookingID === p.bookingId);
+      if (!bk) return res.json({ ok: false, message: 'Booking not found.' });
+      const prevSt = String(bk.Status || '').toUpperCase();
+      if (prevSt === 'CONFIRMED' || prevSt === 'ISSUED') {
+        const agentAcc = DB.agents[bk.AgentEmail];
+        if (agentAcc && !DB.admins.includes(bk.AgentEmail)) {
+          agentAcc.BalancePKR = Number(agentAcc.BalancePKR || 0) + Number(bk.FarePKR || 0);
+        }
+      }
+      bk.Status = 'CANCELED';
+      await saveDB(DB);
+      return res.json({ ok: true, message: 'Booking CANCELED!' });
+    }
 
     if (action === 'adminAddFare' && isAdmin) {
       DB.fares.unshift({

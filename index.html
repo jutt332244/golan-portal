@@ -393,9 +393,9 @@
 
       <div id="banksGrid" class="bank-grid" style="margin-top:16px;"></div>
 
-      <div style="margin-top:22px;background:linear-gradient(135deg,#f8fafc,#eff6ff);border:1.5px solid #bfdbfe;border-top:4px solid #163b7a;border-radius:14px;padding:20px;max-width:560px;box-shadow:0 8px 20px rgba(11,31,68,0.06);">
+       <div style="margin-top:22px;background:linear-gradient(135deg,#f8fafc,#eff6ff);border:1.5px solid #bfdbfe;border-top:4px solid #163b7a;border-radius:14px;padding:20px;max-width:560px;box-shadow:0 8px 20px rgba(11,31,68,0.06);">
         <h3 style="margin:0 0 4px;font-size:17px;color:#0b1f44;">📎 Smart Slip Upload (Auto-Amount &amp; Instant Wallet Credit)</h3>
-        <p style="margin:0 0 14px;font-size:12px;color:#475569;">Slip tasveer select karte hi <strong>Amount (PKR)</strong> aur <strong>TID</strong> khud-ba-khud likhe jayenge.</p>
+        <p style="margin:0 0 14px;font-size:12px;color:#475569;">Attach your bank deposit receipt to automatically detect the <strong>Amount (PKR)</strong> and credit your wallet.</p>
         <form onsubmit="handleInstantSlipUpload(event)">
           <div class="form-group">
             <label>1. Attach Transaction Slip (Image / Receipt)</label>
@@ -404,25 +404,22 @@
           </div>
           <div class="form-group">
             <label>2. Amount Deposited (PKR) — <span style="color:#15803d;">Auto-Filled from Slip</span></label>
-            <input type="number" id="depAmount" placeholder="Slip attach karein — Amount khud likhi jayegi" min="100" required />
+            <input type="number" id="depAmount" placeholder="Attach deposit slip to auto-fill amount" min="100" required />
           </div>
-          <div class="form-group">
-            <label>3. Transaction ID / Slip Reference</label>
-            <input type="text" id="depRef" placeholder="e.g. TID-98234712" required />
-          </div>
+          <input type="hidden" id="depRef" value="SLIP-AUTO" />
           <input type="hidden" id="depBank" value="UBL (384263615)" />
           <button type="submit" class="btn btn-green">✅ Upload Slip &amp; Credit Wallet Instantly</button>
         </form>
       </div>
     </div>
     <script>
-        window.autoScanBankSlip = function(inp) {
+      window.autoScanBankSlip = function(inp) {
         var file = inp && inp.files && inp.files.item(0);
         var st = document.getElementById('slipScanStatus');
         var amtInp = document.getElementById('depAmount');
         var refInp = document.getElementById('depRef');
         if (!file) return;
-        if (st) { st.style.color = '#1d4ed8'; st.textContent = '⏳ Slip parhi ja rahi hai... Amount auto-detect ho rahi hai...'; }
+        if (st) { st.style.color = '#1d4ed8'; st.textContent = '⏳ Scanning deposit slip... Auto-detecting amount...'; }
         var runOcr = function() {
           window.Tesseract.recognize(file, 'eng').then(function(res) {
             var txt = (res && res.data && res.data.text) ? res.data.text : '';
@@ -438,19 +435,19 @@
               });
             }
             var mTid = txt.match(/(?:TID|Ref(?:erence)?|Trans(?:action)?\s*(?:ID|No)|Auth\s*Code)\s*[:#\-]?\s*([A-Z0-9\-]{6,22})/i);
-            if (mTid && mTid.at(1) && refInp && !refInp.value) {
-              refInp.value = mTid.at(1).trim();
+            if (refInp) {
+              refInp.value = (mTid && mTid.at(1)) ? mTid.at(1).trim() : ('SLIP-' + Date.now().toString().slice(-6));
             }
             if (amt >= 100 && amtInp) {
               amtInp.value = amt;
               amtInp.style.background = '#f0fdf4';
               amtInp.style.borderColor = '#16a34a';
-              if (st) { st.style.color = '#15803d'; st.textContent = '✅ Auto-Detected Amount: PKR ' + amt.toLocaleString() + ' (Check kar ke Submit dabayein)'; }
+              if (st) { st.style.color = '#15803d'; st.textContent = '✅ Auto-Detected Amount: PKR ' + amt.toLocaleString() + ' (Verify & Submit)'; }
             } else {
-              if (st) { st.style.color = '#b45309'; st.textContent = '⚠️ Slip thori dhundli hai — baraye meharbani Amount khud likh dein.'; }
+              if (st) { st.style.color = '#b45309'; st.textContent = '⚠️ Receipt image is unclear — please enter the amount manually.'; }
             }
           }).catch(function() {
-            if (st) { st.style.color = '#b45309'; st.textContent = '⚠️ Auto-scan nahi ho saka — Amount khud likh dein.'; }
+            if (st) { st.style.color = '#b45309'; st.textContent = '⚠️ Unable to auto-scan — please enter the amount manually.'; }
           });
         };
         if (window.Tesseract) { runOcr(); }
@@ -462,6 +459,7 @@
         }
       };
     </script>
+
       </div>      <div id="tab-ledger" class="card hidden" style="font-size:12px;">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
           <div>

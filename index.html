@@ -1551,7 +1551,7 @@ renderBookingsTable(res.isAdmin);
             '<td style="white-space:nowrap;padding:12px 10px;"><span style="background:#0b1f44;color:#fbbf24;padding:4px 9px;border-radius:6px;font-family:monospace;font-weight:900;font-size:12.5px;letter-spacing:1px;">' + (b.PNR || b.BookingID || '-') + '</span>' + (b.TicketNo ? '<div style="margin-top:3px;font-size:10.5px;color:#15803d;font-weight:800;font-family:monospace;">TKT: ' + b.TicketNo + '</div>' : '') + '</td>' +
             '<td style="white-space:nowrap;padding:12px 10px;font-weight:900;color:#15803d;font-size:13px;">PKR ' + Number(b.FarePKR || 0).toLocaleString() + '</td>' +
             '<td style="white-space:nowrap;padding:12px 10px;">' + statusHtml + '</td>' +
-            '<td style="white-space:nowrap;padding:12px 10px;">' + (window.__IS_ADMIN__ && stUp !== 'CONFIRMED' && stUp !== 'ISSUED' ? '<button type="button" onclick="window.adminIssueGolanTicket(\'' + (b.BookingID || '') + '\')" style="background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;padding:6px 10px;border-radius:7px;font-size:11px;font-weight:800;cursor:pointer;margin-right:4px;white-space:nowrap;">✓ Issue</button>' : '') + '<button type="button" onclick="window.printSingleGolanTicket(\'' + (b.BookingID || '') + '\')" style="background:linear-gradient(135deg,#0b1f44,#1e3a8a);color:#fff;border:none;padding:6px 10px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🖨 E-Ticket</button></td>' +
+            '<td style="white-space:nowrap;padding:12px 10px;">' + (window.__IS_ADMIN__ && stUp !== 'CONFIRMED' && stUp !== 'ISSUED' && stUp.indexOf('CANCEL') === -1 ? '<button type="button" onclick="window.adminIssueGolanTicket(\'' + (b.BookingID || '') + '\')" style="background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;padding:6px 9px;border-radius:7px;font-size:11px;font-weight:800;cursor:pointer;margin-right:4px;white-space:nowrap;">✓ Issue</button>' : '') + (window.__IS_ADMIN__ && stUp.indexOf('CANCEL') === -1 ? '<button type="button" onclick="window.adminCancelGolanTicket(\'' + (b.BookingID || '') + '\')" style="background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;border:none;padding:6px 9px;border-radius:7px;font-size:11px;font-weight:800;cursor:pointer;margin-right:4px;white-space:nowrap;">✕ Cancel</button>' : '') + '<button type="button" onclick="window.printSingleGolanTicket(\'' + (b.BookingID || '') + '\')" style="background:linear-gradient(135deg,#0b1f44,#1e3a8a);color:#fff;border:none;padding:6px 9px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🖨 E-Ticket</button></td>' +
           '</tr>';
         }).join('') : '<tr><td colspan="8" style="text-align:center;color:#64748b;padding:24px;">No bookings found yet.</td></tr>';
       });
@@ -1611,6 +1611,21 @@ renderBookingsTable(res.isAdmin);
             if (typeof window.syncGolanTables === 'function') window.syncGolanTables();
           } else {
             alert('❌ ' + ((r && r.message) || 'Could not issue ticket.'));
+          }
+        });
+      };
+      window.adminCancelGolanTicket = function(bookingId) {
+        var b = (window.__ALL_BOOKINGS__ || []).find(function(x) { return String(x.BookingID) === String(bookingId); });
+        if (!b) return;
+        if (!confirm('Are you sure you want to CANCEL booking ' + bookingId + ' (' + (b.PassengerName || '') + ')?')) return;
+        var em = (typeof currentEmail !== 'undefined' && currentEmail) ? currentEmail : (localStorage.getItem('golan_email') || '');
+        var tk = (typeof currentToken !== 'undefined' && currentToken) ? currentToken : (localStorage.getItem('golan_token') || '');
+        callBackend({ action: 'adminCancelBooking', email: em, token: tk, bookingId: bookingId }).then(function(r) {
+          if (r && r.ok) {
+            alert('✅ ' + (r.message || 'Booking CANCELED!'));
+            if (typeof window.syncGolanTables === 'function') window.syncGolanTables();
+          } else {
+            alert('❌ ' + ((r && r.message) || 'Could not cancel booking.'));
           }
         });
       };

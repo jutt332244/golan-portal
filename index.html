@@ -1128,6 +1128,9 @@ renderBookingsTable(res.isAdmin);
       });
  
     }
+    function filterQuickJourney(catName, btnEl) {
+      if (btnEl) { document.querySelectorAll('.qj-pill').forEach(function(b) { b.classList.remove('active'); }); btnEl.classList.add('active'); }
+      var mapKeys = { DXB: ['DXB', 'DUBAI'], JED: ['JED', 'JEDDAH'], RUH: ['RUH', 'RIYADH'], DMM: ['DMM', 'DAMMAM'], MED: ['MED', 'MADINAH'], SHJ: ['SHJ', 'SHARJAH'], AUH: ['AUH', 'ABU DHABI'], BAH: ['BAH', 'BAHRAIN'], DOH: ['DOH', 'DOHA'], MCT: ['MCT', 'MUSCAT'], KWI: ['KWI', 'KUWAIT'], LHR: ['LHR', 'LONDON'], IST: ['IST', 'ISTANBUL'], KUL: ['KUL', 'KUALA LUMPUR'], BKK: ['BKK', 'BANGKOK'] };
 
 
     

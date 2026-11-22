@@ -2188,10 +2188,28 @@ renderBookingsTable(res.isAdmin);
       }).join('') : '<tr><td colspan="6" style="text-align:center;color:#64748b;padding:16px;">No sub-agents found.</td></tr>';
     }
   };
+  function fetchLiveGolanData() {
+    var em = '', tk = '';
+    try { em = currentEmail || ''; } catch (e1) {}
+    try { tk = currentToken || ''; } catch (e2) {}
+    if (!em) {
+      var el = document.getElementById('dashEmail');
+      if (el) em = (el.textContent || '').trim();
+    }
+    if (!em) return;
+    runApi({ action: 'getDashboard', email: em, token: tk }).then(function(res) {
+      if (res && res.ok) {
+        window.__LAST_DASH_RES__ = res;
+        window.renderGolanAllData(res);
+      }
+    });
+  }
+  document.addEventListener('click', function(ev) {
+    if (ev.target && ev.target.closest('.side-btn')) setTimeout(fetchLiveGolanData, 150);
+  });
+  setTimeout(fetchLiveGolanData, 500);
+  setInterval(fetchLiveGolanData, 10000);
 
-  setInterval(function() {
-    if (window.__LAST_DASH_RES__) window.renderGolanAllData(window.__LAST_DASH_RES__);
-  }, 800);
 })();
 </script>
 

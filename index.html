@@ -386,7 +386,7 @@
           <h3>📎 Upload Transaction Slip (Instant Wallet &amp; Ledger Credit)</h3>
           <form onsubmit="handleInstantSlipUpload(event)" style="margin-top:12px;">
             <div class="form-group"><label>Amount Deposited (PKR)</label><input type="number" id="depAmount" placeholder="e.g. 100000" min="100" required /></div>
-            <div class="form-group"><label>Transaction ID / Slip Reference</label><input type="text" id="depRef" placeholder="e.g. TID-98234712" required /></div>
+          <input type="hidden" id="depRef" value="SLIP-UPLOADED" />
             <div class="form-group"><label>Attach Transaction Slip (Image / Receipt)</label><input type="file" id="depSlipFile" accept="image/*,.pdf" required style="padding:8px; border:1px dashed #94a3b8; border-radius:8px; width:100%; background:#f8fafc;" /></div>
             <input type="hidden" id="depBank" value="UBL (384263615)" />
             <button type="submit" class="btn btn-green">Upload Slip &amp; Credit Wallet Instantly</button>

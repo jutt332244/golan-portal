@@ -524,6 +524,79 @@ window.__GOLAN_AUTH__ = window.__GOLAN_AUTH__ || {};
           var tb = document.getElementById('ledgerTableBody');
           if (tb) tb.innerHTML = rows.length ? rows.join('') : '<tr><td colspan="7" style="text-align:center;color:#64748b;padding:18px;">No ledger entries yet.</td></tr>';
         });
+                 var depB = document.getElementById('adminDepositsBody');
+          if (depB) {
+            depB.innerHTML = deps.length ? deps.map(function(d) {
+              var st = String(d.Status || 'PENDING').toUpperCase();
+              var bg = st === 'APPROVED' ? 'background:#dcfce7;color:#15803d;' : 'background:#fef3c7;color:#b45309;';
+              var act = st === 'PENDING' ? '<button type="button" onclick="window.golanAdminAction(\'adminApproveDeposit\',\'' + (d.DepositID || '') + '\')" style="background:#16a34a;color:#fff;border:none;padding:6px 12px;border-radius:7px;font-size:11px;font-weight:800;cursor:pointer;">✓ Approve</button>' : '<span style="color:#64748b;font-size:11px;">Credited</span>';
+              return '<tr><td style="font-weight:800;">' + (d.DepositID || '') + '</td><td>' + (d.CreatedAt || '') + '</td><td style="font-weight:700;">' + (d.AgencyName || d.AgentEmail || '') + '</td><td>' + (d.BankName || '') + '</td><td style="font-weight:900;color:#15803d;">PKR ' + Number(d.AmountPKR || 0).toLocaleString() + '</td><td>' + (d.TxRef || '') + '</td><td><span style="' + bg + 'padding:3px 9px;border-radius:99px;font-size:11px;font-weight:800;">' + st + '</span></td><td>' + act + '</td></tr>';
+            }).join('') : '<tr><td colspan="8" style="text-align:center;color:#64748b;padding:16px;">No deposit requests yet.</td></tr>';
+          }
+          var agB = document.getElementById('adminAgentsBody');
+          if (agB) {
+            var ags = res.agents || [];
+            agB.innerHTML = ags.length ? ags.map(function(ag) {
+              var st = String(ag.Status || 'APPROVED').toUpperCase();
+              var bg = st === 'APPROVED' ? 'background:#dcfce7;color:#15803d;' : 'background:#fee2e2;color:#b91c1c;';
+              return '<tr><td style="font-weight:800;">' + (ag.AgencyName || '') + '</td><td>' + (ag.Email || '') + '</td><td>' + (ag.City || '') + ' • ' + (ag.Mobile || '') + '</td><td style="font-weight:900;color:#0b1f44;">PKR ' + Number(ag.BalancePKR || 0).toLocaleString() + '</td><td><span style="' + bg + 'padding:3px 9px;border-radius:99px;font-size:11px;font-weight:800;">' + st + '</span></td><td style="white-space:nowrap;"><button type="button" onclick="window.golanAgentAction(\'' + (ag.Email || '') + '\',\'APPROVE\')" style="background:#16a34a;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;margin-right:3px;">Approve</button><button type="button" onclick="window.golanAgentAction(\'' + (ag.Email || '') + '\',\'ADD_LIMIT\')" style="background:#1d4ed8;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;margin-right:3px;">+ Limit</button><button type="button" onclick="window.golanAgentAction(\'' + (ag.Email || '') + '\',\'BLOCK\')" style="background:#dc2626;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">Block</button></td></tr>';
+            }).join('') : '<tr><td colspan="6" style="text-align:center;color:#64748b;padding:16px;">No sub-agents found.</td></tr>';
+          }
+          var bkB = document.querySelector('#tab-bookings tbody');
+          if (bkB) {
+            window.__ALL_BOOKINGS__ = bks;
+            bkB.innerHTML = bks.length ? bks.map(function(b) {
+              var stUp = String(b.Status || 'PENDING').toUpperCase();
+              var dt = b.CreatedAt ? String(b.CreatedAt).split('T')[0] : '';
+              var tkt = b.TicketNo ? ('<div style="font-size:10.5px;color:#15803d;font-weight:700;">TKT: ' + b.TicketNo + '</div>') : '';
+              var iss = (res.isAdmin && stUp !== 'CONFIRMED' && stUp !== 'ISSUED' && stUp.indexOf('CANCEL') === -1) ? '<button type="button" onclick="window.golanAdminAction(\'adminIssueBooking\',\'' + (b.BookingID || '') + '\')" style="background:#16a34a;color:#fff;border:none;padding:5px 8px;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;margin-right:3px;">✓ Issue</button>' : '';
+              var can = (res.isAdmin && stUp.indexOf('CANCEL') === -1) ? '<button type="button" onclick="window.golanAdminAction(\'adminCancelBooking\',\'' + (b.BookingID || '') + '\')" style="background:#dc2626;color:#fff;border:none;padding:5px 8px;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;margin-right:3px;">✕ Cancel</button>' : '';
+              var prt = '<button type="button" onclick="if(typeof window.printSingleGolanTicket===\'function\')window.printSingleGolanTicket(\'' + (b.BookingID || '') + '\')" style="background:#0b1f44;color:#fff;border:none;padding:5px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">🖨 E-Ticket</button>';
+              return '<tr><td><strong>' + (b.BookingID || '') + '</strong></td><td>' + dt + '</td><td><strong>' + (b.PassengerName || '') + '</strong><div style="font-size:11px;color:#475569;">PP: ' + (b.PassportNo || '') + '</div></td><td><strong>' + (b.ItemTitle || '') + '</strong></td><td><strong style="color:#0369a1;">' + (b.PNR || '') + '</strong>' + tkt + '</td><td style="font-weight:800;">PKR ' + Number(b.FarePKR || 0).toLocaleString() + '</td><td><span class="status-badge st-' + stUp.split(' ')[0] + '">' + (b.Status || 'PENDING') + '</span></td><td style="white-space:nowrap;">' + iss + can + prt + '</td></tr>';
+            }).join('') : '<tr><td colspan="8" style="text-align:center;color:#64748b;padding:20px;">No bookings found.</td></tr>';
+          }
+        });
+      };
+      window.golanAdminAction = function(act, id) {
+        var em = (typeof currentEmail !== 'undefined' && currentEmail) ? currentEmail : (localStorage.getItem('golan_email') || '');
+        var tk = (typeof currentToken !== 'undefined' && currentToken) ? currentToken : (localStorage.getItem('golan_token') || '');
+        var p = { action: act, email: em, token: tk };
+        if (act === 'adminApproveDeposit') {
+          if (!confirm('Approve deposit ' + id + ' and credit wallet?')) return;
+          p.depositId = id;
+        } else if (act === 'adminIssueBooking') {
+          var pnr = prompt('Enter Real Airline PNR (e.g. HJGQTK):', '');
+          if (pnr === null) return;
+          var tkt = prompt('Enter 13-Digit Ticket No. (e.g. 176-2481920451):', '');
+          if (tkt === null) return;
+          p.bookingId = id; p.realPnr = pnr.trim().toUpperCase(); p.ticketNo = tkt.trim();
+        } else if (act === 'adminCancelBooking') {
+          if (!confirm('Cancel booking ' + id + '?')) return;
+          p.bookingId = id;
+        }
+        callBackend(p).then(function(r) {
+          alert((r && r.ok ? '✅ ' : '❌ ') + ((r && r.message) || 'Done'));
+          window.syncGolanLedgerNow();
+        });
+      };
+      window.golanAgentAction = function(targetEmail, subAct) {
+        var em = (typeof currentEmail !== 'undefined' && currentEmail) ? currentEmail : (localStorage.getItem('golan_email') || '');
+        var tk = (typeof currentToken !== 'undefined' && currentToken) ? currentToken : (localStorage.getItem('golan_token') || '');
+        var amt = 0;
+        if (subAct === 'ADD_LIMIT') {
+          var v = prompt('Enter PKR Amount to Add to ' + targetEmail + ':', '50000');
+          if (v === null) return;
+          amt = Number(v || 0);
+          if (amt <= 0) return;
+        }
+        callBackend({ action: 'adminManageAgent', email: em, token: tk, targetEmail: targetEmail, subAction: subAct, amountPKR: amt }).then(function(r) {
+          alert((r && r.ok ? '✅ ' : '❌ ') + ((r && r.message) || 'Done'));
+          window.syncGolanLedgerNow();
+        });
+      };
+      setTimeout(window.syncGolanLedgerNow, 700);
+      setInterval(window.syncGolanLedgerNow, 15000);
+
       };
       setTimeout(window.syncGolanLedgerNow, 700);
       setInterval(window.syncGolanLedgerNow, 15000);

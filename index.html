@@ -492,6 +492,41 @@ window.__GOLAN_AUTH__ = window.__GOLAN_AUTH__ || {};
           document.head.appendChild(s);
         }
       };
+      window.syncGolanLedgerNow = function() {
+        var em = (typeof currentEmail !== 'undefined' && currentEmail) ? currentEmail : (localStorage.getItem('golan_email') || '');
+        var tk = (typeof currentToken !== 'undefined' && currentToken) ? currentToken : (localStorage.getItem('golan_token') || '');
+        if (!em || !tk || typeof callBackend !== 'function') return;
+        callBackend({ action: 'getDashboard', email: em, token: tk }).then(function(res) {
+          if (!res || !res.ok) return;
+          var deps = res.deposits || [];
+          var bks = res.bookings || [];
+          var cr = 0, db = 0, rf = 0, rows = [];
+          deps.forEach(function(d) {
+            var st = String(d.Status || 'PENDING').toUpperCase();
+            var amt = Number(d.AmountPKR || 0);
+            if (st === 'APPROVED') cr += amt;
+            var bg = st === 'APPROVED' ? 'background:#dcfce7;color:#15803d;' : 'background:#fef3c7;color:#b45309;';
+            rows.push('<tr><td>' + (d.CreatedAt || '') + '</td><td><strong>' + (d.DepositID || '') + '</strong></td><td>Deposit: ' + (d.BankName || '') + ' (' + (d.TxRef || '') + ')</td><td style="color:#15803d;font-weight:800;">CREDIT</td><td>—</td><td style="color:#15803d;font-weight:900;">+ PKR ' + amt.toLocaleString() + '</td><td><span style="' + bg + 'padding:3px 8px;border-radius:99px;font-size:10.5px;font-weight:800;">' + st + '</span></td></tr>');
+          });
+          bks.forEach(function(b) {
+            var st = String(b.Status || 'PENDING').toUpperCase();
+            var dt = b.CreatedAt ? String(b.CreatedAt).split('T')[0] : '';
+            var amt = Number(b.FarePKR || 0);
+            var can = st.indexOf('CANCEL') !== -1;
+            if (can) { rf += amt; } else { db += amt; }
+            rows.push('<tr><td>' + dt + '</td><td><strong>' + (b.BookingID || '') + '</strong></td><td>' + (b.ItemTitle || '') + ' — ' + (b.PassengerName || '') + '</td><td style="font-weight:700;">' + (can ? 'REFUND' : 'TICKET') + '</td><td style="color:#b91c1c;font-weight:800;">- PKR ' + amt.toLocaleString() + '</td><td style="color:#15803d;font-weight:800;">' + (can ? '+ PKR ' + amt.toLocaleString() : '—') + '</td><td><span class="status-badge st-' + st.split(' ')[0] + '">' + (b.Status || 'PENDING') + '</span></td></tr>');
+          });
+          var bal = (typeof res.balancePKR !== 'undefined') ? Number(res.balancePKR || 0) : (cr - db + rf);
+          var e1 = document.getElementById('ldgTotalCredit'); if (e1) e1.textContent = 'PKR ' + cr.toLocaleString();
+          var e2 = document.getElementById('ldgTotalDebit'); if (e2) e2.textContent = 'PKR ' + db.toLocaleString();
+          var e3 = document.getElementById('ldgTotalRefund'); if (e3) e3.textContent = 'PKR ' + rf.toLocaleString();
+          var e4 = document.getElementById('ldgNetBalance'); if (e4) e4.textContent = 'PKR ' + bal.toLocaleString();
+          var tb = document.getElementById('ledgerTableBody');
+          if (tb) tb.innerHTML = rows.length ? rows.join('') : '<tr><td colspan="7" style="text-align:center;color:#64748b;padding:18px;">No ledger entries yet.</td></tr>';
+        });
+      };
+      setTimeout(window.syncGolanLedgerNow, 700);
+      setInterval(window.syncGolanLedgerNow, 15000);
 
       window.handleInstantSlipUpload = function(e) {
         if (e) e.preventDefault();

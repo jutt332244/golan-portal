@@ -392,6 +392,60 @@
             <button type="submit" class="btn btn-green">Upload Slip &amp; Credit Wallet Instantly</button>
           </form>
         </div>
+          <div id="slipOcrStatus" style="font-size:12px;font-weight:700;margin-top:8px;color:#0369a1;"></div>
+          <script>
+          (function() {
+            var inp = document.getElementById('depSlipFile');
+            if (!inp) return;
+            var cdns = [
+                                    'https://unpkg' + '.com/tesseract.js@5.1.1/dist/tesseract.min.js',
+              'https://cdnjs.cloudflare' + '.com/ajax/libs/tesseract.js/5.1.1/tesseract.min.js'
+            ];
+            function loadOcr(idx, cb, onErr) {
+              if (window.Tesseract) return cb();
+              if (idx >= cdns.length) return onErr();
+              var s = document.createElement('script');
+              s.src = cdns.at(idx);
+              s.onload = cb;
+              s.onerror = function() { loadOcr(idx + 1, cb, onErr); };
+              document.head.appendChild(s);
+            }
+            inp.addEventListener('change', function() {
+              var file = inp.files && inp.files.item(0);
+              var st = document.getElementById('slipOcrStatus');
+              var amtBox = document.getElementById('depAmount');
+              if (!file || !amtBox) return;
+              amtBox.style.background = '';
+              if (file.type && file.type.indexOf('image') === -1) {
+                if (st) { st.style.color = '#0369a1'; st.textContent = 'PDF attached — please enter the deposit amount manually.'; }
+                return;
+              }
+              if (st) { st.style.color = '#0369a1'; st.textContent = 'Scanning receipt to auto-detect amount...'; }
+              loadOcr(0, function() {
+                window.Tesseract.recognize(file, 'eng').then(function(res) {
+                  var txt = (res && res.data && res.data.text) || '';
+                  var found = 0;
+                  var m1 = txt.match(/(?:PKR|RS\.?|₨)\s*([1-9][0-9,]{1,9})(?:\.\d{1,2})?/i);
+                  var m2 = txt.match(/([1-9][0-9,]{1,9})(?:\.\d{1,2})?\s*(?:PKR|RS\.?|₨)/i);
+                  var m3 = txt.match(/(?:amount|total|paid|sent|transferred)\s*[:\-]?\s*([1-9][0-9,]{1,9})(?:\.\d{1,2})?/i);
+                  var raw = (m1 && m1.at(1)) || (m2 && m2.at(1)) || (m3 && m3.at(1)) || '';
+                  if (raw) found = parseInt(raw.replace(/,/g, ''), 10);
+                  if (found >= 100 && found <= 50000000) {
+                    amtBox.value = found;
+                    amtBox.style.background = '#dcfce7';
+                    if (st) { st.style.color = '#15803d'; st.textContent = 'Auto-Detected Amount: PKR ' + found.toLocaleString(); }
+                  } else {
+                    if (st) { st.style.color = '#b45309'; st.textContent = 'Unable to auto-detect amount — please enter it manually.'; }
+                  }
+                }).catch(function() {
+                  if (st) { st.style.color = '#b45309'; st.textContent = 'Auto-scan failed — please enter the deposit amount manually.'; }
+                });
+              }, function() {
+                if (st) { st.style.color = '#b45309'; st.textContent = 'Receipt scanner unavailable — please enter the deposit amount manually.'; }
+              });
+            });
+          })();
+          </script>
 
       </div>      <div id="tab-ledger" class="card hidden" style="font-size:12px;">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">

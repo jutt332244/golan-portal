@@ -384,7 +384,7 @@
         <div id="banksGrid" class="bank-grid" style="margin-top:12px;"></div>
               <div style="margin-top:20px; padding-top:18px; border-top:1px solid var(--border); max-width:520px;">
           <h3>📎 Upload Transaction Slip (Instant Wallet &amp; Ledger Credit)</h3>
-          <form onsubmit="handleInstantSlipUpload(event)" style="margin-top:12px;">
+          <form onsubmit="event.preventDefault(); if(typeof handleInstantSlipUpload==='function') handleInstantSlipUpload(event); return false;" style="margin-top:12px;">
             <div class="form-group"><label>Amount Deposited (PKR)</label><input type="number" id="depAmount" placeholder="e.g. 100000" min="100" required /></div>
           <input type="hidden" id="depRef" value="SLIP-UPLOADED" />
             <div class="form-group"><label>Attach Transaction Slip (Image / Receipt)</label><input type="file" id="depSlipFile" accept="image/*,.pdf" required style="padding:8px; border:1px dashed #94a3b8; border-radius:8px; width:100%; background:#f8fafc;" /></div>

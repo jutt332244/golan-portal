@@ -2260,17 +2260,22 @@ renderBookingsTable(res.isAdmin);
     });
   };
 
-  function fetchLiveGolanData() {
+   function fetchLiveGolanData() {
+    if (window.__LAST_DASH_RES__) {
+      window.renderGolanAllData(window.__LAST_DASH_RES__);
+    }
+    var a = window.__GOLAN_AUTH__ || {};
     var s = getSavedSession();
-    if (!s.em || !s.tk) return;
-    runApi({ action: 'getDashboard', email: s.em, token: s.tk }).then(function(res) {
+    var em = a.em || s.em;
+    var tk = a.tk || s.tk;
+    if (!em || !tk) return;
+    runApi({ action: 'getDashboard', email: em, token: tk }).then(function(res) {
       if (res && res.ok) {
         window.__LAST_DASH_RES__ = res;
         window.renderGolanAllData(res);
       }
     });
   }
-
   document.addEventListener('click', function(ev) {
     if (ev.target && ev.target.closest('.side-btn')) setTimeout(fetchLiveGolanData, 150);
   });

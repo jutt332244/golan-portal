@@ -1,13 +1,13 @@
  <!DOCTYPE html>
 <html lang="en">
 <head>
- <script>
+<script>
 window.__GOLAN_AUTH__ = window.__GOLAN_AUTH__ || {};
 (function() {
   var _f = window.fetch;
   window.fetch = function(u, o) {
     try {
-      if (o && typeof o.body === 'string' && String(u).indexOf('backend') !== -1) {
+      if (o && typeof o.body === 'string') {
         var b = JSON.parse(o.body);
         if (b.email) window.__GOLAN_AUTH__.em = b.email;
         if (b.token) window.__GOLAN_AUTH__.tk = b.token;
@@ -15,7 +15,7 @@ window.__GOLAN_AUTH__ = window.__GOLAN_AUTH__ || {};
     } catch (e) {}
     return _f.apply(this, arguments).then(function(r) {
       try {
-        if (String(u).indexOf('backend') !== -1) {
+        if (o && String(o.method || '').toUpperCase() === 'POST') {
           r.clone().json().then(function(d) {
             if (d && d.ok && (d.bookings || d.deposits || d.agents)) {
               window.__LAST_DASH_RES__ = d;
@@ -29,6 +29,7 @@ window.__GOLAN_AUTH__ = window.__GOLAN_AUTH__ || {};
   };
 })();
 </script>
+
 
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />

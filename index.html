@@ -2065,15 +2065,24 @@ renderBookingsTable(res.isAdmin);
   var savedAuth = { em: '', tk: '' };
 
   function detectAuth() {
-    if (savedAuth.em && savedAuth.tk) return savedAuth;
-    try {
-      for (var i = 0; i < localStorage.length; i++) {
-        var k = localStorage.key(i);
-        var v = localStorage.getItem(k) || '';
-        if (v.indexOf('@') !== -1 && v.length < 80) savedAuth.em = v.replace(/"/g, '').trim();
-        if (k.toLowerCase().indexOf('token') !== -1 && v.length > 8) savedAuth.tk = v.replace(/"/g, '').trim();
-      }
-    } catch (e) {}
+    var tb = document.querySelector('#tab-bookings tbody');
+    if (tb && !document.getElementById('bookingsTableBody')) tb.id = 'bookingsTableBody';
+    if (typeof currentEmail !== 'undefined' && currentEmail) savedAuth.em = currentEmail;
+    if (typeof currentToken !== 'undefined' && currentToken) savedAuth.tk = currentToken;
+    [window.localStorage, window.sessionStorage].forEach(function(st) {
+      try {
+        for (var i = 0; i < st.length; i++) {
+          var k = st.key(i) || '', v = st.getItem(k) || '';
+          if (v.charAt(0) === '{') {
+            try { var o = JSON.parse(v); if (o.email) savedAuth.em = o.email; if (o.token) savedAuth.tk = o.token; } catch (e) {}
+          } else {
+            var c = v.split('"').join('').trim();
+            if (c.indexOf('@') !== -1 && c.length < 80) savedAuth.em = c;
+            if (k.toLowerCase().indexOf('tok') !== -1 && c.length > 6) savedAuth.tk = c;
+          }
+        }
+      } catch (e) {}
+    });
     return savedAuth;
   }
 

@@ -2188,27 +2188,65 @@ renderBookingsTable(res.isAdmin);
       }).join('') : '<tr><td colspan="6" style="text-align:center;color:#64748b;padding:16px;">No sub-agents found.</td></tr>';
     }
   };
-  function fetchLiveGolanData() {
+  function getSavedSession() {
     var em = '', tk = '';
-    try { em = currentEmail || ''; } catch (e1) {}
-    try { tk = currentToken || ''; } catch (e2) {}
-    if (!em) {
-      var el = document.getElementById('dashEmail');
-      if (el) em = (el.textContent || '').trim();
-    }
-    if (!em) return;
-    runApi({ action: 'getDashboard', email: em, token: tk }).then(function(res) {
+    try { if (typeof currentEmail !== 'undefined' && currentEmail) em = currentEmail; } catch (e) {}
+    try { if (typeof currentToken !== 'undefined' && currentToken) tk = currentToken; } catch (e) {}
+    [window.localStorage, window.sessionStorage].forEach(function(st) {
+      try {
+        for (var i = 0; i < st.length; i++) {
+          var k = st.key(i) || '', v = st.getItem(k) || '';
+          if (v.charAt(0) === '{') {
+            try {
+              var o = JSON.parse(v);
+              if (o.email && String(o.email).indexOf('@') !== -1) em = String(o.email).trim();
+              if (o.token && String(o.token).length > 5) tk = String(o.token).trim();
+            } catch (e1) {}
+          } else {
+            var c = v.split('"').join('').trim();
+            if (c.indexOf('@') !== -1 && c.length < 80) em = c;
+            if (k.toLowerCase().indexOf('tok') !== -1 && c.length > 5) tk = c;
+          }
+        }
+      } catch (e2) {}
+    });
+    return { em: em, tk: tk };
+  }
+
+  var _origFetch = window.fetch;
+  window.fetch = function(u, o) {
+    return _origFetch.apply(this, arguments).then(function(r) {
+      try {
+        if (String(u).indexOf('backend') !== -1) {
+          r.clone().json().then(function(d) {
+            if (d && d.ok && (d.bookings || d.deposits || d.agents)) {
+              window.__LAST_DASH_RES__ = d;
+              window.renderGolanAllData(d);
+            }
+          }).catch(function() {});
+        }
+      } catch (e) {}
+      return r;
+    });
+  };
+
+  function fetchLiveGolanData() {
+    var s = getSavedSession();
+    if (!s.em || !s.tk) return;
+    runApi({ action: 'getDashboard', email: s.em, token: s.tk }).then(function(res) {
       if (res && res.ok) {
         window.__LAST_DASH_RES__ = res;
         window.renderGolanAllData(res);
       }
     });
   }
+
   document.addEventListener('click', function(ev) {
     if (ev.target && ev.target.closest('.side-btn')) setTimeout(fetchLiveGolanData, 150);
   });
-  setTimeout(fetchLiveGolanData, 500);
+  setTimeout(fetchLiveGolanData, 400);
   setInterval(fetchLiveGolanData, 10000);
+
 
 })();
 </script>

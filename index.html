@@ -764,6 +764,70 @@ var API_URL = '/api/backend';
 
 window.__ALL_BOOKINGS__ = res.bookings || [];
 renderBookingsTable(res.isAdmin);
+        try {
+          var depB = document.getElementById('adminDepositsBody');
+          if (depB) {
+            var deps = res.deposits || [];
+            depB.innerHTML = deps.length ? deps.map(function(d) {
+              var st = String(d.Status || 'PENDING').toUpperCase();
+              var bg = st === 'APPROVED' ? 'background:#dcfce7;color:#15803d;' : 'background:#fef3c7;color:#b45309;';
+              var act = st === 'PENDING'
+                ? '<button type="button" onclick="window.golanApproveDep(\'' + (d.DepositID || '') + '\')" style="background:#16a34a;color:#fff;border:none;padding:6px 12px;border-radius:7px;font-size:11px;font-weight:800;cursor:pointer;">✓ Approve</button>'
+                : '<span style="color:#64748b;font-size:11px;">Credited</span>';
+              return '<tr><td><strong>' + (d.DepositID || '') + '</strong></td>' +
+                '<td>' + (d.CreatedAt || '') + '</td>' +
+                '<td><strong>' + (d.AgencyName || d.AgentEmail || '') + '</strong></td>' +
+                '<td>' + (d.BankName || '') + '</td>' +
+                '<td style="font-weight:900;color:#15803d;">PKR ' + Number(d.AmountPKR || 0).toLocaleString() + '</td>' +
+                '<td>' + (d.TxRef || '') + '</td>' +
+                '<td><span style="' + bg + 'padding:3px 9px;border-radius:99px;font-size:11px;font-weight:800;">' + st + '</span></td>' +
+                '<td>' + act + '</td></tr>';
+            }).join('') : '<tr><td colspan="8" style="text-align:center;color:#64748b;padding:16px;">No deposit requests yet.</td></tr>';
+          }
+          var agB = document.getElementById('adminAgentsBody');
+          if (agB) {
+            var ags = res.agents || [];
+            agB.innerHTML = ags.length ? ags.map(function(ag) {
+              var st = String(ag.Status || 'APPROVED').toUpperCase();
+              var bg = st === 'APPROVED' ? 'background:#dcfce7;color:#15803d;' : 'background:#fee2e2;color:#b91c1c;';
+              var em = ag.Email || '';
+              return '<tr><td><strong>' + (ag.AgencyName || '') + '</strong></td>' +
+                '<td>' + em + '</td>' +
+                '<td>' + (ag.City || '') + ' • ' + (ag.Mobile || '') + '</td>' +
+                '<td style="font-weight:900;color:#0b1f44;">PKR ' + Number(ag.BalancePKR || 0).toLocaleString() + '</td>' +
+                '<td><span style="' + bg + 'padding:3px 9px;border-radius:99px;font-size:11px;font-weight:800;">' + st + '</span></td>' +
+                '<td style="white-space:nowrap;">' +
+                '<button type="button" onclick="window.golanManageAg(\'' + em + '\',\'APPROVE\')" style="background:#16a34a;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;margin-right:3px;">Approve</button>' +
+                '<button type="button" onclick="window.golanManageAg(\'' + em + '\',\'ADD_LIMIT\')" style="background:#1d4ed8;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;margin-right:3px;">+ Limit</button>' +
+                '<button type="button" onclick="window.golanManageAg(\'' + em + '\',\'BLOCK\')" style="background:#dc2626;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">Block</button>' +
+                '</td></tr>';
+            }).join('') : '<tr><td colspan="6" style="text-align:center;color:#64748b;padding:16px;">No sub-agents found.</td></tr>';
+          }
+        } catch (adminRenderErr) {}
+        window.golanApproveDep = function(depId) {
+          if (!confirm('Approve deposit ' + depId + ' and credit amount to Sub-Agent wallet?')) return;
+          callBackend({ action: 'adminApproveDeposit', email: currentEmail, token: currentToken, depositId: depId }).then(function(r) {
+            alert((r && r.ok ? '✅ ' : '❌ ') + ((r && r.message) || 'Done'));
+            callBackend({ action: 'getDashboard', email: currentEmail, token: currentToken }).then(function(d) {
+              if (d && d.ok) { window.__LAST_DASH_RES__ = d; loadDashboardData(); }
+            });
+          });
+        };
+        window.golanManageAg = function(targetEmail, subAct) {
+          var amt = 0;
+          if (subAct === 'ADD_LIMIT') {
+            var v = prompt('Enter PKR Amount to Add to ' + targetEmail + ' Wallet:', '50000');
+            if (v === null) return;
+            amt = Number(v || 0);
+            if (amt <= 0) return;
+          }
+          callBackend({ action: 'adminManageAgent', email: currentEmail, token: currentToken, targetEmail: targetEmail, subAction: subAct, amountPKR: amt }).then(function(r) {
+            alert((r && r.ok ? '✅ ' : '❌ ') + ((r && r.message) || 'Done'));
+            callBackend({ action: 'getDashboard', email: currentEmail, token: currentToken }).then(function(d) {
+              if (d && d.ok) { window.__LAST_DASH_RES__ = d; loadDashboardData(); }
+            });
+          });
+        };
 
         var allBanks = (res.banks && res.banks.length) ? res.banks : [{ BankName:'UBL (United Bank Limited)', AccountTitle:'Golan International Travel & Tourism', AccountNumber:'384263615', IBAN:'PK30UNIL0109000384263615' }];
         document.getElementById('banksGrid').innerHTML = allBanks.map(function(bk) {

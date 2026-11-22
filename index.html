@@ -384,108 +384,14 @@
         <div id="banksGrid" class="bank-grid" style="margin-top:12px;"></div>
               <div style="margin-top:20px; padding-top:18px; border-top:1px solid var(--border); max-width:520px;">
           <h3>📎 Upload Transaction Slip (Instant Wallet &amp; Ledger Credit)</h3>
-          <form onsubmit="event.preventDefault(); if(typeof handleInstantSlipUpload==='function') handleInstantSlipUpload(event); return false;" style="margin-top:12px;">
+          <form onsubmit="handleInstantSlipUpload(event)" style="margin-top:12px;">
             <div class="form-group"><label>Amount Deposited (PKR)</label><input type="number" id="depAmount" placeholder="e.g. 100000" min="100" required /></div>
-          <input type="hidden" id="depRef" value="SLIP-UPLOADED" />
+            <div class="form-group"><label>Transaction ID / Slip Reference</label><input type="text" id="depRef" placeholder="e.g. TID-98234712" required /></div>
             <div class="form-group"><label>Attach Transaction Slip (Image / Receipt)</label><input type="file" id="depSlipFile" accept="image/*,.pdf" required style="padding:8px; border:1px dashed #94a3b8; border-radius:8px; width:100%; background:#f8fafc;" /></div>
             <input type="hidden" id="depBank" value="UBL (384263615)" />
             <button type="submit" class="btn btn-green">Upload Slip &amp; Credit Wallet Instantly</button>
           </form>
         </div>
-          <div id="slipOcrStatus" style="font-size:12px;font-weight:700;margin-top:8px;color:#0369a1;"></div>
-          <script>
-          (function() {
-            var inp = document.getElementById('depSlipFile');
-            if (!inp) return;
-            var cdns = [
-                                    'https://unpkg' + '.com/tesseract.js@5.1.1/dist/tesseract.min.js',
-              'https://cdnjs.cloudflare' + '.com/ajax/libs/tesseract.js/5.1.1/tesseract.min.js'
-            ];
-            function loadOcr(idx, cb, onErr) {
-              if (window.Tesseract) return cb();
-              if (idx >= cdns.length) return onErr();
-              var s = document.createElement('script');
-              s.src = cdns.at(idx);
-              s.onload = cb;
-              s.onerror = function() { loadOcr(idx + 1, cb, onErr); };
-              document.head.appendChild(s);
-            }
-            inp.addEventListener('change', function() {
-              var file = inp.files && inp.files.item(0);
-              var st = document.getElementById('slipOcrStatus');
-              var amtBox = document.getElementById('depAmount');
-              if (!file || !amtBox) return;
-              amtBox.style.background = '';
-              if (file.type && file.type.indexOf('image') === -1) {
-                if (st) { st.style.color = '#0369a1'; st.textContent = 'PDF attached — please enter the deposit amount manually.'; }
-                return;
-              }
-              if (st) { st.style.color = '#0369a1'; st.textContent = 'Scanning receipt to auto-detect amount...'; }
-              loadOcr(0, function() {
-                window.Tesseract.recognize(file, 'eng').then(function(res) {
-                  var txt = (res && res.data && res.data.text) || '';
-                  var found = 0;
-                  var m1 = txt.match(/(?:PKR|RS\.?|₨)\s*([1-9][0-9,]{1,9})(?:\.\d{1,2})?/i);
-                  var m2 = txt.match(/([1-9][0-9,]{1,9})(?:\.\d{1,2})?\s*(?:PKR|RS\.?|₨)/i);
-                  var m3 = txt.match(/(?:amount|total|paid|sent|transferred)\s*[:\-]?\s*([1-9][0-9,]{1,9})(?:\.\d{1,2})?/i);
-                  var raw = (m1 && m1.at(1)) || (m2 && m2.at(1)) || (m3 && m3.at(1)) || '';
-                  if (raw) found = parseInt(raw.replace(/,/g, ''), 10);
-                  if (found >= 100 && found <= 50000000) {
-                    amtBox.value = found;
-                    amtBox.style.background = '#dcfce7';
-                    if (st) { st.style.color = '#15803d'; st.textContent = 'Auto-Detected Amount: PKR ' + found.toLocaleString(); }
-                  } else {
-                    if (st) { st.style.color = '#b45309'; st.textContent = 'Unable to auto-detect amount — please enter it manually.'; }
-                  }
-                }).catch(function() {
-                  if (st) { st.style.color = '#b45309'; st.textContent = 'Auto-scan failed — please enter the deposit amount manually.'; }
-                });
-              }, function() {
-                if (st) { st.style.color = '#b45309'; st.textContent = 'Receipt scanner unavailable — please enter the deposit amount manually.'; }
-              });
-            });
-    function showHeadOfficeBanner() {
-    
-        
-
-    var banksTab = document.getElementById('tab-banks');
-    var container = banksTab ? banksTab.parentElement : document.body;
-    if (!container) return;
-    var box = document.getElementById('golanHeadOfficeNotice');
-    if (!box) {
-      box = document.createElement('div');
-      box.id = 'golanHeadOfficeNotice';
-      container.insertBefore(box, container.firstChild);
-    }
-    box.style.cssText = 'display:block;background:linear-gradient(135deg,#0b1f44,#1e3a8a);' +
-      'color:#fff;border-left:5px solid #f59e0b;padding:15px 18px;' +
-      'border-radius:10px;margin:0 0 16px 0;box-shadow:0 6px 18px rgba(11,31,68,0.22);';
-    box.innerHTML = '<div style="font-size:14px;font-weight:800;color:#fbbf24;">' +
-      'DEPOSIT SLIP SUBMITTED — PLEASE CONTACT HEAD OFFICE</div>' +
-      '<div style="font-size:12.5px;margin-top:4px;line-height:1.5;color:#f8fafc;">' +
-      'Thank you. Your payment receipt has been received for verification. ' +
-      'Please contact <strong>Golan International Head Office (0345-3326318 / 0331-6379110)</strong> ' +
-      'for immediate confirmation and wallet credit approval.</div>';
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-  document.addEventListener('submit', function(e) {
-    if (e.target && e.target.closest('#tab-banks')) {
-      setTimeout(showHeadOfficeBanner, 120);
-    }
-  }, true);
-  window.addEventListener('load', function() {
-    var origFn = window.handleInstantSlipUpload;
-    if (typeof origFn === 'function') {
-      window.handleInstantSlipUpload = function() {
-        setTimeout(showHeadOfficeBanner, 120);
-        return origFn.apply(this, arguments);
-      };
-    }
-  });
-
-
-          })();
-          </script>
 
       </div>      <div id="tab-ledger" class="card hidden" style="font-size:12px;">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
@@ -572,7 +478,7 @@
 
         <div class="card" style="margin-bottom:20px;">
           <h3>💰 Pending & Approved Deposit Limit Requests</h3>
-          <div style="overflow-x:auto; margin-top:12px;"><table><thead><tr><th>ID</th><th>Date</th><th>Agency</th><th>Bank</th><th>Amount (PKR)</th><th>Slip / TID</th><th>Status</th><th>Action</th></tr></thead><tbody id="adminDepositsBody"></tbody></table></div>
+          <div style="overflow-x:auto; margin-top:12px;"><table><thead><tr><th>ID</th><th>Date</th><th>Agency</th><th>Bank</th><th>Amount (PKR)</th><th>Slip / TID</th><th>Status</th><th>Action</th></tr></thead><tbody id="depositsTableBody"></tbody></table></div>
         </div>
 
         <div class="card">
@@ -764,72 +670,6 @@ var API_URL = '/api/backend';
 
 window.__ALL_BOOKINGS__ = res.bookings || [];
 renderBookingsTable(res.isAdmin);
-        try {
-          var depB = document.getElementById('adminDepositsBody') || Array.prototype.slice.call(document.querySelectorAll('#tab-admin .card'))
-            .filter(function(c){ return c.textContent.indexOf('Deposit Limit Requests') !== -1; }).map(function(c){ return c.querySelector('tbody'); }).at(0);
-          if (depB) {
-            var deps = res.deposits || [];
-            depB.innerHTML = deps.length ? deps.map(function(d) {
-              var st = String(d.Status || 'PENDING').toUpperCase();
-              var bg = st === 'APPROVED' ? 'background:#dcfce7;color:#15803d;' : 'background:#fef3c7;color:#b45309;';
-              var act = st === 'PENDING'
-                ? '<button type="button" onclick="window.golanApproveDep(\'' + (d.DepositID || '') + '\')" style="background:#16a34a;color:#fff;border:none;padding:6px 12px;border-radius:7px;font-size:11px;font-weight:800;cursor:pointer;">✓ Approve</button>'
-                : '<span style="color:#64748b;font-size:11px;">Credited</span>';
-              return '<tr><td><strong>' + (d.DepositID || '') + '</strong></td>' +
-                '<td>' + (d.CreatedAt || '') + '</td>' +
-                '<td><strong>' + (d.AgencyName || d.AgentEmail || '') + '</strong></td>' +
-                '<td>' + (d.BankName || '') + '</td>' +
-                '<td style="font-weight:900;color:#15803d;">PKR ' + Number(d.AmountPKR || 0).toLocaleString() + '</td>' +
-                '<td>' + (d.TxRef || '') + '</td>' +
-                '<td><span style="' + bg + 'padding:3px 9px;border-radius:99px;font-size:11px;font-weight:800;">' + st + '</span></td>' +
-                '<td>' + act + '</td></tr>';
-            }).join('') : '<tr><td colspan="8" style="text-align:center;color:#64748b;padding:16px;">No deposit requests yet.</td></tr>';
-          }
-          var agB = document.getElementById('adminAgentsBody') || document.getElementById('agentsTableBody') || Array.prototype.slice.call(document.querySelectorAll('#tab-admin .card'))
-            .filter(function(c){ return c.textContent.indexOf('Sub-Agent Wallet Limit') !== -1; }).map(function(c){ return c.querySelector('tbody'); }).at(0);
-          if (agB) {
-            var ags = res.agents || [];
-            agB.innerHTML = ags.length ? ags.map(function(ag) {
-              var st = String(ag.Status || 'APPROVED').toUpperCase();
-              var bg = st === 'APPROVED' ? 'background:#dcfce7;color:#15803d;' : 'background:#fee2e2;color:#b91c1c;';
-              var em = ag.Email || '';
-              return '<tr><td><strong>' + (ag.AgencyName || '') + '</strong></td>' +
-                '<td>' + em + '</td>' +
-                '<td>' + (ag.City || '') + ' • ' + (ag.Mobile || '') + '</td>' +
-                '<td style="font-weight:900;color:#0b1f44;">PKR ' + Number(ag.BalancePKR || 0).toLocaleString() + '</td>' +
-                '<td><span style="' + bg + 'padding:3px 9px;border-radius:99px;font-size:11px;font-weight:800;">' + st + '</span></td>' +
-                '<td style="white-space:nowrap;">' +
-                '<button type="button" onclick="window.golanManageAg(\'' + em + '\',\'APPROVE\')" style="background:#16a34a;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;margin-right:3px;">Approve</button>' +
-                '<button type="button" onclick="window.golanManageAg(\'' + em + '\',\'ADD_LIMIT\')" style="background:#1d4ed8;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;margin-right:3px;">+ Limit</button>' +
-                '<button type="button" onclick="window.golanManageAg(\'' + em + '\',\'BLOCK\')" style="background:#dc2626;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">Block</button>' +
-                '</td></tr>';
-            }).join('') : '<tr><td colspan="6" style="text-align:center;color:#64748b;padding:16px;">No sub-agents found.</td></tr>';
-          }
-        } catch (adminRenderErr) {}
-        window.golanApproveDep = function(depId) {
-          if (!confirm('Approve deposit ' + depId + ' and credit amount to Sub-Agent wallet?')) return;
-          callBackend({ action: 'adminApproveDeposit', email: currentEmail, token: currentToken, depositId: depId }).then(function(r) {
-            alert((r && r.ok ? '✅ ' : '❌ ') + ((r && r.message) || 'Done'));
-            callBackend({ action: 'getDashboard', email: currentEmail, token: currentToken }).then(function(d) {
-              if (d && d.ok) { window.__LAST_DASH_RES__ = d; loadDashboardData(); }
-            });
-          });
-        };
-        window.golanManageAg = function(targetEmail, subAct) {
-          var amt = 0;
-          if (subAct === 'ADD_LIMIT') {
-            var v = prompt('Enter PKR Amount to Add to ' + targetEmail + ' Wallet:', '50000');
-            if (v === null) return;
-            amt = Number(v || 0);
-            if (amt <= 0) return;
-          }
-          callBackend({ action: 'adminManageAgent', email: currentEmail, token: currentToken, targetEmail: targetEmail, subAction: subAct, amountPKR: amt }).then(function(r) {
-            alert((r && r.ok ? '✅ ' : '❌ ') + ((r && r.message) || 'Done'));
-            callBackend({ action: 'getDashboard', email: currentEmail, token: currentToken }).then(function(d) {
-              if (d && d.ok) { window.__LAST_DASH_RES__ = d; loadDashboardData(); }
-            });
-          });
-        };
 
         var allBanks = (res.banks && res.banks.length) ? res.banks : [{ BankName:'UBL (United Bank Limited)', AccountTitle:'Golan International Travel & Tourism', AccountNumber:'384263615', IBAN:'PK30UNIL0109000384263615' }];
         document.getElementById('banksGrid').innerHTML = allBanks.map(function(bk) {
@@ -837,15 +677,13 @@ renderBookingsTable(res.isAdmin);
         }).join('');
 
         if (res.isAdmin && res.agents) {
-        if (document.getElementById('agentsTableBody')) document.getElementById('agentsTableBody').innerHTML = res.agents.map(function(a) {
+          document.getElementById('agentsTableBody').innerHTML = res.agents.map(function(a) {
             return '<tr><td><strong>'+a.AgencyName+'</strong></td><td>'+a.Email+'</td><td>'+a.City+'<br><small>'+a.Mobile+'</small></td><td>'+a.TotpVerified+'</td><td><span class="status-badge st-'+a.Status+'">'+a.Status+'</span></td><td style="display:flex;gap:5px;flex-wrap:wrap;"><button class="btn btn-sm btn-green" onclick="manageAgent(\''+a.Email+'\',\'APPROVE\')">Approve</button><button class="btn btn-sm btn-red" onclick="manageAgent(\''+a.Email+'\',\'BLOCK\')">Block</button><button class="btn btn-sm btn-gold" onclick="resetAgentPass(\''+a.Email+'\')">Reset Pass & QR</button></td></tr>';
           }).join('');
         }
-               }
-      callBackend({ action: 'getDashboard', email: currentEmail, token: currentToken }).then(function(d) {
-        if (d && d.ok) { window.__LAST_DASH_RES__ = d; loadDashboardData(); }
-      });
+            }
     }
+
     function switchTab(name, btn) {
       ['fares','bookings','banks','admin'].forEach(function(t) { document.getElementById('tab-'+t).classList.add('hidden'); });
       document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
@@ -1685,7 +1523,7 @@ renderBookingsTable(res.isAdmin);
       if (typeof callBackend === 'function' && em && tk) {
         callBackend({ action: 'getDashboardData', email: em, token: tk }).then(function(res) {
           var list = (res && res.bookings) || window.__ALL_BOOKINGS__ || [];
-          window.__ALL_BOOKINGS__ = list;
+        window.__ALL_BOOKINGS__ = list; window.__IS_ADMIN__ = !!(res && res.isAdmin);
           document.querySelectorAll('#bookingsTableBody').forEach(function(bBody) {
             bBody.innerHTML = list.length ? list.map(function(b) {
           var rawItin = String(b.ItemTitle || '').replace(/\{DATE:.*?\}/g, '').replace(/\(\-\)/g, '').trim();
@@ -1713,7 +1551,7 @@ renderBookingsTable(res.isAdmin);
             '<td style="white-space:nowrap;padding:12px 10px;"><span style="background:#0b1f44;color:#fbbf24;padding:4px 9px;border-radius:6px;font-family:monospace;font-weight:900;font-size:12.5px;letter-spacing:1px;">' + (b.PNR || b.BookingID || '-') + '</span>' + (b.TicketNo ? '<div style="margin-top:3px;font-size:10.5px;color:#15803d;font-weight:800;font-family:monospace;">TKT: ' + b.TicketNo + '</div>' : '') + '</td>' +
             '<td style="white-space:nowrap;padding:12px 10px;font-weight:900;color:#15803d;font-size:13px;">PKR ' + Number(b.FarePKR || 0).toLocaleString() + '</td>' +
             '<td style="white-space:nowrap;padding:12px 10px;">' + statusHtml + '</td>' +
-            '<td style="white-space:nowrap;padding:12px 10px;"><button type="button" onclick="window.printSingleGolanTicket(\'' + (b.BookingID || '') + '\')" style="background:linear-gradient(135deg,#0b1f44,#1e3a8a);color:#fff;border:none;padding:6px 12px;border-radius:7px;font-size:11.5px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 2px 6px rgba(11,31,68,0.2);">🖨 E-Ticket</button></td>' +
+            '<td style="white-space:nowrap;padding:12px 10px;">' + (window.__IS_ADMIN__ && stUp !== 'CONFIRMED' && stUp !== 'ISSUED' ? '<button type="button" onclick="window.adminIssueGolanTicket(\'' + (b.BookingID || '') + '\')" style="background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;padding:6px 10px;border-radius:7px;font-size:11px;font-weight:800;cursor:pointer;margin-right:4px;white-space:nowrap;">✓ Issue</button>' : '') + '<button type="button" onclick="window.printSingleGolanTicket(\'' + (b.BookingID || '') + '\')" style="background:linear-gradient(135deg,#0b1f44,#1e3a8a);color:#fff;border:none;padding:6px 10px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">🖨 E-Ticket</button></td>' +
           '</tr>';
         }).join('') : '<tr><td colspan="8" style="text-align:center;color:#64748b;padding:24px;">No bookings found yet.</td></tr>';
       });
@@ -1758,6 +1596,24 @@ renderBookingsTable(res.isAdmin);
         if (grpCnt > 0) setEl('statAvailGroups', grpCnt);
       };
       window.updateGolanHomeStats();
+      window.adminIssueGolanTicket = function(bookingId) {
+        var b = (window.__ALL_BOOKINGS__ || []).find(function(x) { return String(x.BookingID) === String(bookingId); });
+        if (!b) return;
+        var newPnr = prompt('Enter Real Airline / GDS PNR for ' + (b.PassengerName || bookingId) + ':', b.PNR || '');
+        if (newPnr === null) return;
+        var tktNo = prompt('Enter 13-Digit Airline Ticket Number (e.g. 176-2481920451):', b.TicketNo || '');
+        if (tktNo === null) return;
+        var em = (typeof currentEmail !== 'undefined' && currentEmail) ? currentEmail : (localStorage.getItem('golan_email') || '');
+        var tk = (typeof currentToken !== 'undefined' && currentToken) ? currentToken : (localStorage.getItem('golan_token') || '');
+        callBackend({ action: 'adminIssueBooking', email: em, token: tk, bookingId: bookingId, pnr: newPnr.trim(), ticketNo: tktNo.trim() }).then(function(r) {
+          if (r && r.ok) {
+            alert('✅ ' + (r.message || 'Ticket Issued & E-Voucher Sent to Gmail!'));
+            if (typeof window.syncGolanTables === 'function') window.syncGolanTables();
+          } else {
+            alert('❌ ' + ((r && r.message) || 'Could not issue ticket.'));
+          }
+        });
+      };
 
           
 

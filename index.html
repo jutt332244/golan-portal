@@ -562,6 +562,7 @@
       });
     }
     function enterDashboard(agencyName, isAdmin, expiry) {
+  function enterDashboard(agencyName, isAdmin, expiry) {
       currentIsAdmin = !!isAdmin;
       document.getElementById('authSection').classList.add('hidden');
       document.getElementById('dashboardSection').classList.remove('hidden');
@@ -584,37 +585,33 @@
         window.__ALL_BOOKINGS__ = res.bookings || [];
         window.__ALL_DEPOSITS__ = res.deposits || [];
         currentIsAdmin = !!res.isAdmin;
-
         var bal = Number(res.balancePKR || 0);
         document.getElementById('walletBadge').textContent = '💰 Wallet: PKR ' + bal.toLocaleString();
 
         var fares = res.fares || [];
         document.getElementById('statAvailGroups').textContent = fares.length;
         document.getElementById('faresTableBody').innerHTML = fares.length ? fares.map(function(f) {
-          var isVisa = f.Category === 'Visit Visa';
-          var isUmrah = f.Category === 'Umrah Package';
+          var isVisa = f.Category === 'Visit Visa', isUmrah = f.Category === 'Umrah Package';
           var mainName = f.Route || f.Title || f.PackageName || f.Category;
           var l1 = isVisa ? 'Processing:' : (isUmrah ? 'Route:' : 'Timing:');
           var l2 = isVisa ? 'Validity:' : 'Baggage:';
           var l4 = isVisa ? 'Documents:' : (isUmrah ? 'Hotels:' : 'Flight Type:');
-          var meta = '<div style="margin-top:4px;font-size:11px;line-height:1.55;color:#475569;">'
+          var meta = '<div style="margin-top:4px;font-size:11px;line-height:1.5;color:#475569;">'
             + (f.Timing ? '<div><b>'+l1+'</b> '+esc(f.Timing)+'</div>' : '')
             + (f.Luggage ? '<div><b>'+l2+'</b> '+esc(f.Luggage)+'</div>' : '')
             + (f.Stay ? '<div><b>'+l4+'</b> '+esc(f.Stay)+'</div>' : '')
             + (f.Details ? '<div style="color:#0f4c5c;font-weight:600;">• '+esc(f.Details)+'</div>' : '') + '</div>';
           var safeTitle = (f.Category + ' - ' + mainName).replace(/'/g, '');
-          return '<tr>'
-            + '<td><span class="status-badge st-APPROVED">'+esc(f.Category)+'</span><div style="font-size:11px;color:#64748b;margin-top:4px;">'+esc(f.TravelDate || f.Date || 'Open Validity')+'</div></td>'
+          return '<tr><td><span class="status-badge st-APPROVED">'+esc(f.Category)+'</span><div style="font-size:11px;color:#64748b;margin-top:4px;">'+esc(f.TravelDate||f.Date||'Open Validity')+'</div></td>'
             + '<td><strong style="font-size:13.5px;color:#0b1f44;">'+esc(mainName)+'</strong>'+meta+'</td>'
             + '<td><span class="status-badge st-APPROVED">'+(res.isAdmin && f.Seats ? esc(f.Seats)+' Seats' : 'Available')+'</span></td>'
-            + '<td><strong style="font-size:13.5px;color:#0b1f44;">PKR '+Number(f.FarePKR || 0).toLocaleString()+'</strong></td>'
-            + '<td><button type="button" class="btn btn-sm btn-primary" onclick="openBookingModal(\''+esc(f.Category)+'\',\''+esc(safeTitle)+'\','+Number(f.FarePKR||0)+')">Book / Hold</button></td>'
-            + '</tr>';
+            + '<td><strong style="font-size:13.5px;color:#0b1f44;">PKR '+Number(f.FarePKR||0).toLocaleString()+'</strong></td>'
+            + '<td><button type="button" class="btn btn-sm btn-primary" onclick="openBookingModal(\''+esc(f.Category)+'\',\''+esc(safeTitle)+'\','+Number(f.FarePKR||0)+')">Book / Hold</button></td></tr>';
         }).join('') : '<tr><td colspan="5" style="text-align:center;color:#64748b;padding:20px;">No active records posted yet.</td></tr>';
 
         var banks = (res.banks && res.banks.length) ? res.banks : DEFAULT_BANKS;
         document.getElementById('banksGrid').innerHTML = banks.map(function(bk) {
-          return '<div class="bank-card"><h4>🏦 '+esc(bk.BankName)+'</h4><p>Title: <strong>'+esc(bk.AccountTitle)+'</strong></p><p>Account #: <span class="mono">'+esc(bk.AccountNumber)+'</span></p>'+(bk.IBAN ? '<p>IBAN: <span class="mono">'+esc(bk.IBAN)+'</span></p>' : '')+'</div>';
+          return '<div class="bank-card"><h4>🏦 '+esc(bk.BankName)+'</h4><p>Title: <strong>'+esc(bk.AccountTitle)+'</strong></p><p>Account #: <span class="mono">'+esc(bk.AccountNumber)+'</span></p>'+(bk.IBAN?'<p>IBAN: <span class="mono">'+esc(bk.IBAN)+'</span></p>':'')+'</div>';
         }).join('');
 
         renderBookingsTable(res.isAdmin);
@@ -625,7 +622,7 @@
           document.getElementById('adminDepositsBody').innerHTML = deps.length ? deps.map(function(d) {
             var st = String(d.Status || 'PENDING').toUpperCase();
             var act = st === 'PENDING' ? '<button type="button" class="btn btn-sm btn-green" onclick="adminApproveDepositReq(\''+esc(d.DepositID)+'\')">✓ Approve</button>' : '<span style="color:#64748b;font-size:11px;">Credited</span>';
-            return '<tr><td><b>'+esc(d.DepositID)+'</b></td><td>'+esc(d.CreatedAt)+'</td><td><b>'+esc(d.AgencyName || d.AgentEmail)+'</b></td><td>'+esc(d.BankName)+'</td><td style="font-weight:900;color:#15803d;">PKR '+Number(d.AmountPKR||0).toLocaleString()+'</td><td>'+esc(d.TxRef)+'</td><td><span class="status-badge st-'+st+'">'+st+'</span></td><td>'+act+'</td></tr>';
+            return '<tr><td><b>'+esc(d.DepositID)+'</b></td><td>'+esc(d.CreatedAt)+'</td><td><b>'+esc(d.AgencyName||d.AgentEmail)+'</b></td><td>'+esc(d.BankName)+'</td><td style="font-weight:900;color:#15803d;">PKR '+Number(d.AmountPKR||0).toLocaleString()+'</td><td>'+esc(d.TxRef)+'</td><td><span class="status-badge st-'+st+'">'+st+'</span></td><td>'+act+'</td></tr>';
           }).join('') : '<tr><td colspan="8" style="text-align:center;color:#64748b;padding:16px;">No deposit requests yet.</td></tr>';
 
           var ags = res.agents || [];
@@ -647,268 +644,32 @@
         if (el) el.classList.toggle('hidden', id !== tabName);
       });
       if (btnEl && btnEl.classList && btnEl.classList.contains('side-btn')) {
-        document.querySelectorAll('.side-btn').for
-    function enterDashboard(agencyName, isAdmin, expiry) {
-      currentIsAdmin = !!isAdmin; Neeche diya gaya **sirf yeh code** copy karke bilkul usi jagah (`handleVerifyTotp` ke `}` ke baad aur `function openBookingModal` se pehle) paste kar dein:
-
-```javascript
-    function enterDashboard(agencyName, isAdmin, expiry) {
-      currentIsAdmin = !!isAdmin;
-      document.getElementById('authSection').classList.add('hidden');
-      document.getElementById('dashboardSection').classList.remove('hidden');
-      document.getElementById('dashAgencyName').textContent = agencyName;
-      document.getElementById('sideSubAgentName').textContent = agencyName;
-      document.getElementById('sideAdminBtn').classList.toggle('hidden', !isAdmin);
-      if (expiryInterval) clearInterval(expiryInterval);
-      expiryInterval = setInterval(function() {
-        if
-      document.getElementById('authSection').classList.add('hidden');
-      document.getElementById('dashboardSection').classList.remove('hidden');
-      document.getElementById('dash (Date.now() >= Number(expiry)) { alert('12:00 AM Midnight Lock: Please verify 2FA again.'); logout(); }
-      }, 15000);
-      switchTab('liveair');
-      loadDashboardData();
-    }
-
-    function loadDashboardData() {
-      if (!currentEmail || !currentToken) return;
-      callBackend({ action:'getDashboardData', email:currentEmail,AgencyName').textContent = agencyName;
-      document.getElementById('sideSubAgentName').textContent = agencyName;
-      document.getElementById('sideAdminBtn').classList.toggle('hidden token:currentToken }).then(function(res) {
-        if (!res || !res.ok) return;
-        window.__LAST_DASH_RES__ = res;
-        window.__ALL_BOOKINGS__ = res.bookings || [];
-        window.__ALL_DEPOSITS__ = res.deposits || [];
-        currentIsAdmin = !!res', !isAdmin);
-      if (expiryInterval) clearInterval(expiryInterval);
-      expiryInterval = setInterval(function() {
-        if (Date.now() >= Number(expiry)) { alert('12:.isAdmin;
-
-        var bal = Number(res.balancePKR || 0);
-        document.getElementById('walletBadge').textContent = '💰 Wallet: PKR ' + bal.toLocaleString();00 AM Midnight Lock: Please verify 2FA again.'); logout(); }
-      }, 15000);
-      switchTab('liveair');
-      loadDashboardData();
-    }
-
-    function loadDashboardData() {
-      if (!currentEmail || !currentToken) return;
-      callBackend({ action:'get
-
-        var fares = res.fares || [];
-        document.getElementById('statAvailGroups').textContent = fares.length;
-        document.getElementById('faresTableBody').innerHTML = fares.DashboardData', email:currentEmail, token:currentToken }).then(function(res) {
-        if (!res || !res.ok) return;
-        window.__LAST_DASH_RES__ = res;
-        window.__ALL_BOOKINGS__ = res.bookings || [];
-        window.__ALL_DEPOSITS__ = res.deposits || [];
-        currentIsAdmin = !!res.isAdmin;
-
-        var bal = Number(res.balancePKR || 0);
-        document.getElementById('walletBadge').textContent = '💰 Wallet: PKR ' + bal.toLocaleString();
-
-        var fares = res.fares || [];
-        document.length ? fares.map(function(f) {
-          var isVisa = f.Category === 'Visit Visa';
-          var isUmrah = f.Category === 'Umrah Package';
-          var mainName = f.Route || f.Title || f.PackageName || f.Category;
-          var l1 = isVisa ? 'Processing:' : (isUmrah ? 'Route:' : 'Timing:');
-          var l2 = isVisa ? 'Validity:' : 'Baggage:';
-          var l4 = isVisa ? 'Documents:' : (isUmrah ? 'Hotels:' : 'Flight Type:');
-          var meta = '<div style="margin-top:4px;font-size:11px;getElementById('statAvailGroups').textContent = fares.length;
-        document.getElementById('faresTableBody').innerHTML = fares.length ? fares.map(function(f) {
-          var isVisa = f.Category === 'Visit Visa';
-          var isUmrah = f.Category === 'Umrah Package';
-          var mainName = f.Route || f.Title || f.PackageName || f.Category;
-          var l1 = isVisa ? 'Processing:' : (isUmrah ? 'Route:' : 'Timing:');
-          var l2 = isVisa ? 'Validity:' : 'Baggage:';
-          var l4 = isVisa ? 'Documents:' : (line-height:1.55;color:#475569;">'
-            + (f.Timing ? '<div><b>'+l1+'</b> '+esc(f.Timing)+'</div>' : '')
-            + (f.Luggage ? '<div><b>'+l2+'</b> '+esc(f.Luggage)+'</div>' : '')
-            + (f.Stay ? '<div><b>'+l4+'</b> '+esc(f.Stay)+'</div>' : '')
-            + (f.Details ? '<div style="color:#0f4c5c;font-weight:600;">• '+esc(f.Details)+'</div>' : '') +isUmrah ? 'Hotels:' : 'Flight Type:');
-          var meta = '<div style="margin-top:4px;font-size:11px;line-height:1.55;color:#475569;">'
-            + (f.Timing ? '<div><b>'+l1+'</b> '+esc(f.Timing)+'</div>' : '')
-            + (f.Luggage ? '<div><b>'+l2+'</b> '+esc(f.Luggage)+'</div>' : '')
-            + (f.Stay ? '<div><b>'+l4+'</b> '</div>';
-          var safeTitle = (f.Category + ' - ' + mainName).replace(/'/g, '');
-          return '<tr>'
-            + '<td><span class="status-badge st-APPROVED">'+esc(f.Category)+'</span><div style="font-size:11px;color:#64748b;margin-top:4px;">'+esc(f.TravelDate || f.Date || 'Open Validity')+'</div></td>'
-            + '<td><strong style="font-size:13.5px;color:#0 '+esc(f.Stay)+'</div>' : '')
-            + (f.Details ? '<div style="color:#0f4c5c;font-weight:600;">• '+esc(f.Details)+'b1f44;">'+esc(mainName)+'</strong>'+meta+'</td>'
-            + '<td><span class="status-badge st-APPROVED">'+(res.isAdmin && f.Seats ? esc(f.</div>' : '') + '</div>';
-          var safeTitle = (f.Category + ' - ' + mainName).replace(/'/g, '');
-          return '<tr>'
-            + '<td><span class="status-badge st-APPROVED">'+esc(f.Category)+'</span><div style="font-size:11px;color:#64Seats)+' Seats' : 'Available')+'</span></td>'
-            + '<td><strong style="font-size:13.5px;color:#0b1f44;">PKR '+Number(f.FarePKR || 0).toLocaleString()+'</strong></td>'
-            + '<td><button type="button" class="btn btn-sm btn-primary" onclick="openBookingModal(\''+esc(f.Category748b;margin-top:4px;">'+esc(f.TravelDate || f.Date || 'Open Validity')+'</div></td>'
-            + '<td><strong style="font-size:13.5px;color:#0b1f44;">'+esc(mainName)+'</strong>'+meta+'</td>'
-            + '<td><span class="status-badge st-APPROVED">'+(res.isAdmin && f.Seats ? esc(f.Seats)+' Seats' : 'Available'))+'\',\''+esc(safeTitle)+'\','+Number(f.FarePKR||0)+')">Book / Hold</button></td>'
-            + '</tr>';
-        }).join('') : '<tr><td colspan="5" style="text-align:center;color:#64748b;padding:2+'</span></td>'
-            + '<td><strong style="font-size:13.5px;color:#0b1f44;">PKR '+Number(f.FarePKR || 0).toLocaleString()+'</strong></td>'
-            + '<td><button type="button" class="btn btn-sm btn0px;">No active records posted yet.</td></tr>';
-
-        var banks = (res.banks && res.banks.length) ? res.-primary" onclick="openBookingModal(\''+esc(f.Category)+'\',\''+esc(safeTitle)+'\','+Number(f.FarePKR||0)+')">Book / Hold</button></td>'banks : DEFAULT_BANKS;
-        document.getElementById('banksGrid').innerHTML = banks.map(function(bk) {
-          return '<div class="bank-card"><h4>🏦 '+esc(bk.BankName)+'</h4><p>Title: <strong>'+esc(bk.AccountTitle)+'</strong></p><p>Account #: <span class="mono">'+esc(bk.AccountNumber)+'</span></p>'+(bk.IBAN ? '<p>IBAN: <span class="mono">'+esc(bk.IBAN)+'</span></p>' : '')+'</div>';
-            + '</tr>';
-        }).join('') : '<tr><td colspan="5" style="text-align:center;color:#64748b;padding:20px;">No active records posted yet.</td></tr>';
-
-        var banks = (res.banks && res.banks.length) ? res.banks : DEFAULT_BANKS;
-        document.getElementById('banksGrid').innerHTML = banks.map(function(bk) {
-          return '<div class="bank-card"><h4>🏦 '+esc(bk.BankName)+'</h4><p>Title: <strong>'+esc(bk.AccountTitle)+'</strong></p><p>Account #: <span class
-        }).join('');
-
-        renderBookingsTable(res.isAdmin);
-        refreshLedgerAuto(bal);
-
-        if (res.isAdmin) {
-          var deps = res.deposits || [];
-          document.getElementById('adminDepositsBody').innerHTML = deps.length ? deps.map(function(d) {
-            var st = String(d.Status || 'PENDING').toUpperCase();
-            var act =="mono">'+esc(bk.AccountNumber)+'</span></p>'+(bk.IBAN ? '<p>IBAN: <span class="mono">'+esc(bk.IBAN)+'</span></p>' : '')+'</div>';
-        }).join('');
-
-        renderBookingsTable(res.isAdmin);
-        refreshLedgerAuto(bal); st === 'PENDING' ? '<button type="button" class="btn btn-sm btn-green" onclick="adminApproveDepositReq(\''+esc(d.DepositID)+'\')">✓ Approve</button>' : '<span style="color:#64
-
-        if (res.isAdmin) {
-          var deps = res.deposits || [];
-          document.getElementById('adminDepositsBody').innerHTML = deps.length ? deps.map(function(d) {
-            var st = String(d.Status || 'PENDING').toUpperCase();
-            var act = st === 'PENDING' ? '<button type="button" class="btn btn-sm btn-green" onclick="adminApproveDepositReq(\''+esc(d.DepositID)+'\')">✓ Approve</button>' : '<span style="color:#64748b;font-size:11px;">Credited</span>';
-            return '<tr><td><b>'+esc(d.DepositID)+'</b></td><td>'+esc(d.CreatedAt748b;font-size:11px;">Credited</span>';
-            return '<tr><td><b>'+esc(d.DepositID)+'</b></td><td>'+esc(d.CreatedAt)+'</td><td><b>'+esc(d.AgencyName || d.AgentEmail)+'</b></td><td>'+esc(d.BankName)+'</td><td style="font-weight:900;color:#15803d;">PKR '+Number(d.AmountPKR||0).toLocaleString()+'</td><td>'+esc(d.TxRef)+'</td><td><span class="status-badge st-'+st+'">'+st+'</span></td><td>'+act+'</td></tr>';
-          }).join('') : '<tr><td colspan="8" style="text-align:center;color:#64748b;padding:16px;">No deposit requests yet.</td></tr>';
-
-          var ags = res.agents || [];
-          document.getElementById('adminAgentsBody').innerHTML = ags.length ? ags.map(function(ag) {
-            var st = String(ag.Status || 'PENDING').toUpperCase();
-            return '<tr><td><b>'+esc(ag.AgencyName)+'</b></td><td>'+esc(ag.Email)+'</td><td>'+esc(ag.City)+' • '+esc(ag.Mobile)+'</td><td style="font-weight:900;color:#0b1f44;">PKR '+Number(ag.BalancePKR||0).toLocaleString()+'</td><td><span class="status-badge st-'+st+'">'+st+'</span></td><td style="white-space:nowrap;display:flex;gap:4px;flex-wrap:wrap;"><button type="button" class="btn btn-sm btn-green" onclick="adminAgentCtrl(\''+esc(ag.Email)+'\',\'APPROVE\')">Approve</button><button type="button" class="btn btn-sm btn-primary" onclick="adminAgentCtrl(\''+esc(ag.Email)+'\',\'ADD_LIMIT\')">+ Limit</button><button type="button" class="btn btn-sm btn-red" onclick="adminAgentCtrl(\''+esc(ag.Email)+'\',\'BLOCK\')">Block</button><button type="button" class="btn btn-sm btn-gold" onclick="resetAgentPass(\''+esc(ag.Email)+'\')">Reset Pass</button></td></tr>';
-          )+'</td><td><b>'+esc(d.AgencyName || d.AgentEmail)+'</b></td><td>'+esc(d.BankName)+'</td><td style="font-weight:900;color:#15803d;">PKR '+Number(d.AmountPKR||0).toLocaleString()+'</td><td>'+esc(d.TxRef)+'</td><td><span class="status-badge st-'+st+'">'+st+'</span></td><td>'+act+'</td></tr>';
-          }).join('') : '<tr><td colspan="8" style="text-align:center;color:#64748b;padding:16px;">No deposit requests yet.</td></tr>';
-
-          var ags = res.agents || [];
-          document.getElementById('adminAgentsBody').innerHTML = ags.length ? ags.map(function(ag) {
-            var st = String(ag.Status || 'PENDING').toUpperCase();
-            return '<tr><td><b>'+esc(ag.AgencyName)+'</b></td><td>'+esc(ag.Email)+'</td><td>'+esc(ag.City)+' • '+esc(ag.Mobile)+'</td><td style="font-weight:900;color:#0b1f44;">PKR '+Number(ag.BalancePKR||0).toLocaleString()+'</td><td><span class="status-badge st-'+st+'">'+st+'</span></td><td style="white-space:nowrap;display:flex;gap:4px;flex-wrap:wrap;"><button type="button" class="btn btn-sm btn-green" onclick="adminAgentCtrl(\''+esc(ag.Email)+'\',\'APPROVE\')">Approve</button><button type="button" class="btn btn-sm btn-primary" onclick="adminAgentCtrl(\''+esc(ag.Email)+'\',\'ADD_LIMIT\')">+ Limit</button><button type="button" class="btn btn-sm btn-red" onclick="adminAgentCtrl(\''+esc(ag.Email)+'\',\'BLOCK\')">Block</button><button type="button" class="btn btn-sm btn-gold" onclick="resetAgentPass(\''+esc(ag.Email)+'\')">Reset Pass</button></td></tr>';
-          }).join('') : '<tr><td colspan="6" style="text-align:center;color:#64748b;padding:16px;">No sub-agents found.</td></tr>}).join('') : '<tr><td colspan="6" style="text-align:center;color:#64748b;padding:16px;">No sub-agents found.</td></tr>';
-        }
-      });
-    }
-    var loadDashboard = loadDashboardData;
-
-    function switchTab(tabName, btnEl) {
-      var isDash = (tabName === 'liveair');
-      document.getElementById('dashHeroBanner').';
-        }
-      });
-    }
-    var loadDashboard = loadDashboardData;
-
-    function switchTab(tabName, btnEl) {
-      var isDash = (tabName === 'liveair');
-      document.getElementById('dashHeroBanner').style.display = isDash ? 'flex' : 'style.display = isDash ? 'flex' : 'none';
-      document.getElementById('dashHomeBlocks').style.display = isDash ? 'block' : 'none';
-      ['liveair','faresnone';
-      document.getElementById('dashHomeBlocks').style.display = isDash ? 'block' : 'none';
-      ['liveair','fares','bookings','banks','ledger','admin'].forEach(function(id) {
-        var el = document.getElementById('tab-' + id);
-        if (el) el.class','bookings','banks','ledger','admin'].forEach(function(id) {
-        var el = document.getElementById('tab-' + id);
-        if (el) el.classList.toggle('hidden', id !== tabName);
-      });
-      if (btnEl && btnEl.classList && btnEl.classList.contains('side-btn')) {
-        document.querySelectorAll('.side-btn').forEach(function(b) { b.classList.remove('active'); });
-        btnEl.classList.add('active');
-      }
-      windowList.toggle('hidden', id !== tabName);
-      });
-      if (btnEl && btnEl.classList && btnEl.classList.contains('side-btn')) {
         document.querySelectorAll('.side-btn').forEach(function(b) { b.classList.remove('active'); });
         btnEl.classList.add('active');
       }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-
-    function openFareCategoryTab(catName, btnEl) {
+      function openFareCategoryTab(catName, btnEl) {
       switchTab('fares', btnEl);
-      var mapKeys = {
-        DXB: ['DXB','SHJ','.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function openFareCategoryTab(catName, btnEl) {
-      switchTab('fares', btnEl);
-      var mapKeys = {
-        DXB: ['DXB','SHJ','AUH','UAE','DUBAI','SHARJAH'],
-        JED: ['JED','RUH','DMM','MED','KSA','SAUDI','JEDDAH','RIYADH'],
-        MCT: ['MCT','SLL','MUSCAT','OMAN'],
-        BAH: ['BAH','BAHRAIN'],
-        LHR: ['LHR','MAN','BHX','UK','LONDON','MANCHESTER']
-      };
+      var mapKeys = { DXB:['DXB','SHJ','AUH','UAE','DUBAI'], JED:['JED','RUH','DMM','MED','KSA','SAUDI','JEDDAH','RIYADH'], MCT:['MCT','SLL','MUSCAT','OMAN'], BAH:['BAH','BAHRAIN'], LHR:['LHR','MAN','BHX','UK','LONDON','MANCHESTER'] };
       var titles = { ALL:'🌐 All Group Fares, Packages & Visas', 'Umrah Package':'🕋 Live Umrah Packages', 'Visit Visa':'🛂 Live Visit Visas', DXB:'🇦🇪 UAE & Dubai Group Fares', JED:'🇸🇦 KSA Group Fares', MCT:'🇴🇲 Muscat Group Fares', BAH:'🇧🇭 Bahrain Group Fares', LHR:'🇬🇧 UK & London Fares' };
       document.getElementById('faresTabHeading').textContent = titles[catName] || ('🛫 ' + catName);
-      var rows = document.querySelectorAll('#faresTableBody tr');
-      var shown = 0;
-      var oldEmpty = document.getElementById('quickJourneyEmptyRow');
-      if (oldEmpty) oldEmpty.remove();
+      var rows = document.querySelectorAll('#faresTableBody tr'), shown = 0;
+      var oldEmpty = document.getElementById('quickJourneyEmptyRow'); if (oldEmpty) oldEmpty.remove();
       rows.forEach(function(tr) {
         var txt = (tr.textContent || '').toUpperCase();
         var match = (!catName || catName === 'ALL') ? true : (mapKeys[catName] ? mapKeys[catName].some(function(k) { return txt.indexOf(k) !== -1; }) : txt.indexOf(catName.toUpperCase()) !== -1);
-        tr.style.display = match ? '' : 'none';
-        if (match) shown++;
+        tr.style.display = match ? '' : 'none'; if (match) shown++;
       });
-      if (shown === 0) {
-        document.getElementById('faresTableBody').insertAdjacentHTML('beforeend', '<tr id="quickJourneyEmptyRow"><td colspan="5" style="text-align:center;color:#64748b;padding:24px;">No seats posted for this filter yet. <button type="button" class="btn btn-sm btn-primary" style="margin-left:8px;" onclick="openFareCategoryTab(\'ALL\')">Show All</button></td></tr>');
-      }
-AUH','UAE','DUBAI','SHARJAH'],
-        JED: ['JED','RUH','DMM','MED','KSA','SAUDI','JEDDAH','RIYADH'],
-        MCT: ['MCT','SLL','MUSCAT','OMAN'],
-        BAH: ['BAH','BAHRAIN'],
-        LHR: ['LHR','MAN','BHX','UK','LONDON','MANCHESTER']
-      };
-      var titles = { ALL:'🌐 All Group Fares, Packages & Visas', 'Umrah Package':'🕋 Live Umrah Packages', 'Visit Visa':'🛂 Live Visit Visas', DXB:'🇦🇪 UAE & Dubai Group Fares', JED:'🇸🇦 KSA Group Fares', MCT:'🇴🇲 Muscat Group Fares', BAH:'🇧🇭 Bahrain Group Fares', LHR:'🇬🇧 UK & London Fares' };
-      document.getElementById('faresTabHeading').textContent = titles[catName] || ('🛫 ' + catName);
-      var rows = document.querySelectorAll('#faresTableBody tr');
-      var shown = 0;
-      var oldEmpty = document.getElementById('quickJourneyEmptyRow');
-      if (oldEmpty) oldEmpty.remove();
-      rows.forEach(function(tr) {
-        var txt = (tr.textContent || '').toUpperCase();
-        var match = (!catName || catName === 'ALL') ? true : (mapKeys[catName] ? mapKeys[catName].some(function(k) { return txt.indexOf(k) !== -1; }) : txt.indexOf(catName.toUpperCase()) !== -1);
-        tr.style.display = match ? '' : 'none';
-        if (match) shown++;
-      });
-      if (shown === 0) {
-        document.getElementById('faresTableBody').insertAdjacentHTML('beforeend', '<tr id="quickJourneyEmptyRow"><td colspan="5" style="text-align:center;color:#64748b;padding:24px;">No seats posted for this filter yet. <button type="button" class="btn btn-sm btn-primary" style="margin-left:8px;" onclick="openFareCategoryTab(\'ALL\')">Show All</button></td></tr>');
-      }
+      if (shown === 0) document.getElementById('faresTableBody').insertAdjacentHTML('beforeend', '<tr id="quickJourneyEmptyRow"><td colspan="5" style="text-align:center;color:#64748b;padding:24px;">No seats posted for this filter yet. <button type="button" class="btn btn-sm btn-primary" style="margin-left:8px;" onclick="openFareCategoryTab(\'ALL\')">Show All</button></td></tr>');
     }
 
     function renderBookingsTable(isAdmin) {
-      var list = window.__ALL_BOOKINGS__ || [];
-      var now = Date.now();
-      var todayStr = new Date().toLocaleDateString('    }
-
-    function renderBookingsTable(isAdmin) {
-      var list = window.__ALL_BOOKINGS__ || [];
-      var now = Date.now();
-      var todayStr = new Date().toLocaleDateen-GB', { timeZone: 'Asia/Karachi' });
+      var list = window.__ALL_BOOKINGS__ || [], now = Date.now(), todayStr = new Date().toLocaleDateString('en-GB', { timeZone: 'Asia/Karachi' });
       var todayCnt = 0, soldCnt = 0, holdCnt = 0, cancCnt = 0;
       list.forEach(function(b) {
-String('en-GB', { timeZone: 'Asia/Karachi' });
-      var todayCnt =         if (String(b.CreatedAt || '').indexOf(todayStr) !== -1) todayCnt++;
-        var st = String(b.Status || 'PENDING').toUpperCase();
-        var isExp =0, soldCnt = 0, holdCnt = 0, cancCnt = 0;
-      list.forEach(function(b) {
         if (String(b.CreatedAt || '').indexOf(todayStr) !== -1) todayCnt++;
-        var st = String(b.Status || 'PENDING').toUpperCase();
-        var isExp = (st === 'PENDING' && b.HoldUntil && now > Number(b.HoldUntil));
-        if (st === 'CONFIRMED' || st === 'ISSUED') soldCnt++;
-        else if (st === 'CANCELED' || st === 'EXPIRED' || isExp) cancCnt++;
-        else holdCnt++;
-      });
-      document.getElementById (st === 'PENDING' && b.HoldUntil && now > Number(b.HoldUntil));
+        var st = String(b.Status || 'PENDING').toUpperCase(), isExp = (st === 'PENDING' && b.HoldUntil && now > Number(b.HoldUntil));
         if (st === 'CONFIRMED' || st === 'ISSUED') soldCnt++;
         else if (st === 'CANCELED' || st === 'EXPIRED' || isExp) cancCnt++;
         else holdCnt++;
@@ -916,114 +677,52 @@ String('en-GB', { timeZone: 'Asia/Karachi' });
       document.getElementById('statTodayBookings').textContent = todayCnt;
       document.getElementById('statTotalBookings').textContent = list.length;
       document.getElementById('statSoldTickets').textContent = soldCnt;
-      document.getElementById('stat('statTodayBookings').textContent = todayCnt;
-      document.getElementById('statTotalBookings').textContent = list.length;
-      document.getElementById('statSoldTickets').textContent = soldCnt;
       document.getElementById('statHoldTickets').textContent = holdCnt;
       document.getElementById('statCanceledTickets').textContent = cancCnt;
 
       document.getElementById('bookingsTableBody').innerHTML = list.length ? list.map(function(b) {
-        var cleanTitle = String(b.ItemTitle || '').replace(/\s*\{DATE:.*?\}/g, '');HoldTickets').textContent = holdCnt;
-      document.getElementById('statCanceledTickets').textContent = cancCnt;
-
-      document.getElementById('bookingsTableBody').innerHTML = list.length ? list.map(function(b) {
         var cleanTitle = String(b.ItemTitle || '').replace(/\s*\{DATE:.*?\}/g, '');
-        var st = String(b.Status || 'PENDING').toUpperCase();
-        var isExp = (st === 'PENDING' && b.HoldUntil && now > Number(b.HoldUntil));
-        var badgeSt = isExp ? 'EXPIRED' : st;
-        var timerHtml = (st === 'PENDING' && b.HoldUntil && !isExp) ?
-        var st = String(b.Status || 'PENDING').toUpperCase();
-        var isExp = (st === 'PENDING' && b.HoldUntil && now > Number(b.HoldUntil));
-        var badgeSt = isExp ? 'EXPIRED' : st;
-        var timerHtml = (st === 'PENDING' && b.HoldUntil && !isExp) ? '<br><span class="live-timer" data- '<br><span class="live-timer" data-until="'+b.HoldUntil+'" style="color:#dc2626;font-weight:800;font-size:11px;font-family:monospace;">⏳ ...</span>' : '';
-        var pnrHtml = '<span style="background:#0b1f44;color:#fbbf24;padding:3px 8px;border-radiusuntil="'+b.HoldUntil+'" style="color:#dc2626;font-weight:800;font-size:11px;font-family:monospace;">⏳ ...</span>' : '';
-        var pnrHtml = '<span style="background:#0b1f44;color:#fbbf24;padding:3px 8px;border-radius:6px;font-family:monospace;font-:6px;font-family:monospace;font-weight:800;">'+esc(b.PNR || 'PENDING')+'</span>' + (b.TicketNo ? '<div style="font-size:10.5px;color:#15803d;font-weight:700;margin-weight:800;">'+esc(b.PNR || 'PENDING')+'</span>' + (b.TicketNo ? '<div style="font-size:10.5px;color:#15803d;font-weight:700;margin-top:3px;">TKT: '+esc(b.TicketNo)+'</div>' : '');
-        var btns = '';
-        if (isAdmin && st === 'top:3px;">TKT: '+esc(b.TicketNo)+'</div>' : '');
+        var st = String(b.Status || 'PENDING').toUpperCase(), isExp = (st === 'PENDING' && b.HoldUntil && now > Number(b.HoldUntil)), badgeSt = isExp ? 'EXPIRED' : st;
+        var timerHtml = (st === 'PENDING' && b.HoldUntil && !isExp) ? '<br><span class="live-timer" data-until="'+b.HoldUntil+'" style="color:#dc2626;font-weight:800;font-size:11px;font-family:monospace;">⏳ ...</span>' : '';
+        var pnrHtml = '<span style="background:#0b1f44;color:#fbbf24;padding:3px 8px;border-radius:6px;font-family:monospace;font-weight:800;">'+esc(b.PNR||'PENDING')+'</span>' + (b.TicketNo ? '<div style="font-size:10.5px;color:#15803d;font-weight:700;margin-top:3px;">TKT: '+esc(b.TicketNo)+'</div>' : '');
         var btns = '';
         if (isAdmin && st === 'PENDING') btns += '<button type="button" class="btn btn-sm btn-green" style="margin:2px;" onclick="adminIssueGolanTicket(\''+esc(b.BookingID)+'\')">✓ Issue</button>';
-        if (isAdmin && st !== 'CANCELED') btns += '<button type="button"PENDING') btns += '<button type="button" class="btn btn-sm btn-green" style="margin:2px;" onclick="adminIssueGolanTicket(\''+esc(b.BookingID)+'\')">✓ Issue</button>';
-        if (isAdmin && st !== 'CANCELED') btns += '<button type="button" class="btn btn-sm btn-red" style="margin:2px;" onclick="adminCancelGolan class="btn btn-sm btn-red" style="margin:2px;" onclick="adminCancelGolanTicket(\''+esc(b.BookingID)+'\')">✕ Cancel</button>';
-        btns += '<button type="button" class="btn btn-sm btn-primary" style="margin:2px;" onclick="printSingleTicket(\''+esc(b.BookingID)+'\')">✕ Cancel</button>';
+        if (isAdmin && st !== 'CANCELED') btns += '<button type="button" class="btn btn-sm btn-red" style="margin:2px;" onclick="adminCancelGolanTicket(\''+esc(b.BookingID)+'\')">✕ Cancel</button>';
         btns += '<button type="button" class="btn btn-sm btn-primary" style="margin:2px;" onclick="printSingleGolanTicket(\''+esc(b.BookingID)+'\')">🖨 PDF</button>';
-        if (isAdmin) btns += '<button type="button" class="btn btn-sm" style="margin:2px;background:#e2GolanTicket(\''+esc(b.BookingID)+'\')">🖨 PDF</button>';
         if (isAdmin) btns += '<button type="button" class="btn btn-sm" style="margin:2px;background:#e2e8f0;color:#991b1b;" onclick="deleteBookingAdmin(\''+esc(b.BookingID)+'\')">🗑️</button>';
-        return '<tr><td><b>'+e8f0;color:#991b1b;" onclick="deleteBookingAdmin(\''+esc(b.BookingID)+'\')">🗑️</button>';
-        return '<tr><td><b>'+esc(b.BookingID)+'</b><br><small style="color:#64748b;">'+esc(b.AgencyName)+'</small></td><td style="white-space:nowrap;">'+esc(b.CreatedAt)+'esc(b.BookingID)+'</b><br><small style="color:#64748b;">'+esc(b.AgencyName)+'</small></td><td style="white-space:nowrap;">'+esc(b.CreatedAt)+'</td><td><b>'+esc(b.PassengerName)+'</b><br><small>PP: '+esc(b.PassportNo)+' | '+esc(b.PaxMobile||'-')+'</small></td><td>'+esc(cleanTitle)+'</td><td>'+pnrHtml</td><td><b>'+esc(b.PassengerName)+'</b><br><small>PP: '+esc(b.PassportNo)+' | '+esc(b.PaxMobile||'-')+'</small></td><td>'+esc(cleanTitle)+'</td><td>'+pnrHtml+'</td><td style="font-weight:800;color:#15803d;white-space:nowrap;">PKR '+Number(b.FarePKR||+'</td><td style="font-weight:800;color:#15803d;white-space:nowrap;">PKR '+Number(b.FarePKR||0).toLocaleString()+'</td><td><span class="status-badge st-'+badgeSt+'">'+badgeSt+'</span>'+timerHtml+'</td>0).toLocaleString()+'</td><td><span class="status-badge st-'+badgeSt+'">'+badgeSt+'</span>'+timerHtml+'</td><td style="white-space:nowrap;">'+btns+'</td></tr>';
-      }).join('') : '<tr><td colspan="8" style="text-align:center;color:#64748b;padding:20px;">No bookings yet.</td></tr>';
-    }
-
-<td style="white-space:nowrap;">'+btns+'</td></tr>';
+        return '<tr><td><b>'+esc(b.BookingID)+'</b><br><small style="color:#64748b;">'+esc(b.AgencyName)+'</small></td><td style="white-space:nowrap;">'+esc(b.CreatedAt)+'</td><td><b>'+esc(b.PassengerName)+'</b><br><small>PP: '+esc(b.PassportNo)+' | '+esc(b.PaxMobile||'-')+'</small></td><td>'+esc(cleanTitle)+'</td><td>'+pnrHtml+'</td><td style="font-weight:800;color:#15803d;white-space:nowrap;">PKR '+Number(b.FarePKR||0).toLocaleString()+'</td><td><span class="status-badge st-'+badgeSt+'">'+badgeSt+'</span>'+timerHtml+'</td><td style="white-space:nowrap;">'+btns+'</td></tr>';
       }).join('') : '<tr><td colspan="8" style="text-align:center;color:#64748b;padding:20px;">No bookings yet.</td></tr>';
     }
 
     function filterBookingsTable() {
-      var q = (document.getElementById('adminBookingSearchInput').value || '').trim().toUpper    function filterBookingsTable() {
       var q = (document.getElementById('adminBookingSearchInput').value || '').trim().toUpperCase();
-      document.querySelectorAll('#bookingsTableBody tr').forEach(function(tr) {
-        tr.style.display = (!q || tr.textContent.toUpperCase().indexOf(qCase();
       document.querySelectorAll('#bookingsTableBody tr').forEach(function(tr) {
         tr.style.display = (!q || tr.textContent.toUpperCase().indexOf(q) !== -1) ? '' : 'none';
       });
     }
 
-    function refreshLedgerAuto(walletBal)) !== -1) ? '' : 'none';
-      });
-    }
-
     function refreshLedgerAuto(walletBal) {
-      var bookings = window.__ALL_BOOKINGS__ || [];
-      var deposits = window.__ALL_DEPOSITS__ || [];
-      var debit = 0, refund = 0, credit = 0, rows = [];
+      var bookings = window.__ALL_BOOKINGS__ || [], deposits = window.__ALL_DEPOSITS__ || [], debit = 0, refund = 0, credit = 0, rows = [];
       deposits.forEach(function(d) {
-        var amt = Number(d.AmountPKR || 0);
-        var st = String(d.Status || 'PENDING').toUpperCase();
-        if (st === 'APPROVED') credit += amt;
-        rows.push('<tr><td>'+esc(d.CreatedAt)+'</td><td><b>'+esc(d.DepositID)+'</b></td><td>Deposit ('+esc(d.BankName)+')</td><td><span class="status-badge st- {
-      var bookings = window.__ALL_BOOKINGS__ || [];
-      var deposits = window.__ALL_DEPOSITS__ || [];
-      var debit = 0, refund = 0, credit = 0, rows = [];
-      deposits.forEach(function(d) {
-        var amt = Number(d.AmountPKR || 0);
-        var st = String(d.Status || 'PENDING').toUpperCase();
+        var amt = Number(d.AmountPKR || 0), st = String(d.Status || 'PENDING').toUpperCase();
         if (st === 'APPROVED') credit += amt;
         rows.push('<tr><td>'+esc(d.CreatedAt)+'</td><td><b>'+esc(d.DepositID)+'</b></td><td>Deposit ('+esc(d.BankName)+')</td><td><span class="status-badge st-APPROVED">DEPOSIT</span></td><td>—</td><td style="color:#15803d;font-weight:800;">+ PKR '+amt.toLocaleString()+'</td><td><span class="status-badge st-'+st+'">'+st+'</span></td></tr>');
       });
       bookings.forEach(function(b) {
-        var amt = Number(b.FarePKR || 0);
-        var stAPPROVED">DEPOSIT</span></td><td>—</td><td style="color:#15803d;font-weight:800;">+ PKR '+amt.toLocaleString()+'</td><td><span class="status-badge st-'+st+'">'+st+'</span></td></tr>');
-      });
-      bookings.forEach(function(b) {
-        var amt = Number(b.FarePKR || 0);
-        var st = String(b.Status || 'PENDING').toUpperCase();
-        var title = String(b.Item = String(b.Status || 'PENDING').toUpperCase();
-        var title = String(b.ItemTitle || '').replace(/\s*\{DATE:.*?\}/g, '');
+        var amt = Number(b.FarePKR || 0), st = String(b.Status || 'PENDING').toUpperCase(), title = String(b.ItemTitle || '').replace(/\s*\{DATE:.*?\}/g, '');
         if (st === 'CANCELED') {
           refund += amt;
-          rows.push('<tr><td>'+esc(b.CreatedAt)+'</td><td><b>'+esc(b.BookingID)+'</b></td><td>Refund: '+esc(title)+' ('Title || '').replace(/\s*\{DATE:.*?\}/g, '');
-        if (st === 'CANCELED') {
-          refund += amt;
-          rows.push('<tr><td>'+esc(b.CreatedAt)+'</td><td><b>'+esc(b.BookingID)+'</b></td><td>Refund: '+esc(title)+' ('+esc(b.PassengerName)+')</td><td><span class="status-badge st-APPROVED">REFUND+esc(b.PassengerName)+')</td><td><span class="status-badge st-APPROVED">REFUND</span></td><td>—</td><td style="color:#1d4ed8;font-weight:800;">+ PKR '+amt.toLocaleString()+'</td><td><span class="status-badge st-CANCELED">CANCELED</span></td></tr>');
-        } else {
-          if (st === 'CONFIRMED'</span></td><td>—</td><td style="color:#1d4ed8;font-weight:800;">+ PKR '+amt.toLocaleString()+'</td><td><span class="status-badge st-CANCELED">CANCELED</span></td></tr>');
+          rows.push('<tr><td>'+esc(b.CreatedAt)+'</td><td><b>'+esc(b.BookingID)+'</b></td><td>Refund: '+esc(title)+' ('+esc(b.PassengerName)+')</td><td><span class="status-badge st-APPROVED">REFUND</span></td><td>—</td><td style="color:#1d4ed8;font-weight:800;">+ PKR '+amt.toLocaleString()+'</td><td><span class="status-badge st-CANCELED">CANCELED</span></td></tr>');
         } else {
           if (st === 'CONFIRMED' || st === 'ISSUED') debit += amt;
-          rows.push('<tr><td>'+esc(b.CreatedAt)+'</td><td><b>'+esc(b.BookingID)+'</b></td><td>'+esc(title)+' ('+esc(b.PassengerName)+')</td><td><span class="status-badge st-PENDING">BOOKING</span></td><td style="color:#b91c1c;font-weight:800;">- PKR '+amt.toLocaleString || st === 'ISSUED') debit += amt;
-          rows.push('<tr><td>'+esc(b.CreatedAt)+'</td><td><b>'+esc(b.BookingID)+'</b></td><td>'+esc(title)+' ('+esc(b.PassengerName)+')</td><td><span class="status-badge st-PENDING">BOOKING</span></td><td style="color:#b91c1c;font-weight:800;">- PKR '+amt.toLocaleString()()+'</td><td>—</td><td><span class="status-badge st-'+st+'">'+st+'</span></td></tr>');
-        }
-      });
-      document.getElementById('ldgTotalCredit').textContent = 'PKR ' + credit.toLocaleString();
-      document.getElementById('ldgTotalDebit').+'</td><td>—</td><td><span class="status-badge st-'+st+'">'+st+'</span></td></tr>');
+          rows.push('<tr><td>'+esc(b.CreatedAt)+'</td><td><b>'+esc(b.BookingID)+'</b></td><td>'+esc(title)+' ('+esc(b.PassengerName)+')</td><td><span class="status-badge st-PENDING">BOOKING</span></td><td style="color:#b91c1c;font-weight:800;">- PKR '+amt.toLocaleString()+'</td><td>—</td><td><span class="status-badge st-'+st+'">'+st+'</span></td></tr>');
         }
       });
       document.getElementById('ldgTotalCredit').textContent = 'PKR ' + credit.toLocaleString();
       document.getElementById('ldgTotalDebit').textContent = 'PKR ' + debit.toLocaleString();
-      document.getElementById('ldgTotaltextContent = 'PKR ' + debit.toLocaleString();
       document.getElementById('ldgTotalRefund').textContent = 'PKR ' + refund.toLocaleString();
       document.getElementById('ldgNetBalance').textContent = 'PKR ' + Number(walletBal || 0).toLocaleString();
-      document.getElementById('ledgerTableBody').innerHTML = rows.length ? rows.Refund').textContent = 'PKR ' + refund.toLocaleString();
-      document.getElementById('ldgNetBalance').textContent = 'PKR ' + Number(walletBal || 0).toLocaleString();
-      document.getElementById('ledgerTableBody').innerHTML = rows.length ? rows.joinjoin('') : '<tr><td colspan="7" style="text-align:center;color:#64748b;padding:18px;">No ledger entries yet.</td></tr>';
+      document.getElementById('ledgerTableBody').innerHTML = rows.length ? rows.join('') : '<tr><td colspan="7" style="text-align:center;color:#64748b;padding:18px;">No ledger entries yet.</td></tr>';
     }
    function openBookingModal(cat, title, fare) {
       selectedItem = { Category: cat, Title: title, FarePKR: fare };

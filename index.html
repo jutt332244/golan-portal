@@ -765,7 +765,8 @@ var API_URL = '/api/backend';
 window.__ALL_BOOKINGS__ = res.bookings || [];
 renderBookingsTable(res.isAdmin);
         try {
-          var depB = document.getElementById('adminDepositsBody');
+          var depB = document.getElementById('adminDepositsBody') || Array.prototype.slice.call(document.querySelectorAll('#tab-admin .card'))
+            .filter(function(c){ return c.textContent.indexOf('Deposit Limit Requests') !== -1; }).map(function(c){ return c.querySelector('tbody'); }).at(0);
           if (depB) {
             var deps = res.deposits || [];
             depB.innerHTML = deps.length ? deps.map(function(d) {
@@ -784,7 +785,8 @@ renderBookingsTable(res.isAdmin);
                 '<td>' + act + '</td></tr>';
             }).join('') : '<tr><td colspan="8" style="text-align:center;color:#64748b;padding:16px;">No deposit requests yet.</td></tr>';
           }
-          var agB = document.getElementById('adminAgentsBody');
+          var agB = document.getElementById('adminAgentsBody') || document.getElementById('agentsTableBody') || Array.prototype.slice.call(document.querySelectorAll('#tab-admin .card'))
+            .filter(function(c){ return c.textContent.indexOf('Sub-Agent Wallet Limit') !== -1; }).map(function(c){ return c.querySelector('tbody'); }).at(0);
           if (agB) {
             var ags = res.agents || [];
             agB.innerHTML = ags.length ? ags.map(function(ag) {

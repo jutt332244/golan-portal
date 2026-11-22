@@ -1,4 +1,4 @@
-   const crypto = require('crypto');
+const crypto = require('crypto');
 
 const SB_HOST = ['https:', '', ['yxnygfbamkvzgskgoxoy', 'supabase', 'co'].join('.')].join('/');
 const SB_URL = process.env.SUPABASE_URL || process.env.STORAGE_SUPABASE_URL || SB_HOST;
@@ -110,7 +110,7 @@ function verifyTotp(secret, code) {
   return false;
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   try {
     const p = Object.assign({}, req.query || {}, typeof req.body === 'object' && req.body ? req.body : {});
     const action = p.action || '';
@@ -171,7 +171,7 @@ export default async function handler(req, res) {
 
     if (action === 'checkSession') return res.json({ ok: true, agencyName: a.AgencyName, isAdmin, expiry: a.SessionExpiry });
 
-    if (action === 'getDashboardData') {
+    if (action === 'getDashboardData' || action === 'getDashboard') {
       const bookings = isAdmin ? DB.bookings : DB.bookings.filter(b => b.AgentEmail === email);
       const deposits = isAdmin ? (DB.deposits || []) : (DB.deposits || []).filter(d => d.AgentEmail === email);
       const agents = isAdmin ? Object.values(DB.agents).map(x => ({
@@ -209,7 +209,7 @@ export default async function handler(req, res) {
           'Authorization': 'Bearer ' + DUFFEL_KEY,
           'Duffel-Version': 'v2',
           'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+          'Accept': 'application/json'
         },
         body: JSON.stringify({
           data: {
@@ -225,11 +225,11 @@ export default async function handler(req, res) {
         return res.json({ ok: false, message: 'GDS Response Error (' + r.status + '): ' + rawTxt.slice(0, 100) });
       }
       if (!r.ok || !json.data || !Array.isArray(json.data.offers) || json.data.offers.length === 0) {
-        const errMsg = (json.errors && json.errors && json.errors.message) || 'No live flights found for ' + origin + ' → ' + dest + ' on ' + date + '.';
+        const errMsg = (json.errors && json.errors[0] && json.errors[0].message) || 'No live flights found for ' + origin + ' → ' + dest + ' on ' + date + '.';
         return res.json({ ok: false, message: errMsg });
       }
       const USD_TO_PKR = 280;
-          const AIRLINE_POOL = [
+      const AIRLINE_POOL = [
         { name: 'Emirates', code: 'EK', num: '623' },
         { name: 'flydubai', code: 'FZ', num: '392' },
         { name: 'Pakistan International Airlines (PIA)', code: 'PK', num: '221' },
@@ -237,9 +237,9 @@ export default async function handler(req, res) {
         { name: 'Qatar Airways', code: 'QR', num: '629' }
       ];
       const offers = json.data.offers.slice(0, 15).map((o, idx) => {
-        const slice = o.slices && o.slices.at(0);
-        const seg0 = slice && slice.segments && slice.segments.at(0);
-        const segLast = slice && slice.segments && slice.segments.at(-1);
+        const slice = o.slices && o.slices[0];
+        const seg0 = slice && slice.segments && slice.segments[0];
+        const segLast = slice && slice.segments && slice.segments[slice.segments.length - 1];
         const stops = slice && slice.segments ? slice.segments.length - 1 : 0;
         const sim = AIRLINE_POOL[idx % AIRLINE_POOL.length];
         let rawAirline = (seg0 && seg0.operating_carrier && seg0.operating_carrier.name) || (seg0 && seg0.marketing_carrier && seg0.marketing_carrier.name) || (o.owner && o.owner.name) || '';
@@ -248,17 +248,19 @@ export default async function handler(req, res) {
         const flightNo = isDummy ? (sim.code + '-' + sim.num) : (seg0 && seg0.marketing_carrier ? (seg0.marketing_carrier.iata_code + '-' + seg0.marketing_carrier_flight_number) : sim.code + '-' + sim.num);
         const depTime = seg0 && seg0.departing_at ? seg0.departing_at.replace('T', ' ').slice(0, 16) : (date + ' 04:15');
         const arrTime = segLast && segLast.arriving_at ? segLast.arriving_at.replace('T', ' ').slice(0, 16) : (date + ' 07:45');
-
         const rawAmt = Number(o.total_amount || 0);
         const farePKR = o.total_currency === 'PKR' ? Math.round(rawAmt) : Math.round(rawAmt * USD_TO_PKR);
         return {
           OfferID: o.id,
           Airline: airline,
           FlightNo: flightNo,
+          Origin: origin,
+          Dest: dest,
           Route: tripType === 'roundtrip' ? (origin + ' ⇄ ' + dest) : (tripType === 'multicity' ? (origin + '→' + dest + ' / ' + origin2 + '→' + dest2) : (origin + ' → ' + dest)),
           Stops: stops === 0 ? 'Non-Stop Direct' : stops + ' Stop(s)',
           DepTime: depTime,
           ArrTime: arrTime,
+          Baggage: '23-30 KG Checked + 7 KG Hand Carry',
           Luggage: '23-30 KG Checked + 7 KG Hand Carry',
           FarePKR: farePKR
         };
@@ -279,11 +281,12 @@ export default async function handler(req, res) {
       await saveDB(DB);
       return res.json({ ok: true, message: 'Please contact us Head Office' });
     }
+
     if (action === 'addBooking') {
       const fare = Number(p.farePKR || 0);
       const itStr = String(p.itemTitle || '');
       const dMatch = itStr.match(/\{DATE:(\d{4}-\d{2}-\d{2})/);
-      const depMs = dMatch ? Date.parse(dMatch + 'T12:00:00Z') : (Date.now() + 10 * 86400000);
+      const depMs = (dMatch && dMatch[1]) ? Date.parse(dMatch[1] + 'T12:00:00Z') : (Date.now() + 10 * 86400000);
       const hrsToDep = (depMs - Date.now()) / 3600000;
       const isLCC = /flyjinnah|airsial|airblue|serene|flydubai|airarabia|jazeera|salam/i.test(itStr);
       let holdMins = 1440;
@@ -320,7 +323,7 @@ export default async function handler(req, res) {
         Status: 'PENDING'
       });
       await saveDB(DB);
-      const gasUrl = 'https://script.' + 'google' + '.com/macros/s/AKfycbyw4rKuL8HLL7zrBjrYIzcxJs2ZLsOY2LcoM7lWQ4LPT0lmkDL0jbAr4vQIIArxofTGjQ/exec';
+      const gasUrl = 'https://script.google.com/macros/s/AKfycbyw4rKuL8HLL7zrBjrYIzcxJs2ZLsOY2LcoM7lWQ4LPT0lmkDL0jbAr4vQIIArxofTGjQ/exec';
       const recipients = [email, paxMail, 'golaninternational322@gmail.com', 'sj3296521759@gmail.com', ...(DB.admins || [])].filter((v, idx, arr) => v && v.includes('@') && arr.indexOf(v) === idx).join(',');
       let mailNote = '';
       try {
@@ -345,14 +348,15 @@ export default async function handler(req, res) {
       }
       if (p.pnr && String(p.pnr).trim()) bk.PNR = String(p.pnr).trim().toUpperCase();
       bk.TicketNo = String(p.ticketNo || '').trim();
-      const gasUrl = 'https://script.' + 'google' + '.com/macros/s/AKfycbyw4rKuL8HLL7zrBjrYIzcxJs2ZLsOY2LcoM7lWQ4LPT0lmkDL0jbAr4vQIIArxofTGjQ/exec';
+      bk.Status = 'CONFIRMED';
+      await saveDB(DB);
+const gasUrl = 'https://script.google.com/macros/s/AKfycbyw4rKuL8HLL7zrBjrYIzcxJs2ZLsOY2LcoM7lWQ4LPT0lmkDL0jbAr4vQIIArxofTGjQ/exec';
       const recipients = [bk.AgentEmail, bk.PassengerEmail, 'golaninternational322@gmail.com', 'sj3296521759@gmail.com', ...(DB.admins || [])].filter((v, idx, arr) => v && v.includes('@') && arr.indexOf(v) === idx).join(',');
       try {
         const r = await fetch(gasUrl + '?action=sendVoucher&to=' + encodeURIComponent(recipients) + '&bId=' + encodeURIComponent(bk.BookingID) + '&dtStr=' + encodeURIComponent(bk.CreatedAt || '') + '&agencyName=' + encodeURIComponent(bk.AgencyName || '') + '&paxName=' + encodeURIComponent(bk.PassengerName || '') + '&passportNo=' + encodeURIComponent(bk.PassportNo || '') + '&category=' + encodeURIComponent(bk.Category || '') + '&itemTitle=' + encodeURIComponent(bk.ItemTitle || '') + '&farePKR=' + encodeURIComponent(fare) + '&statusTxt=' + encodeURIComponent('ISSUED / CONFIRMED (PNR: ' + (bk.PNR || '') + (bk.TicketNo ? ' | TKT: ' + bk.TicketNo : '') + ')'), { method: 'GET', redirect: 'follow' });
         await r.text();
       } catch (e) {}
-
-       return res.json({ ok: true, message: 'Ticket Issued & CONFIRMED! PNR: ' + bk.PNR });
+      return res.json({ ok: true, message: 'Ticket Issued & CONFIRMED! PNR: ' + bk.PNR });
     }
 
     if (action === 'adminDeleteBooking' && isAdmin) {
@@ -362,6 +366,7 @@ export default async function handler(req, res) {
       await saveDB(DB);
       return res.json({ ok: true, message: 'Booking deleted permanently!' });
     }
+
     if (action === 'adminCancelBooking' && isAdmin) {
       const bk = DB.bookings.find(b => b.BookingID === p.bookingId);
       if (!bk) return res.json({ ok: false, message: 'Booking not found.' });
@@ -437,4 +442,3 @@ export default async function handler(req, res) {
     return res.status(200).json({ ok: false, message: 'Backend Error: ' + err.message });
   }
 };
-

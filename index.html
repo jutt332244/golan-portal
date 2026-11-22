@@ -444,25 +444,42 @@
                 if (st) { st.style.color = '#b45309'; st.textContent = 'Receipt scanner unavailable — please enter the deposit amount manually.'; }
               });
             });
-             var depForm = inp ? inp.closest('form') : null;
+    function showHeadOfficeBanner() {
+    var host = document.querySelector('.main') || document.getElementById('tab-banks');
+    if (!host) return;
+    var box = document.getElementById('golanHeadOfficeNotice');
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'golanHeadOfficeNotice';
+      host.insertBefore(box, host.firstChild);
+    }
+    box.style.cssText = 'background:linear-gradient(135deg,#0b1f44,#1e3a8a);' +
+      'color:#fff;border-left:5px solid #f59e0b;padding:14px 18px;' +
+      'border-radius:10px;margin:0 0 16px 0;box-shadow:0 6px 18px rgba(11,31,68,0.18);';
+    box.innerHTML = '<div style="font-size:14px;font-weight:800;color:#fbbf24;">' +
+      'DEPOSIT SLIP SUBMITTED — PLEASE CONTACT HEAD OFFICE</div>' +
+      '<div style="font-size:12.5px;margin-top:4px;line-height:1.5;color:#f8fafc;">' +
+      'Thank you. Your payment receipt has been received for verification. ' +
+      'Please contact <strong>Golan International Head Office (0345-3326318)</strong> ' +
+      'for confirmation and wallet credit approval.</div>';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  var depForm = inp ? inp.closest('form') : null;
   if (depForm) {
     depForm.addEventListener('submit', function() {
-      setTimeout(function() {
-        var tab = document.getElementById('tab-banks') || depForm.parentElement;
-        if (!tab) return;
-        var box = document.getElementById('golanHeadOfficeNotice');
-        if (!box) {
-          box = document.createElement('div');
-          box.id = 'golanHeadOfficeNotice';
-          tab.insertBefore(box, tab.firstChild);
-        }
-        box.style.cssText = 'background:linear-gradient(135deg,#0b1f44,#1e3a8a);color:#fff;border-left:5px solid #f59e0b;padding:14px 18px;border-radius:10px;margin-bottom:16px;box-shadow:0 6px 18px rgba(11,31,68,0.18);';
-        box.innerHTML = '<div style="font-size:14px;font-weight:800;letter-spacing:0.3px;color:#fbbf24;">DEPOSIT SLIP SUBMITTED — PLEASE CONTACT HEAD OFFICE</div>' +
-          '<div style="font-size:12.5px;margin-top:4px;line-height:1.5;color:#f8fafc;">Thank you. Your payment receipt has been received for verification. Please contact <strong>Golan International Head Office (0345-3326318)</strong> for immediate confirmation and wallet credit approval.</div>';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }, 150);
+      setTimeout(showHeadOfficeBanner, 100);
     });
+    var subBtn = depForm.querySelector('button[type="submit"]');
+    if (subBtn) {
+      subBtn.addEventListener('click', function() {
+        var amt = document.getElementById('depAmount');
+        if (amt && Number(amt.value) >= 100 && inp.files && inp.files.length > 0) {
+          setTimeout(showHeadOfficeBanner, 250);
+        }
+      });
+    }
   }
+
 
           })();
           </script>

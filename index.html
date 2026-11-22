@@ -846,9 +846,6 @@ renderBookingsTable(res.isAdmin);
         if (d && d.ok) { window.__LAST_DASH_RES__ = d; loadDashboardData(); }
       });
     }
-
-    }
-
     function switchTab(name, btn) {
       ['fares','bookings','banks','admin'].forEach(function(t) { document.getElementById('tab-'+t).classList.add('hidden'); });
       document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });

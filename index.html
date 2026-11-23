@@ -72,9 +72,13 @@
     .bank-card .mono { font-family:monospace; font-size:14px; font-weight:800; color:#fff; }
     .admin-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
     table { width:100%; border-collapse:collapse; font-size:12px; }
-    th { background:#f1f5f9; text-align:left; padding:10px 8px; color:#0b1f44; font-weight:800; font-size:11px; text-transform:uppercase; border-bottom:2px solid #cbd5e1; white-space:nowrap; }
-    td { padding:10px 8px; border-bottom:1px solid var(--border); vertical-align:middle; }
-    .status-badge { padding:3px 9px; border-radius:99px; font-size:10.5px; font-weight:800; display:inline-block; white-space:nowrap; }
+    th { background:#f1f5f9; text-align:left; padding:9px 7px; color:#0b1f44; font-weight:800; font-size:10.5px; text-transform:uppercase; border-bottom:2px solid #cbd5e1; line-height:1.25; }
+    td { padding:9px 7px; border-bottom:1px solid var(--border); vertical-align:middle; }
+    #tab-bookings table { width:100%; table-layout:auto; font-size:11.5px; }
+    #tab-bookings th, #tab-bookings td { padding:8px 6px; word-break:break-word; }
+    .act-wrap { display:flex; flex-wrap:wrap; gap:4px; min-width:105px; max-width:135px; }
+    .act-wrap .btn-sm { padding:4px 7px; font-size:10.5px; margin:0 !important; }
+    .status-badge { padding:3px 8px; border-radius:99px; font-size:10px; font-weight:800; display:inline-block; white-space:nowrap; }
     .st-APPROVED, .st-CONFIRMED, .st-ACTIVE, .st-ISSUED { background:#dcfce7; color:#166534; }
     .st-PENDING { background:#fef3c7; color:#92400e; }
     .st-BLOCKED, .st-CANCELED, .st-EXPIRED { background:#fee2e2; color:#991b1b; }
@@ -297,8 +301,8 @@
               <button type="button" class="btn btn-sm" style="background:#e2e8f0; color:#0f172a;" onclick="document.getElementById('adminBookingSearchInput').value='';filterBookingsTable();">✕</button>
             </div>
           </div>
-          <div style="overflow-x:auto;">
-            <table><thead><tr><th>Booking ID</th><th>Date</th><th>Passenger &amp; Passport</th><th>Package / Flight</th><th>PNR / Ticket</th><th>Fare (PKR)</th><th>Status &amp; Hold Timer</th><th>Action</th></tr></thead><tbody id="bookingsTableBody"></tbody></table>
+          <div>
+            <table><thead><tr><th>Booking ID</th><th>Date</th><th>Passenger &amp; Passport</th><th>Package / Flight</th><th>PNR / Ticket</th><th>Fare (PKR)</th><th>Status &amp; Timer</th><th>Action</th></tr></thead><tbody id="bookingsTableBody"></tbody></table>
           </div>
         </div>
 
@@ -310,10 +314,10 @@
             <div id="headOfficeContactBanner" class="hidden" style="margin-bottom:12px; background:#fef3c7; border:1px solid #f59e0b; border-left:5px solid #b45309; border-radius:8px; padding:10px 12px; color:#78350f; font-size:12px;"><strong>📞 Please contact Head Office</strong> — Deposit slip submitted for verification.</div>
             <h4 style="color:#0b1f44; margin-bottom:6px;">📎 Smart Slip Upload (Auto-Amount Detection)</h4>
             <form onsubmit="handleInstantSlipUpload(event)">
-              <div class="form-group"><label>1. Select Deposited Bank Account *</label><select id="depBank" required><option value="UBL (384263615)">UBL (United Bank Limited) - 384263615</option></select></div>
+              <div class="form-group"><label>1. Select Deposited Bank Account *</label><select id="depBank" required><option value="UBL (384263615)">UBL (United Bank Limited) — 384263615</option></select></div>
               <div class="form-group"><label>2. Attach Deposit Slip (Image) *</label><input type="file" id="depSlipFile" accept="image/*" onchange="autoScanBankSlip(this)" required style="background:#fff; border:1.5px dashed #163b7a;" /><div id="slipScanStatus" style="margin-top:5px; font-size:11.5px; font-weight:700; color:#1d4ed8;"></div></div>
               <div class="form-group"><label>3. Amount Deposited (PKR) *</label><input type="number" id="depAmount" placeholder="Auto-filled or enter PKR amount" min="100" required /></div>
-              <div class="form-group"><label>4. Transaction ID / Reference *</label><input type="text" id="depRef" placeholder="Auto-filled or enter TID" required /></div>
+              <input type="hidden" id="depRef" value="SLIP-AUTO" />
               <button type="submit" id="slipUploadBtn" class="btn btn-green">✅ Submit Deposit Slip</button>
             </form>
           </div>
@@ -690,10 +694,13 @@
         if (bankSel) {
           var prevBank = bankSel.value;
           bankSel.innerHTML = banks.map(function(bk) {
-            var val = bk.BankName + ' (' + bk.AccountNumber + ')';
-            return '<option value="'+esc(val)+'">'+esc(bk.BankName)+' — '+esc(bk.AccountNumber)+'</option>';
+            var acc = bk.AccountNumber ? ' (' + bk.AccountNumber + ')' : '';
+            var val = (bk.BankName || 'Bank') + acc;
+            return '<option value="'+esc(val)+'">'+esc(bk.BankName || 'Bank')+(bk.AccountNumber ? ' — '+esc(bk.AccountNumber) : '')+'</option>';
           }).join('');
-          if (prevBank) bankSel.value = prevBank;
+          var hasPrev = Array.prototype.some.call(bankSel.options, function(opt) { return opt.value === prevBank; });
+          if (hasPrev) bankSel.value = prevBank;
+          else if (bankSel.options.length) bankSel.selectedIndex = 0;
         }
 
         renderBookingsTable(res.isAdmin);
@@ -793,15 +800,17 @@
 
       document.getElementById('bookingsTableBody').innerHTML = list.length ? list.map(function(b) {
         var cleanTitle = String(b.ItemTitle || '').replace(/\s*\{DATE:.*?\}/g, '');
+        var dtParts = String(b.CreatedAt || '').split(',');
+        var dateHtml = dtParts.length > 1 ? ('<div>'+esc(dtParts[0])+'</div><small style="color:#64748b;">'+esc(dtParts.slice(1).join(',').trim())+'</small>') : esc(b.CreatedAt);
         var st = String(b.Status || 'PENDING').toUpperCase(), isExp = (st === 'PENDING' && b.HoldUntil && now > Number(b.HoldUntil)), badgeSt = isExp ? 'EXPIRED' : st;
-        var timerHtml = (st === 'PENDING' && b.HoldUntil && !isExp) ? '<br><span class="live-timer" data-until="'+esc(b.HoldUntil)+'" style="color:#dc2626;font-weight:800;font-size:11px;font-family:monospace;">⏳ ...</span>' : '';
-        var pnrHtml = '<span style="background:#0b1f44;color:#fbbf24;padding:3px 8px;border-radius:6px;font-family:monospace;font-weight:800;">'+esc(b.PNR||'PENDING')+'</span>' + (b.TicketNo ? '<div style="font-size:10.5px;color:#15803d;font-weight:700;margin-top:3px;">TKT: '+esc(b.TicketNo)+'</div>' : '');
+        var timerHtml = (st === 'PENDING' && b.HoldUntil && !isExp) ? '<br><span class="live-timer" data-until="'+esc(b.HoldUntil)+'" style="color:#dc2626;font-weight:800;font-size:10.5px;font-family:monospace;">⏳ ...</span>' : '';
+        var pnrHtml = '<span style="background:#0b1f44;color:#fbbf24;padding:3px 7px;border-radius:6px;font-family:monospace;font-weight:800;">'+esc(b.PNR||'PENDING')+'</span>' + (b.TicketNo ? '<div style="font-size:10px;color:#15803d;font-weight:700;margin-top:3px;">TKT: '+esc(b.TicketNo)+'</div>' : '');
         var bid = esc(b.BookingID), btns = '';
-        if (isAdmin && st === 'PENDING') btns += '<button type="button" class="btn btn-sm btn-green" style="margin:2px;" data-bid="'+bid+'" onclick="adminIssueGolanTicket(this.getAttribute(\'data-bid\'))">✓ Issue</button>';
-        if (isAdmin && st !== 'CANCELED') btns += '<button type="button" class="btn btn-sm btn-red" style="margin:2px;" data-bid="'+bid+'" onclick="adminCancelGolanTicket(this.getAttribute(\'data-bid\'))">✕ Cancel</button>';
-        btns += '<button type="button" class="btn btn-sm btn-primary" style="margin:2px;" data-bid="'+bid+'" onclick="printSingleGolanTicket(this.getAttribute(\'data-bid\'))">🖨 PDF</button>';
-        if (isAdmin) btns += '<button type="button" class="btn btn-sm" style="margin:2px;background:#e2e8f0;color:#991b1b;" data-bid="'+bid+'" onclick="deleteBookingAdmin(this.getAttribute(\'data-bid\'))">🗑️</button>';
-        return '<tr><td><b>'+bid+'</b><br><small style="color:#64748b;">'+esc(b.AgencyName)+'</small></td><td style="white-space:nowrap;">'+esc(b.CreatedAt)+'</td><td><b>'+esc(b.PassengerName)+'</b><br><small>PP: '+esc(b.PassportNo)+' | '+esc(b.PaxMobile||'-')+'</small></td><td>'+esc(cleanTitle)+'</td><td>'+pnrHtml+'</td><td style="font-weight:800;color:#15803d;white-space:nowrap;">PKR '+Number(b.FarePKR||0).toLocaleString()+'</td><td><span class="status-badge st-'+esc(badgeSt)+'">'+esc(badgeSt)+'</span>'+timerHtml+'</td><td style="white-space:nowrap;">'+btns+'</td></tr>';
+        if (isAdmin && st === 'PENDING') btns += '<button type="button" class="btn btn-sm btn-green" data-bid="'+bid+'" onclick="adminIssueGolanTicket(this.getAttribute(\'data-bid\'))">✓ Issue</button>';
+        if (isAdmin && st !== 'CANCELED') btns += '<button type="button" class="btn btn-sm btn-red" data-bid="'+bid+'" onclick="adminCancelGolanTicket(this.getAttribute(\'data-bid\'))">✕ Cancel</button>';
+        btns += '<button type="button" class="btn btn-sm btn-primary" data-bid="'+bid+'" onclick="printSingleGolanTicket(this.getAttribute(\'data-bid\'))">🖨 PDF</button>';
+        if (isAdmin) btns += '<button type="button" class="btn btn-sm" style="background:#e2e8f0;color:#991b1b;" data-bid="'+bid+'" onclick="deleteBookingAdmin(this.getAttribute(\'data-bid\'))">🗑️</button>';
+        return '<tr><td><b>'+bid+'</b><br><small style="color:#64748b;">'+esc(b.AgencyName)+'</small></td><td>'+dateHtml+'</td><td><b>'+esc(b.PassengerName)+'</b><br><small>PP: '+esc(b.PassportNo)+'<br>'+esc(b.PaxMobile||'-')+'</small></td><td>'+esc(cleanTitle)+'</td><td>'+pnrHtml+'</td><td style="font-weight:800;color:#15803d;">PKR '+Number(b.FarePKR||0).toLocaleString()+'</td><td><span class="status-badge st-'+esc(badgeSt)+'">'+esc(badgeSt)+'</span>'+timerHtml+'</td><td><div class="act-wrap">'+btns+'</div></td></tr>';
       }).join('') : '<tr><td colspan="8" style="text-align:center;color:#64748b;padding:20px;">No bookings yet.</td></tr>';
     }
 
@@ -1237,9 +1246,9 @@
             st.textContent = '✅ Auto-Detected: PKR ' + amt.toLocaleString();
           } else {
             st.style.color = '#b45309';
-            st.textContent = '⚠️ Slip unclear — please enter amount & TID manually.';
+            st.textContent = '⚠️ Slip unclear — please enter amount manually.';
           }
-        }).catch(function() { st.style.color = '#b45309'; st.textContent = '⚠️ Enter amount & TID manually.'; });
+        }).catch(function() { st.style.color = '#b45309'; st.textContent = '⚠️ Enter amount manually.'; });
       };
       if (window.Tesseract) runOcr();
       else {
@@ -1254,7 +1263,8 @@
       e.preventDefault();
       var amt = Number(document.getElementById('depAmount').value || 0);
       var ref = (document.getElementById('depRef').value || ('SLIP-' + Date.now().toString().slice(-6))).trim();
-      var bank = (document.getElementById('depBank').value || 'UBL (384263615)').trim();
+      var bankSel = document.getElementById('depBank');
+      var bank = (bankSel && bankSel.value) ? bankSel.value.trim() : 'UBL (384263615)';
       if (amt < 100) { alert('Minimum deposit PKR 100.'); return; }
       var btn = document.getElementById('slipUploadBtn');
       btn.disabled = true; btn.textContent = '⏳ Submitting...';
@@ -1263,6 +1273,8 @@
           document.getElementById('headOfficeContactBanner').classList.remove('hidden');
           alert('📞 Deposit request submitted! Please contact Head Office for approval.');
           e.target.reset();
+          document.getElementById('depRef').value = 'SLIP-AUTO';
+          if (bankSel && bankSel.options.length) bankSel.selectedIndex = 0;
           document.getElementById('slipScanStatus').textContent = '';
           loadDashboardData();
         } else {
@@ -1358,4 +1370,3 @@
   </div>
 </body>
 </html>
-

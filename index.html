@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -66,7 +66,7 @@
     .j-card:hover { transform:translateY(-2px); box-shadow:0 6px 16px rgba(15,23,42,0.08); }
     .search-row { display:grid; grid-template-columns:1.3fr auto 1.3fr 1fr 1fr auto; gap:10px; align-items:end; }
     .bank-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px; }
-    .bank-card { background:linear-gradient(135deg,#071530,#163b7a); color:#fff; padding:18px; border-radius:14px; border-bottom:3px solid var(--gold); box-shadow:0 8px 20px rgba(11,31,68,0.16); }
+    .bank-card { background:linear-gradient(135deg,#071530,#163b7a); color:#fff; padding:18px; border-radius:14px; border-bottom:3px solid var(--gold); box-shadow:0 8px 20px rgba(11,31,68,0.16); position:relative; }
     .bank-card h4 { color:#fbbf24; font-size:14.5px; margin-bottom:8px; }
     .bank-card p { font-size:12.5px; margin:4px 0; color:#e2e8f0; }
     .bank-card .mono { font-family:monospace; font-size:14px; font-weight:800; color:#fff; }
@@ -76,7 +76,7 @@
     td { padding:9px 7px; border-bottom:1px solid var(--border); vertical-align:middle; }
     #tab-bookings table { width:100%; table-layout:auto; font-size:11.5px; }
     #tab-bookings th, #tab-bookings td { padding:8px 6px; word-break:break-word; }
-    .act-wrap { display:flex; flex-wrap:wrap; gap:4px; min-width:105px; max-width:135px; }
+    .act-wrap { display:flex; flex-wrap:wrap; gap:4px; min-width:105px; max-width:140px; }
     .act-wrap .btn-sm { padding:4px 7px; font-size:10.5px; margin:0 !important; }
     .status-badge { padding:3px 8px; border-radius:99px; font-size:10px; font-weight:800; display:inline-block; white-space:nowrap; }
     .st-APPROVED, .st-CONFIRMED, .st-ACTIVE, .st-ISSUED { background:#dcfce7; color:#166534; }
@@ -361,7 +361,7 @@
               </form>
             </div>
             <div class="card">
-              <h3>🏦 Add Official Payment Account</h3>
+              <h3>🏦 Manage Official Payment Accounts</h3>
               <form onsubmit="handleAdminAddBank(event)">
                 <div class="form-group"><label>Bank / Wallet Name</label><input type="text" id="bankName" required /></div>
                 <div class="form-group"><label>Account Title</label><input type="text" id="bankTitle" value="Golan International Travel & Tourism" required /></div>
@@ -369,12 +369,26 @@
                 <div class="form-group"><label>IBAN</label><input type="text" id="bankIban" /></div>
                 <button type="submit" id="addBankBtn" class="btn btn-gold">Add Payment Account</button>
               </form>
+              <div style="margin-top:16px; border-top:1px solid var(--border); padding-top:12px;">
+                <h4 style="font-size:13px; color:var(--navy); margin-bottom:8px;">Active Accounts (Click Remove to Delete)</h4>
+                <div id="adminBanksList" style="display:flex; flex-direction:column; gap:6px;"></div>
+              </div>
             </div>
           </div>
           <div class="card"><h3>💰 Deposit Limit Requests</h3><div style="overflow-x:auto;"><table><thead><tr><th>ID</th><th>Date</th><th>Agency</th><th>Bank</th><th>Amount</th><th>Slip / TID</th><th>Status</th><th>Action</th></tr></thead><tbody id="adminDepositsBody"></tbody></table></div></div>
           <div class="card"><h3>🛡️ Sub-Agent Wallet &amp; Security Control</h3><div style="overflow-x:auto;"><table><thead><tr><th>Agency</th><th>Email</th><th>City / Mobile</th><th>Wallet (PKR)</th><th>Status</th><th>Controls</th></tr></thead><tbody id="adminAgentsBody"></tbody></table></div></div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <div id="attachmentModal" class="hidden" style="position:fixed; inset:0; background:rgba(15,23,42,0.75); z-index:99999; display:flex; align-items:center; justify-content:center; padding:16px;">
+    <div style="background:#fff; border-radius:16px; max-width:650px; width:100%; overflow:hidden; box-shadow:0 20px 45px rgba(0,0,0,0.35);">
+      <div style="background:#0b1f44; color:#fff; padding:14px 18px; display:flex; justify-content:space-between; align-items:center;">
+        <strong id="attachmentModalTitle" style="font-size:15px;">📎 Uploaded Document</strong>
+        <button type="button" onclick="document.getElementById('attachmentModal').classList.add('hidden')" style="border:1px solid rgba(255,255,255,0.3); background:transparent; color:#fff; border-radius:6px; padding:4px 10px; cursor:pointer;">Close ✕</button>
+      </div>
+      <div id="attachmentModalBody" style="padding:18px; max-height:78vh; overflow-y:auto; text-align:center;"></div>
     </div>
   </div>
 
@@ -470,12 +484,44 @@
     }
 
     function callBackend(payload) {
-      var qs = Object.keys(payload).map(function(k) {
-        return encodeURIComponent(k) + '=' + encodeURIComponent(payload[k] == null ? '' : payload[k]);
-      }).join('&');
-      return fetch(API_URL + '?' + qs).then(function(r) {
+      return fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload || {})
+      }).then(function(r) {
         if (!r.ok) throw new Error('Server error (' + r.status + ')');
         return r.json();
+      });
+    }
+
+    function compressFileToDataUrl(file, maxW, quality) {
+      return new Promise(function(resolve, reject) {
+        if (!file) return resolve('');
+        if (file.type === 'application/pdf') {
+          if (file.size > 400000) return reject(new Error('PDF file must be under 400 KB (or upload a photo/image).'));
+          var rd = new FileReader();
+          rd.onload = function() { resolve(rd.result || ''); };
+          rd.onerror = function() { reject(new Error('Could not read PDF file.')); };
+          rd.readAsDataURL(file);
+          return;
+        }
+        var reader = new FileReader();
+        reader.onload = function(ev) {
+          var img = new Image();
+          img.onload = function() {
+            var w = img.width, h = img.height;
+            if (w > maxW) { h = Math.round(h * (maxW / w)); w = maxW; }
+            var c = document.createElement('canvas');
+            c.width = w; c.height = h;
+            var ctx = c.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            resolve(c.toDataURL('image/jpeg', quality || 0.65));
+          };
+          img.onerror = function() { reject(new Error('Invalid image file.')); };
+          img.src = ev.target.result;
+        };
+        reader.onerror = function() { reject(new Error('Could not read file.')); };
+        reader.readAsDataURL(file);
       });
     }
 
@@ -642,7 +688,9 @@
       openBookingModal(
         btn.getAttribute('data-cat') || 'Group Flight',
         btn.getAttribute('data-title') || '',
-        Number(btn.getAttribute('data-fare') || 0)
+        Number(btn.getAttribute('data-fare') || 0),
+        btn.getAttribute('data-fareid') || '',
+        Number(btn.getAttribute('data-holdmins') || 0)
       );
     }
 
@@ -679,16 +727,24 @@
             + (f.Stay ? '<div><b>'+l4+'</b> '+esc(f.Stay)+'</div>' : '')
             + (f.Details ? '<div style="color:#0f4c5c;font-weight:600;">• '+esc(f.Details)+'</div>' : '') + '</div>';
           var fullLabel = f.Category + ' - ' + mainName;
+          var isSoldOut = !isVisa && (String(f.Seats) === '0' || String(f.Seats) === 'Sold Out');
+          var seatBadge = isSoldOut
+            ? '<span class="status-badge st-CANCELED">Sold Out</span>'
+            : '<span class="status-badge st-APPROVED">'+(res.isAdmin && f.Seats ? esc(f.Seats)+' Seats' : 'Available')+'</span>';
+          var delBtn = res.isAdmin ? ' <button type="button" class="btn btn-sm btn-red" data-fareid="'+esc(f.ID)+'" onclick="adminDeleteFareReq(this.getAttribute(\'data-fareid\'))">🗑️</button>' : '';
           return '<tr><td><span class="status-badge st-APPROVED">'+esc(f.Category)+'</span><div style="font-size:11px;color:#64748b;margin-top:4px;">'+esc(f.TravelDate||f.Date||'Open Validity')+'</div></td>'
             + '<td><strong style="font-size:13.5px;color:#0b1f44;">'+esc(mainName)+'</strong>'+meta+'</td>'
-            + '<td><span class="status-badge st-APPROVED">'+(res.isAdmin && f.Seats ? esc(f.Seats)+' Seats' : 'Available')+'</span></td>'
+            + '<td>'+seatBadge+'</td>'
             + '<td><strong style="font-size:13.5px;color:#0b1f44;">PKR '+Number(f.FarePKR||0).toLocaleString()+'</strong></td>'
-            + '<td><button type="button" class="btn btn-sm btn-primary" data-cat="'+esc(f.Category)+'" data-title="'+esc(fullLabel)+'" data-fare="'+Number(f.FarePKR||0)+'" onclick="handleFareBookClick(this)">Book / Hold</button></td></tr>';
+            + '<td style="white-space:nowrap;"><button type="button" class="btn btn-sm btn-primary" '+(isSoldOut?'disabled':'')+' data-cat="'+esc(f.Category)+'" data-title="'+esc(fullLabel)+'" data-fare="'+Number(f.FarePKR||0)+'" data-fareid="'+esc(f.ID||'')+'" data-holdmins="'+Number(f.HoldMins||30)+'" onclick="handleFareBookClick(this)">Book / Hold</button>'+delBtn+'</td></tr>';
         }).join('') : '<tr><td colspan="5" style="text-align:center;color:#64748b;padding:20px;">No active records posted yet.</td></tr>';
 
         var banks = (res.banks && res.banks.length) ? res.banks : DEFAULT_BANKS;
-        document.getElementById('banksGrid').innerHTML = banks.map(function(bk) {
-          return '<div class="bank-card"><h4>🏦 '+esc(bk.BankName)+'</h4><p>Title: <strong>'+esc(bk.AccountTitle)+'</strong></p><p>Account #: <span class="mono">'+esc(bk.AccountNumber)+'</span></p>'+(bk.IBAN?'<p>IBAN: <span class="mono">'+esc(bk.IBAN)+'</span></p>':'')+'</div>';
+        document.getElementById('banksGrid').innerHTML = banks.map(function(bk, idx) {
+          var removeBtn = (res.isAdmin && res.banks && res.banks.length)
+            ? '<button type="button" class="btn btn-sm btn-red" style="margin-top:10px;" data-bid="'+esc(bk.BankID||'')+'" data-acc="'+esc(bk.AccountNumber||'')+'" data-idx="'+idx+'" onclick="adminDeleteBankReq(this)">🗑️ Remove Account</button>'
+            : '';
+          return '<div class="bank-card"><h4>🏦 '+esc(bk.BankName)+'</h4><p>Title: <strong>'+esc(bk.AccountTitle)+'</strong></p><p>Account #: <span class="mono">'+esc(bk.AccountNumber)+'</span></p>'+(bk.IBAN?'<p>IBAN: <span class="mono">'+esc(bk.IBAN)+'</span></p>':'')+removeBtn+'</div>';
         }).join('');
         var bankSel = document.getElementById('depBank');
         if (bankSel) {
@@ -703,6 +759,15 @@
           else if (bankSel.options.length) bankSel.selectedIndex = 0;
         }
 
+        var adminBanksEl = document.getElementById('adminBanksList');
+        if (adminBanksEl && res.isAdmin) {
+          adminBanksEl.innerHTML = (res.banks && res.banks.length) ? res.banks.map(function(bk, idx) {
+            return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;background:#f8fafc;border:1px solid #e2e8f0;padding:8px 10px;border-radius:8px;font-size:12px;">'
+              + '<div><b>'+esc(bk.BankName)+'</b> — <span style="font-family:monospace;">'+esc(bk.AccountNumber)+'</span></div>'
+              + '<button type="button" class="btn btn-sm btn-red" data-bid="'+esc(bk.BankID||'')+'" data-acc="'+esc(bk.AccountNumber||'')+'" data-idx="'+idx+'" onclick="adminDeleteBankReq(this)">🗑️ Remove</button></div>';
+          }).join('') : '<div style="font-size:12px;color:#64748b;">No custom accounts added yet (showing default UBL).</div>';
+        }
+
         renderBookingsTable(res.isAdmin);
         refreshLedgerAuto(bal);
 
@@ -710,8 +775,10 @@
           var deps = res.deposits || [];
           document.getElementById('adminDepositsBody').innerHTML = deps.length ? deps.map(function(d) {
             var st = String(d.Status || 'PENDING').toUpperCase();
-            var act = st === 'PENDING' ? '<button type="button" class="btn btn-sm btn-green" data-depid="'+esc(d.DepositID)+'" onclick="adminApproveDepositReq(this.getAttribute(\'data-depid\'))">✓ Approve</button>' : '<span style="color:#64748b;font-size:11px;">Credited</span>';
-            return '<tr><td><b>'+esc(d.DepositID)+'</b></td><td>'+esc(d.CreatedAt)+'</td><td><b>'+esc(d.AgencyName||d.AgentEmail)+'</b></td><td>'+esc(d.BankName)+'</td><td style="font-weight:900;color:#15803d;">PKR '+Number(d.AmountPKR||0).toLocaleString()+'</td><td>'+esc(d.TxRef)+'</td><td><span class="status-badge st-'+esc(st)+'">'+esc(st)+'</span></td><td>'+act+'</td></tr>';
+            var did = esc(d.DepositID);
+            var viewBtn = d.HasSlip ? '<button type="button" class="btn btn-sm btn-primary" style="margin-right:4px;" data-did="'+did+'" onclick="viewAttachment(\'deposit\',this.getAttribute(\'data-did\'))">👁️ Slip</button>' : '';
+            var act = st === 'PENDING' ? '<button type="button" class="btn btn-sm btn-green" data-depid="'+did+'" onclick="adminApproveDepositReq(this.getAttribute(\'data-depid\'))">✓ Approve</button>' : '<span style="color:#64748b;font-size:11px;">Credited</span>';
+            return '<tr><td><b>'+did+'</b></td><td>'+esc(d.CreatedAt)+'</td><td><b>'+esc(d.AgencyName||d.AgentEmail)+'</b></td><td>'+esc(d.BankName)+'</td><td style="font-weight:900;color:#15803d;">PKR '+Number(d.AmountPKR||0).toLocaleString()+'</td><td>'+viewBtn+esc(d.TxRef)+'</td><td><span class="status-badge st-'+esc(st)+'">'+esc(st)+'</span></td><td>'+act+'</td></tr>';
           }).join('') : '<tr><td colspan="8" style="text-align:center;color:#64748b;padding:16px;">No deposit requests yet.</td></tr>';
 
           var ags = res.agents || [];
@@ -809,6 +876,7 @@
         if (isAdmin && st === 'PENDING') btns += '<button type="button" class="btn btn-sm btn-green" data-bid="'+bid+'" onclick="adminIssueGolanTicket(this.getAttribute(\'data-bid\'))">✓ Issue</button>';
         if (isAdmin && st !== 'CANCELED') btns += '<button type="button" class="btn btn-sm btn-red" data-bid="'+bid+'" onclick="adminCancelGolanTicket(this.getAttribute(\'data-bid\'))">✕ Cancel</button>';
         btns += '<button type="button" class="btn btn-sm btn-primary" data-bid="'+bid+'" onclick="printSingleGolanTicket(this.getAttribute(\'data-bid\'))">🖨 PDF</button>';
+        if (isAdmin && b.HasDocs) btns += '<button type="button" class="btn btn-sm btn-gold" data-bid="'+bid+'" onclick="viewAttachment(\'booking\',this.getAttribute(\'data-bid\'))">📎 Docs</button>';
         if (isAdmin) btns += '<button type="button" class="btn btn-sm" style="background:#e2e8f0;color:#991b1b;" data-bid="'+bid+'" onclick="deleteBookingAdmin(this.getAttribute(\'data-bid\'))">🗑️</button>';
         return '<tr><td><b>'+bid+'</b><br><small style="color:#64748b;">'+esc(b.AgencyName)+'</small></td><td>'+dateHtml+'</td><td><b>'+esc(b.PassengerName)+'</b><br><small>PP: '+esc(b.PassportNo)+'<br>'+esc(b.PaxMobile||'-')+'</small></td><td>'+esc(cleanTitle)+'</td><td>'+pnrHtml+'</td><td style="font-weight:800;color:#15803d;">PKR '+Number(b.FarePKR||0).toLocaleString()+'</td><td><span class="status-badge st-'+esc(badgeSt)+'">'+esc(badgeSt)+'</span>'+timerHtml+'</td><td><div class="act-wrap">'+btns+'</div></td></tr>';
       }).join('') : '<tr><td colspan="8" style="text-align:center;color:#64748b;padding:20px;">No bookings yet.</td></tr>';
@@ -836,7 +904,7 @@
       bookings.forEach(function(b) {
         var amt = Number(b.FarePKR || 0), st = String(b.Status || 'PENDING').toUpperCase(), title = String(b.ItemTitle || '').replace(/\s*\{DATE:.*?\}/g, '');
         if (st === 'CANCELED') {
-          var wasPaid = !!b.TicketNo;
+          var wasPaid = !!(b.Refunded || b.WasPaid || b.TicketNo);
           if (wasPaid) refund += amt;
           rows.push('<tr><td>'+esc(b.CreatedAt)+'</td><td><b>'+esc(b.BookingID)+'</b></td><td>'+(wasPaid?'Refund: ':'Hold Released: ')+esc(title)+' ('+esc(b.PassengerName)+')</td><td><span class="status-badge st-CANCELED">'+(wasPaid?'REFUND':'RELEASED')+'</span></td><td>—</td><td style="color:#1d4ed8;font-weight:800;">'+(wasPaid?'+ PKR '+amt.toLocaleString():'PKR 0')+'</td><td><span class="status-badge st-CANCELED">CANCELED</span></td></tr>');
         } else {
@@ -851,8 +919,8 @@
       document.getElementById('ledgerTableBody').innerHTML = rows.length ? rows.join('') : '<tr><td colspan="7" style="text-align:center;color:#64748b;padding:18px;">No ledger entries yet.</td></tr>';
     }
 
-    function openBookingModal(cat, title, fare) {
-      selectedItem = { Category: cat, Title: title, FarePKR: fare };
+    function openBookingModal(cat, title, fare, fareId, holdMins) {
+      selectedItem = { Category: cat, Title: title, FarePKR: fare, FareID: fareId || '', HoldMins: holdMins || 0 };
       var form = document.getElementById('bookingForm');
       if (form) form.reset();
       document.getElementById('paxNat').value = 'Pakistani';
@@ -885,10 +953,12 @@
       document.getElementById('bookingModal').classList.add('hidden');
     }
 
-    function submitBooking(e) {
+    async function submitBooking(e) {
       e.preventDefault();
       if (!selectedItem || isBookingSubmitting) return;
-      if (selectedItem.Category === 'Visit Visa' && !document.getElementById('visaFieldsWrap').classList.contains('hidden')) {
+      var passportDoc = '', photoDoc = '';
+      var isVisa = (selectedItem.Category === 'Visit Visa' && !document.getElementById('visaFieldsWrap').classList.contains('hidden'));
+      if (isVisa) {
         var vName = document.getElementById('visaFullName').value.trim();
         var vPass = document.getElementById('visaPassport').value.trim().toUpperCase();
         var vMob = document.getElementById('visaMobile').value.trim();
@@ -904,8 +974,9 @@
         document.getElementById('paxDob').value = '1995-01-01';
         document.getElementById('paxExp').value = '2030-01-01';
         document.getElementById('paxNat').value = 'Pakistani';
-        document.getElementById('paxMobile').value = vMob + ' [Docs: ' + f1.files[0].name + ', ' + f2.files[0].name + ']';
+        document.getElementById('paxMobile').value = vMob;
       }
+
       var fn = document.getElementById('paxFirstName').value.trim();
       var ln = document.getElementById('paxLastName').value.trim();
       var pp = document.getElementById('paxPassport').value.trim().toUpperCase();
@@ -914,41 +985,47 @@
       if (!/^[A-Z0-9]{6,12}$/.test(pp)) { alert('❌ Invalid Passport Number! Enter 6-12 letters/digits without spaces.'); return; }
       if (!mob || mob.length < 7) { alert('❌ Please enter valid Passenger Mobile / WhatsApp number.'); return; }
 
-      var fullName = fn + ' ' + ln;
-      var paxEm = ((document.getElementById('paxEmail') && document.getElementById('paxEmail').value) || currentEmail).trim();
-      var fullTitle = String(selectedItem.Title || '');
-      if (selectedItem.Category === 'Live Airline') {
-        var o = (window.__GDS_OFFERS__ || [])[ACTIVE_GDS_IDX] || {};
-        if (fullTitle.indexOf('{DATE:') === -1 && o.DepTime) {
-          var tDate = String(o.DepTime).split(' ')[0] || '';
-          fullTitle += ' {DATE:' + tDate + '|DEP:' + (o.DepTime||'') + '|ARR:' + (o.ArrTime||'') + '|DTERM:1|ATERM:1}';
-        }
-      }
-
       var subBtn = document.getElementById('modalSubmitBtn');
       isBookingSubmitting = true;
       subBtn.disabled = true;
       subBtn.textContent = '⏳ Confirming Hold...';
 
-      callBackend({
-        action:'addBooking', email:currentEmail, token:currentToken, passengerName:fullName, passengerEmail:paxEm,
-        passportNo:pp, dob:document.getElementById('paxDob').value, passportExpiry:document.getElementById('paxExp').value,
-        nationality:document.getElementById('paxNat').value, paxMobile:mob,
-        category:selectedItem.Category, itemTitle:fullTitle, farePKR:selectedItem.FarePKR
-      }).then(function(res) {
+      try {
+        if (isVisa) {
+          passportDoc = await compressFileToDataUrl(document.getElementById('visaDocPassport').files[0], 900, 0.65);
+          photoDoc = await compressFileToDataUrl(document.getElementById('visaDocPhoto').files[0], 700, 0.65);
+        }
+        var fullName = fn + ' ' + ln;
+        var paxEm = ((document.getElementById('paxEmail') && document.getElementById('paxEmail').value) || currentEmail).trim();
+        var fullTitle = String(selectedItem.Title || '');
+        if (selectedItem.Category === 'Live Airline') {
+          var o = (window.__GDS_OFFERS__ || [])[ACTIVE_GDS_IDX] || {};
+          if (fullTitle.indexOf('{DATE:') === -1 && o.DepTime) {
+            var tDate = String(o.DepTime).split(' ')[0] || '';
+            fullTitle += ' {DATE:' + tDate + '|DEP:' + (o.DepTime||'') + '|ARR:' + (o.ArrTime||'') + '|DTERM:1|ATERM:1}';
+          }
+        }
+        var res = await callBackend({
+          action:'addBooking', email:currentEmail, token:currentToken, passengerName:fullName, passengerEmail:paxEm,
+          passportNo:pp, dob:document.getElementById('paxDob').value, passportExpiry:document.getElementById('paxExp').value,
+          nationality:document.getElementById('paxNat').value, paxMobile:mob,
+          category:selectedItem.Category, itemTitle:fullTitle, farePKR:selectedItem.FarePKR,
+          fareId:selectedItem.FareID || '', holdMins:selectedItem.HoldMins || 0,
+          passportDoc:passportDoc, photoDoc:photoDoc
+        });
         if (!res || !res.ok) { alert((res && res.message) || 'Booking failed.'); return; }
         closeBookingModal();
         document.getElementById('gdsDetailsModal').classList.add('hidden');
         showProBookingCard(res.bookingId, res.pnr, fullName, pp, selectedItem.Title, selectedItem.FarePKR);
         loadDashboardData();
         switchTab('bookings');
-      }).catch(function(err) {
+      } catch (err) {
         alert('Booking error: ' + err.message);
-      }).finally(function() {
+      } finally {
         isBookingSubmitting = false;
         subBtn.disabled = false;
         subBtn.textContent = 'Hold Booking (PENDING)';
-      });
+      }
     }
 
     function showProBookingCard(id, pnr, pax, pp, itin, fare) {
@@ -1156,6 +1233,13 @@
       });
     }
 
+    function adminDeleteFareReq(fareId) {
+      if (!confirm('Remove this Fare / Package from portal?')) return;
+      callBackend({ action:'adminDeleteFare', email:currentEmail, token:currentToken, fareId:fareId })
+        .then(function(r) { alert((r&&r.message)||'Removed'); loadDashboardData(); })
+        .catch(function(err) { alert('Error: ' + err.message); });
+    }
+
     function handleAdminAddBank(e) {
       e.preventDefault();
       var btn = document.getElementById('addBankBtn');
@@ -1171,6 +1255,50 @@
         alert('Error: ' + err.message);
       }).finally(function() {
         btn.disabled = false; btn.textContent = 'Add Payment Account';
+      });
+    }
+
+    function adminDeleteBankReq(btn) {
+      var bankId = btn.getAttribute('data-bid') || '';
+      var acc = btn.getAttribute('data-acc') || '';
+      var idx = btn.getAttribute('data-idx') || '';
+      if (!confirm('Remove bank account ' + acc + '?')) return;
+      callBackend({ action:'adminDeleteBank', email:currentEmail, token:currentToken, bankId:bankId, accountNumber:acc, index:idx })
+        .then(function(r) { alert((r&&r.message)||'Removed'); loadDashboardData(); })
+        .catch(function(err) { alert('Error: ' + err.message); });
+    }
+
+    function viewAttachment(kind, id) {
+      var modal = document.getElementById('attachmentModal');
+      var body = document.getElementById('attachmentModalBody');
+      var title = document.getElementById('attachmentModalTitle');
+      title.textContent = kind === 'deposit' ? ('🧾 Deposit Slip — ' + id) : ('📎 Visa Documents — ' + id);
+      body.innerHTML = '<div class="alert alert-info">Loading attachment...</div>';
+      modal.classList.remove('hidden');
+      callBackend({ action:'adminGetAttachment', email:currentEmail, token:currentToken, kind:kind, id:id }).then(function(res) {
+        if (!res || !res.ok) {
+          body.innerHTML = '<div class="alert alert-error">' + esc((res && res.message) || 'Not available.') + '</div>';
+          return;
+        }
+        if (kind === 'deposit') {
+          body.innerHTML = '<img src="' + esc(res.slipImage) + '" alt="Deposit Slip" style="max-width:100%;border-radius:10px;border:1px solid #cbd5e1;" />';
+        } else {
+          var html = '';
+          if (res.passportDoc) {
+            html += '<h4 style="margin-bottom:8px;color:#0b1f44;">Passport Scan</h4>';
+            if (res.passportDoc.indexOf('data:application/pdf') === 0) {
+              html += '<iframe src="' + esc(res.passportDoc) + '" style="width:100%;height:360px;border:1px solid #cbd5e1;border-radius:8px;margin-bottom:14px;"></iframe>';
+            } else {
+              html += '<img src="' + esc(res.passportDoc) + '" style="max-width:100%;border-radius:8px;border:1px solid #cbd5e1;margin-bottom:14px;" />';
+            }
+          }
+          if (res.photoDoc) {
+            html += '<h4 style="margin-bottom:8px;color:#0b1f44;">Applicant Photo</h4><img src="' + esc(res.photoDoc) + '" style="max-width:260px;border-radius:8px;border:1px solid #cbd5e1;" />';
+          }
+          body.innerHTML = html || '<div class="alert alert-info">No files attached.</div>';
+        }
+      }).catch(function(err) {
+        body.innerHTML = '<div class="alert alert-error">Error: ' + esc(err.message) + '</div>';
       });
     }
 
@@ -1259,19 +1387,24 @@
       }
     }
 
-    function handleInstantSlipUpload(e) {
+    async function handleInstantSlipUpload(e) {
       e.preventDefault();
       var amt = Number(document.getElementById('depAmount').value || 0);
       var ref = (document.getElementById('depRef').value || ('SLIP-' + Date.now().toString().slice(-6))).trim();
       var bankSel = document.getElementById('depBank');
       var bank = (bankSel && bankSel.value) ? bankSel.value.trim() : 'UBL (384263615)';
+      var fileInp = document.getElementById('depSlipFile');
       if (amt < 100) { alert('Minimum deposit PKR 100.'); return; }
+      if (!fileInp || !fileInp.files || !fileInp.files.length) { alert('Please attach deposit slip image.'); return; }
+
       var btn = document.getElementById('slipUploadBtn');
-      btn.disabled = true; btn.textContent = '⏳ Submitting...';
-      callBackend({ action:'requestDeposit', email:currentEmail, token:currentToken, amountPKR:amt, bankName:bank, txRef:ref }).then(function(r) {
+      btn.disabled = true; btn.textContent = '⏳ Uploading Slip...';
+      try {
+        var slipImage = await compressFileToDataUrl(fileInp.files[0], 900, 0.65);
+        var r = await callBackend({ action:'requestDeposit', email:currentEmail, token:currentToken, amountPKR:amt, bankName:bank, txRef:ref, slipImage:slipImage });
         if (r && r.ok) {
           document.getElementById('headOfficeContactBanner').classList.remove('hidden');
-          alert('📞 Deposit request submitted! Please contact Head Office for approval.');
+          alert('📞 Deposit slip uploaded! Please contact Head Office for approval.');
           e.target.reset();
           document.getElementById('depRef').value = 'SLIP-AUTO';
           if (bankSel && bankSel.options.length) bankSel.selectedIndex = 0;
@@ -1280,11 +1413,11 @@
         } else {
           alert('❌ ' + ((r && r.message) || 'Submission failed.'));
         }
-      }).catch(function(err) {
+      } catch (err) {
         alert('❌ Error: ' + err.message);
-      }).finally(function() {
+      } finally {
         btn.disabled = false; btn.textContent = '✅ Submit Deposit Slip';
-      });
+      }
     }
 
     function printSingleGolanTicket(bookingId) {

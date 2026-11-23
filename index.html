@@ -14,8 +14,8 @@
     .wa-btn { background:linear-gradient(135deg,#16a34a,#15803d); color:#fff; text-decoration:none; padding:5px 13px; border-radius:99px; font-weight:700; font-size:11.5px; box-shadow:0 2px 8px rgba(22,163,74,0.35); }
     header { background:linear-gradient(135deg,#071530 0%,#0b1f44 55%,#163b7a 100%); color:#fff; padding:14px 20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; border-bottom:3px solid var(--gold); box-shadow:0 6px 24px rgba(11,31,68,0.22); }
     .brand { display:flex; align-items:center; gap:14px; }
-    .logo-box { width:108px; height:58px; border-radius:10px; background:#061229; overflow:hidden; flex-shrink:0; border:2px solid #fbbf24; box-shadow:0 4px 14px rgba(0,0,0,0.35); }
-    .logo-box img { width:100%; height:100%; object-fit:contain; display:block; }
+    .logo-box { width:68px; height:64px; border-radius:14px; background:linear-gradient(145deg,#ffffff,#f1f5f9); overflow:hidden; flex-shrink:0; border:2px solid #fbbf24; box-shadow:0 4px 16px rgba(0,0,0,0.35); display:flex; align-items:center; justify-content:center; padding:4px; }
+    .logo-box img, .logo-box svg { width:100%; height:100%; object-fit:contain; display:block; }
     .brand h1 { font-size:20px; font-weight:900; letter-spacing:0.6px; }
     .brand p { font-size:11px; color:#fbbf24; font-weight:700; letter-spacing:0.4px; margin-top:2px; }
     .ceo-box { text-align:right; font-size:12px; background:rgba(255,255,255,0.08); padding:8px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.16); cursor:pointer; }
@@ -35,8 +35,8 @@
     .sub-text { font-size:12.5px; color:var(--muted); margin-bottom:16px; }
     .form-group { margin-bottom:12px; }
     label { display:block; font-size:11.5px; font-weight:700; color:#1e293b; margin-bottom:4px; }
-    input, select { width:100%; padding:10px 12px; border:1.5px solid #cbd5e1; border-radius:9px; font-size:13.5px; background:#f8fafc; transition:0.15s; }
-    input:focus, select:focus { outline:none; border-color:var(--blue); background:#fff; box-shadow:0 0 0 3px rgba(22,59,122,0.14); }
+    input, select, textarea { width:100%; padding:10px 12px; border:1.5px solid #cbd5e1; border-radius:9px; font-size:13.5px; background:#f8fafc; transition:0.15s; }
+    input:focus, select:focus, textarea:focus { outline:none; border-color:var(--blue); background:#fff; box-shadow:0 0 0 3px rgba(22,59,122,0.14); }
     .btn { width:100%; padding:11px 16px; border:none; border-radius:9px; font-size:13.5px; font-weight:800; cursor:pointer; transition:0.15s; }
     .btn:hover:not(:disabled) { transform:translateY(-1px); }
     .btn:disabled { opacity:0.65; cursor:not-allowed; }
@@ -52,18 +52,98 @@
     .qr-box { text-align:center; background:#f8fafc; border:2px dashed #94a3b8; border-radius:12px; padding:14px; margin-bottom:14px; }
     .qr-box img { width:170px; height:170px; border-radius:8px; border:4px solid #fff; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
     .secret-pill { display:inline-block; background:#e2e8f0; padding:4px 10px; border-radius:6px; font-family:monospace; font-size:13px; font-weight:800; color:var(--navy); margin-top:4px; }
-    .dash-wrap { display:grid; grid-template-columns:205px 1fr; gap:16px; align-items:start; }
+    .dash-wrap { display:grid; grid-template-columns:225px 1fr; gap:16px; align-items:start; }
     .sidebar { background:#fff; border-radius:16px; border:1px solid var(--border); padding:16px 12px; box-shadow:0 6px 20px rgba(15,23,42,0.05); position:sticky; top:14px; }
-    .side-btn { width:100%; text-align:left; background:#fff; border:1px solid transparent; padding:9px 11px; border-radius:9px; font-weight:700; font-size:12.5px; cursor:pointer; color:#334155; transition:0.15s; margin-bottom:4px; display:block; }
+    .side-brand-card { text-align:center; padding-bottom:14px; border-bottom:1px solid #e2e8f0; margin-bottom:12px; }
+    .side-logo-wrap { width:72px; height:72px; margin:0 auto 8px; border-radius:14px; background:#f8fafc; border:1.5px solid #e2e8f0; display:flex; align-items:center; justify-content:center; padding:6px; overflow:hidden; box-shadow:0 4px 12px rgba(11,31,68,0.08); }
+    .side-logo-wrap img { width:100%; height:100%; object-fit:contain; }
+    .side-btn { width:100%; text-align:left; background:#fff; border:1px solid transparent; padding:9px 11px; border-radius:9px; font-weight:700; font-size:12.5px; cursor:pointer; color:#334155; transition:0.15s; margin-bottom:4px; display:flex; align-items:center; justify-content:space-between; gap:8px; }
     .side-btn:hover { background:#f1f5f9; color:var(--navy); }
     .side-btn.active { background:linear-gradient(135deg,#0b1f44,#163b7a); color:#fff; box-shadow:0 4px 12px rgba(11,31,68,0.2); }
+
+    /* Support -> Settings Sidebar Dropdown */
+    .support-divider { display:flex; align-items:center; gap:8px; margin:12px 4px 8px; font-size:10.5px; font-weight:800; letter-spacing:0.8px; color:#94a3b8; text-transform:uppercase; }
+    .support-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+    .settings-toggle { width:100%; text-align:left; background:#f8fafc; border:1px solid #e2e8f0; padding:9px 11px; border-radius:9px; font-weight:700; font-size:12.5px; cursor:pointer; color:#334155; display:flex; align-items:center; justify-content:space-between; transition:0.15s; }
+    .settings-toggle:hover { background:#f1f5f9; color:var(--navy); }
+    .settings-submenu { padding:6px 0 4px 14px; display:flex; flex-direction:column; gap:3px; }
+    .settings-submenu.collapsed { display:none; }
+    .sub-side-btn { width:100%; text-align:left; background:transparent; border:none; padding:7px 10px; border-radius:8px; font-size:12.5px; font-weight:600; color:#475569; cursor:pointer; transition:0.15s; }
+    .sub-side-btn:hover { background:#f1f5f9; color:var(--navy); }
+    .sub-side-btn.active { background:#e0e7ff; color:#1e3a8a; font-weight:800; }
+
     .tab-btn { background:#fff; border:1px solid var(--border); padding:8px 16px; border-radius:99px; font-weight:800; font-size:12.5px; cursor:pointer; color:#334155; }
     .tab-btn.active { background:linear-gradient(135deg,#0b1f44,#163b7a); color:#fff; border-color:var(--navy); }
     .stats-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:16px; }
     .stat-box { background:#fff; padding:15px 16px; border-radius:14px; border:1px solid #e2e8f0; display:flex; align-items:center; gap:12px; box-shadow:0 2px 8px rgba(15,23,42,0.03); }
-    .journey-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
-    .j-card { padding:14px; border-radius:12px; cursor:pointer; transition:0.15s; border:1px solid #e2e8f0; }
-    .j-card:hover { transform:translateY(-2px); box-shadow:0 6px 16px rgba(15,23,42,0.08); }
+
+    /* Visual Destination / Group Image Boxes */
+    .journey-photo-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+    .jp-card { position:relative; height:172px; border-radius:14px; overflow:hidden; cursor:pointer; box-shadow:0 8px 20px rgba(15,23,42,0.1); transition:transform 0.22s ease, box-shadow 0.22s ease; border:1px solid rgba(255,255,255,0.6); }
+    .jp-card:hover { transform:translateY(-4px); box-shadow:0 14px 28px rgba(11,31,68,0.18); }
+    .jp-card img { width:100%; height:100%; object-fit:cover; display:block; transition:transform 0.35s ease; }
+    .jp-card:hover img { transform:scale(1.06); }
+    .jp-bar { position:absolute; left:12px; right:12px; bottom:12px; background:rgba(15,23,42,0.82); backdrop-filter:blur(5px); color:#fff; padding:10px 14px; border-radius:9px; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .jp-title { font-size:13.5px; font-weight:800; letter-spacing:0.2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .jp-arrow { font-size:16px; font-weight:800; transition:transform 0.2s ease; flex-shrink:0; }
+    .jp-card:hover .jp-arrow { transform:translateX(4px); }
+
+    /* Grouped Airline Fares Booking Cards (AirSial / B2B Inventory Style) */
+    .fares-topbar { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px; }
+    .fares-meta-bar { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:14px; font-size:12.5px; color:#64748b; font-weight:600; }
+    .live-avail-pill { display:inline-flex; align-items:center; gap:6px; background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; padding:4px 10px; border-radius:99px; font-size:11.5px; font-weight:700; }
+    .live-dot { width:7px; height:7px; border-radius:50%; background:#10b981; display:inline-block; }
+    .airline-group-card { background:#fff; border:1px solid #e2e8f0; border-radius:14px; margin-bottom:18px; overflow:hidden; box-shadow:0 4px 16px rgba(15,23,42,0.04); }
+    .ag-header { padding:16px 20px; display:flex; justify-content:space-between; align-items:center; gap:12px; border-bottom:1px solid #eef2f6; background:#ffffff; }
+    .ag-brand { display:flex; align-items:center; gap:12px; }
+    .ag-logo-badge { min-width:74px; height:38px; padding:4px 10px; border-radius:8px; border:1px solid #e2e8f0; background:#fff; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:12px; letter-spacing:0.4px; }
+    .ag-label { font-size:10px; font-weight:700; color:#94a3b8; letter-spacing:0.7px; text-transform:uppercase; }
+    .ag-name { font-size:14.5px; font-weight:800; color:#0f172a; margin-top:1px; }
+    .ag-count-pill { background:#f1f5f9; color:#334155; font-size:12px; font-weight:700; padding:5px 12px; border-radius:99px; border:1px solid #e2e8f0; }
+    .ag-subheader { padding:12px 20px; background:#f8fafc; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+    .ag-route-box { display:flex; align-items:center; gap:10px; }
+    .ag-plane-icon { width:34px; height:34px; border-radius:9px; background:#e0f2fe; color:#0369a1; display:flex; align-items:center; justify-content:center; font-size:16px; }
+    .ag-route-code { font-size:13.5px; font-weight:800; color:#0f172a; }
+    .ag-table-wrap { overflow-x:auto; }
+    .ag-table { width:100%; border-collapse:collapse; min-width:760px; }
+    .ag-table th { background:#fff; padding:11px 18px; font-size:10.5px; font-weight:800; color:#64748b; letter-spacing:0.6px; text-transform:uppercase; border-bottom:1px solid #eef2f6; }
+    .ag-table td { padding:14px 18px; border-bottom:1px solid #f1f5f9; font-size:13px; color:#1e293b; vertical-align:middle; }
+    .ag-table tr:last-child td { border-bottom:none; }
+    .ag-table tbody tr:hover { background:#fafcff; }
+    .meal-pill-yes { display:inline-flex; align-items:center; gap:5px; background:#ecfdf5; color:#047857; border:1px solid #bbf7d0; padding:4px 10px; border-radius:7px; font-size:11.5px; font-weight:700; }
+    .meal-pill-no { display:inline-flex; align-items:center; gap:5px; background:#f8fafc; color:#64748b; border:1px solid #e2e8f0; padding:4px 10px; border-radius:7px; font-size:11.5px; font-weight:700; }
+    .seat-pill-avail { display:inline-block; background:#eff6ff; color:#1d4ed8; padding:4px 11px; border-radius:99px; font-size:11.5px; font-weight:700; }
+    .seat-pill-sold { display:inline-block; background:#fee2e2; color:#b91c1c; padding:4px 11px; border-radius:99px; font-size:11.5px; font-weight:700; }
+    .fare-price-main { font-size:15.5px; font-weight:900; color:#0f172a; line-height:1.1; }
+    .fare-price-sub { font-size:10px; font-weight:700; color:#94a3b8; letter-spacing:0.4px; margin-top:2px; text-transform:uppercase; }
+    .btn-book-amber { background:linear-gradient(135deg,#fbbf24,#f59e0b); color:#1e293b; border:none; padding:9px 16px; border-radius:9px; font-size:12.5px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 3px 10px rgba(245,158,11,0.25); transition:0.15s; white-space:nowrap; }
+    .btn-book-amber:hover:not(:disabled) { background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; transform:translateY(-1px); }
+    .btn-book-amber:disabled { opacity:0.5; cursor:not-allowed; }
+
+    /* Team Contacts Banner & Cards */
+    .contacts-banner { background:linear-gradient(95deg,#2563eb 0%,#4f46e5 55%,#7c3aed 100%); color:#fff; padding:26px 24px; border-radius:16px; text-align:center; margin-bottom:18px; box-shadow:0 10px 24px rgba(59,130,246,0.22); }
+    .contacts-banner h2 { font-size:24px; font-weight:800; margin-bottom:6px; }
+    .contacts-banner p { font-size:13px; color:#e0e7ff; }
+    .team-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+    .team-card { background:#f0f6ff; border:1px solid #dbeafe; border-radius:14px; padding:18px; display:flex; align-items:flex-start; gap:14px; transition:0.18s; }
+    .team-card:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(37,99,235,0.1); background:#e8f1ff; }
+    .team-avatar { width:48px; height:48px; border-radius:50%; background:linear-gradient(135deg,#3b82f6,#2563eb); color:#fff; font-size:19px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 4px 10px rgba(37,99,235,0.28); }
+    .team-info h4 { font-size:15px; font-weight:800; color:#0f172a; margin-bottom:2px; text-transform:uppercase; }
+    .team-role { font-size:11px; font-weight:800; color:#2563eb; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:8px; display:block; }
+    .team-line { font-size:12.5px; color:#334155; margin-bottom:4px; }
+    .team-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+    .contact-pill { display:inline-flex; align-items:center; gap:5px; padding:5px 11px; border-radius:99px; font-size:11.5px; font-weight:700; text-decoration:none; }
+    .pill-call { background:#dbeafe; color:#1d4ed8; }
+    .pill-wa { background:#dcfce7; color:#15803d; }
+
+    /* Profile & Password Cards */
+    .profile-grid { display:grid; grid-template-columns:300px 1fr; gap:20px; align-items:start; }
+    .logo-upload-box { background:#f8fafc; border:2px dashed #cbd5e1; border-radius:14px; padding:20px; text-align:center; }
+    .logo-preview-circle { width:124px; height:124px; margin:0 auto 12px; border-radius:16px; background:#fff; border:2px solid #e2e8f0; display:flex; align-items:center; justify-content:center; overflow:hidden; padding:8px; box-shadow:0 4px 14px rgba(15,23,42,0.06); }
+    .logo-preview-circle img { width:100%; height:100%; object-fit:contain; }
+    .pass-wrap { position:relative; }
+    .pass-toggle { position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:13px; color:#475569; font-weight:700; }
+
     .search-row { display:grid; grid-template-columns:1.3fr auto 1.3fr 1fr 1fr auto; gap:10px; align-items:end; }
     .bank-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px; }
     .bank-card { background:linear-gradient(135deg,#071530,#163b7a); color:#fff; padding:18px; border-radius:14px; border-bottom:3px solid var(--gold); box-shadow:0 8px 20px rgba(11,31,68,0.16); position:relative; }
@@ -86,8 +166,8 @@
     .ticker-move { display:inline-block; padding-left:100%; animation:golanTicker 28s linear infinite; font-size:12px; font-weight:600; }
     .ticker-wrap:hover .ticker-move { animation-play-state:paused; }
     @keyframes golanTicker { 0% { transform:translateX(0); } 100% { transform:translateX(-100%); } }
-    @media (max-width:960px) { .dash-wrap, .auth-grid, .admin-grid { grid-template-columns:1fr; } .sidebar { position:static; } .stats-4 { grid-template-columns:repeat(2,1fr); } .journey-grid { grid-template-columns:repeat(2,1fr); } .search-row { grid-template-columns:1fr; } }
-    @media (max-width:600px) { .feature-cards, .stats-4 { grid-template-columns:1fr; } }
+    @media (max-width:960px) { .dash-wrap, .auth-grid, .admin-grid, .profile-grid, .team-grid { grid-template-columns:1fr; } .sidebar { position:static; } .stats-4 { grid-template-columns:repeat(2,1fr); } .journey-photo-grid { grid-template-columns:repeat(2,1fr); } .search-row { grid-template-columns:1fr; } }
+    @media (max-width:600px) { .feature-cards, .stats-4, .journey-photo-grid { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
@@ -100,7 +180,9 @@
   </div>
   <header>
     <div class="brand">
-      <div class="logo-box"><img id="mainHeaderLogo" src="logo.png.jpeg" alt="Golan Logo" onerror="this.style.display='none'" /></div>
+      <div class="logo-box" id="headerLogoContainer">
+        <img id="mainHeaderLogo" alt="Golan International Logo" />
+      </div>
       <div><h1>GOLAN INTERNATIONAL</h1><p>TRAVEL &amp; TOURISM • AIRLINE TICKETING &amp; UMRAH SERVICES</p></div>
     </div>
     <div class="ceo-box" onclick="openCeoWhatsApp()"><span>Chief Executive</span><strong>Shan Chairman</strong><span style="color:#86efac;font-weight:700;">📞 0345-3326318 (WhatsApp) | Toba Tek Singh</span></div>
@@ -171,19 +253,33 @@
 
     <div id="dashboardSection" class="dash-wrap hidden">
       <aside class="sidebar">
-        <div style="text-align:center; padding-bottom:12px; border-bottom:1px solid #e2e8f0; margin-bottom:12px;">
-          <div style="font-size:14px; font-weight:900; color:#0b1f44;">GOLAN INTERNATIONAL</div>
+        <div class="side-brand-card">
+          <div class="side-logo-wrap"><img id="sidebarBrandLogo" alt="Agency Logo" /></div>
+          <div style="font-size:13.5px; font-weight:900; color:#0b1f44;">GOLAN INTERNATIONAL</div>
           <div id="sideSubAgentName" style="font-size:11px; font-weight:800; color:#d97706; margin-top:3px; text-transform:uppercase;">SUB-AGENT PORTAL</div>
         </div>
-        <button type="button" class="side-btn active" data-tab="liveair" onclick="switchTab('liveair',this)">🏠 Dashboard</button>
-        <button type="button" class="side-btn" data-tab="fares" onclick="openFareCategoryTab('ALL',this)">🛫 Group Fares &amp; Visas</button>
-        <button type="button" class="side-btn" data-tab="bookings" onclick="switchTab('bookings',this)">📋 Bookings &amp; Receipts</button>
-        <button type="button" class="side-btn" data-tab="ledger" onclick="switchTab('ledger',this)">📒 My Ledger</button>
-        <button type="button" class="side-btn" data-tab="banks" onclick="switchTab('banks',this)">🏦 Banks &amp; Deposit</button>
-        <button type="button" id="sideAdminBtn" class="side-btn hidden" data-tab="admin" onclick="switchTab('admin',this)">👑 Super Admin</button>
-        <button type="button" class="side-btn" onclick="openCeoWhatsApp()">💬 Give Feedback!</button>
+
+        <button type="button" class="side-btn active" data-tab="liveair" onclick="switchTab('liveair',this)"><span>🏠 Dashboard</span></button>
+        <button type="button" class="side-btn" data-tab="fares" onclick="openFareCategoryTab('ALL',this)"><span>🛫 Group Fares &amp; Visas</span></button>
+        <button type="button" class="side-btn" data-tab="bookings" onclick="switchTab('bookings',this)"><span>📋 Bookings &amp; Receipts</span></button>
+        <button type="button" class="side-btn" data-tab="ledger" onclick="switchTab('ledger',this)"><span>📒 My Ledger</span></button>
+        <button type="button" class="side-btn" data-tab="banks" onclick="switchTab('banks',this)"><span>🏦 Banks &amp; Deposit</span></button>
+        <button type="button" class="side-btn" data-tab="contacts" onclick="switchTab('contacts',this)"><span>👥 Team Contacts</span></button>
+        <button type="button" id="sideAdminBtn" class="side-btn hidden" data-tab="admin" onclick="switchTab('admin',this)"><span>👑 Super Admin</span></button>
+        <button type="button" class="side-btn" onclick="openCeoWhatsApp()"><span>💬 Give Feedback!</span></button>
+
+        <div class="support-divider">SUPPORT</div>
+        <button type="button" class="settings-toggle" onclick="toggleSettingsMenu()">
+          <span>⚙️ Settings</span>
+          <span id="settingsChevron">⌃</span>
+        </button>
+        <div id="settingsSubmenu" class="settings-submenu">
+          <button type="button" class="sub-side-btn" data-tab="profile" onclick="switchTab('profile',this)">My Profile</button>
+          <button type="button" class="sub-side-btn" data-tab="password" onclick="switchTab('password',this)">Change Password</button>
+        </div>
+
         <div style="margin-top:12px; padding-top:10px; border-top:1px solid #e2e8f0;">
-          <button type="button" class="side-btn" style="color:#b91c1c; background:#fef2f2; border-color:#fecaca;" onclick="logout()">⏻ Logout</button>
+          <button type="button" class="side-btn" style="color:#b91c1c; background:#fef2f2; border-color:#fecaca; justify-content:center;" onclick="logout()">⏻ Logout</button>
         </div>
       </aside>
 
@@ -230,20 +326,48 @@
             <div class="stat-box" style="border-left:4px solid #dc2626;"><div style="font-size:22px;">❌</div><div><div style="font-size:10.5px;font-weight:800;color:#64748b;">CANCELED / EXP</div><div id="statCanceledTickets" style="font-size:22px;font-weight:900;">0</div></div></div>
           </div>
 
-          <div style="background:#fff; padding:16px; border-radius:16px; border:1px solid #e2e8f0; margin-bottom:16px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-              <div><h4 style="color:#0f172a; font-size:14.5px;">Browse Fares &amp; Packages by Journey</h4><span style="font-size:11.5px; color:#64748b;">Quick filter group flights, Umrah &amp; visit visas</span></div>
-              <a href="javascript:void(0)" onclick="openFareCategoryTab('ALL')" style="font-size:12px; font-weight:700; color:#0f4c5c; text-decoration:none;">View All →</a>
+          <div style="background:#fff; padding:18px; border-radius:16px; border:1px solid #e2e8f0; margin-bottom:16px; box-shadow:0 6px 20px rgba(15,23,42,0.04);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+              <div><h4 style="color:#0f172a; font-size:15.5px; font-weight:800;">Browse Groups, Packages &amp; Sectors</h4><span style="font-size:11.5px; color:#64748b;">Select any category box below to view live B2B inventory</span></div>
+              <a href="javascript:void(0)" onclick="openFareCategoryTab('ALL')" style="font-size:12px; font-weight:800; color:#0f4c5c; text-decoration:none;">View All →</a>
             </div>
-            <div class="journey-grid">
-              <div class="j-card" onclick="openFareCategoryTab('ALL')" style="background:linear-gradient(135deg,#f8fafc,#e0f2fe);"><div style="font-size:18px;margin-bottom:4px;">🌐</div><div style="font-weight:800;font-size:13px;">All Groups</div><div style="font-size:11px;color:#64748b;">Complete inventory</div></div>
-              <div class="j-card" onclick="openFareCategoryTab('DXB')" style="background:linear-gradient(135deg,#f8fafc,#eef2ff);"><div style="font-size:18px;margin-bottom:4px;">🇦🇪</div><div style="font-weight:800;font-size:13px;">UAE / Dubai</div><div style="font-size:11px;color:#64748b;">DXB &amp; SHJ fares</div></div>
-              <div class="j-card" onclick="openFareCategoryTab('JED')" style="background:linear-gradient(135deg,#f8fafc,#f0fdf4);"><div style="font-size:18px;margin-bottom:4px;">🇸🇦</div><div style="font-weight:800;font-size:13px;">KSA Flights</div><div style="font-size:11px;color:#64748b;">JED / RUH / MED</div></div>
-              <div class="j-card" onclick="openFareCategoryTab('Umrah Package')" style="background:linear-gradient(135deg,#f8fafc,#fefce8);"><div style="font-size:18px;margin-bottom:4px;">🕋</div><div style="font-weight:800;font-size:13px;">Umrah B2B</div><div style="font-size:11px;color:#64748b;">Makkah &amp; Madinah</div></div>
-              <div class="j-card" onclick="openFareCategoryTab('MCT')" style="background:linear-gradient(135deg,#f8fafc,#fff7ed);"><div style="font-size:18px;margin-bottom:4px;">🇴🇲</div><div style="font-weight:800;font-size:13px;">Muscat</div><div style="font-size:11px;color:#64748b;">Oman group fares</div></div>
-              <div class="j-card" onclick="openFareCategoryTab('BAH')" style="background:linear-gradient(135deg,#f8fafc,#fdf2f8);"><div style="font-size:18px;margin-bottom:4px;">🇧🇭</div><div style="font-weight:800;font-size:13px;">Bahrain</div><div style="font-size:11px;color:#64748b;">Bahrain flights</div></div>
-              <div class="j-card" onclick="openFareCategoryTab('LHR')" style="background:linear-gradient(135deg,#f8fafc,#f5f3ff);"><div style="font-size:18px;margin-bottom:4px;">🇬🇧</div><div style="font-weight:800;font-size:13px;">UK &amp; London</div><div style="font-size:11px;color:#64748b;">LHR &amp; MAN fares</div></div>
-              <div class="j-card" onclick="openFareCategoryTab('Visit Visa')" style="background:linear-gradient(135deg,#f8fafc,#ecfeff);"><div style="font-size:18px;margin-bottom:4px;">🛂</div><div style="font-weight:800;font-size:13px;">Visit Visas</div><div style="font-size:11px;color:#64748b;">UAE, KSA &amp; Global</div></div>
+            <div class="journey-photo-grid">
+              <div class="jp-card" onclick="openFareCategoryTab('ALL')" style="background:linear-gradient(135deg,#0ea5e9,#1e3a8a);">
+                <img src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=700&q=80" alt="All Groups" onerror="this.style.display='none'" />
+                <div class="jp-bar"><span class="jp-title">All Groups</span><span class="jp-arrow">→</span></div>
+              </div>
+              <div class="jp-card" onclick="openFareCategoryTab('Umrah Package')" style="background:linear-gradient(135deg,#92400e,#0f172a);">
+                <img src="https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?auto=format&fit=crop&w=700&q=80" alt="Umrah Packages" onerror="this.style.display='none'" />
+                <div class="jp-bar"><span class="jp-title">Umrah Packages</span><span class="jp-arrow">→</span></div>
+              </div>
+              <div class="jp-card" onclick="openFareCategoryTab('GYD')" style="background:linear-gradient(135deg,#0284c7,#0f172a);">
+                <img src="https://images.unsplash.com/photo-1609137144813-7d9921338f24?auto=format&fit=crop&w=700&q=80" alt="Baku Packages" onerror="this.style.display='none'" />
+                <div class="jp-bar"><span class="jp-title">Baku Packages</span><span class="jp-arrow">→</span></div>
+              </div>
+              <div class="jp-card" onclick="openFareCategoryTab('UMRAH_SEATS')" style="background:linear-gradient(135deg,#b45309,#1e293b);">
+                <img src="https://images.unsplash.com/photo-1565552645632-d725f8bfc19a?auto=format&fit=crop&w=700&q=80" alt="Umrah Groups Only Seats" onerror="this.style.display='none'" />
+                <div class="jp-bar"><span class="jp-title">Umrah Groups (Only Seats)</span><span class="jp-arrow">→</span></div>
+              </div>
+              <div class="jp-card" onclick="openFareCategoryTab('DXB')" style="background:linear-gradient(135deg,#0369a1,#172554);">
+                <img src="https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=700&q=80" alt="UAE Dubai" onerror="this.style.display='none'" />
+                <div class="jp-bar"><span class="jp-title">UAE (United Arab Emirates)</span><span class="jp-arrow">→</span></div>
+              </div>
+              <div class="jp-card" onclick="openFareCategoryTab('KWI')" style="background:linear-gradient(135deg,#0f766e,#1e3a8a);">
+                <img src="https://images.unsplash.com/photo-1578894381163-e72c17f2d45f?auto=format&fit=crop&w=700&q=80" alt="Kuwait KWI" onerror="this.style.display='none'" />
+                <div class="jp-bar"><span class="jp-title">Kuwait (KWI)</span><span class="jp-arrow">→</span></div>
+              </div>
+              <div class="jp-card" onclick="openFareCategoryTab('JED')" style="background:linear-gradient(135deg,#1d4ed8,#0b1f44);">
+                <img src="https://images.unsplash.com/photo-1586724237569-f3d0c1dee8c6?auto=format&fit=crop&w=700&q=80" alt="KSA Groups" onerror="this.style.display='none'" />
+                <div class="jp-bar"><span class="jp-title">KSA Groups</span><span class="jp-arrow">→</span></div>
+              </div>
+              <div class="jp-card" onclick="openFareCategoryTab('EUROPE')" style="background:linear-gradient(135deg,#334155,#0f172a);">
+                <img src="https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=700&q=80" alt="Europe Groups" onerror="this.style.display='none'" />
+                <div class="jp-bar"><span class="jp-title">Europe Groups</span><span class="jp-arrow">→</span></div>
+              </div>
+              <div class="jp-card" onclick="openFareCategoryTab('Visit Visa')" style="background:linear-gradient(135deg,#0f4c5c,#163b7a);">
+                <img src="https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=700&q=80" alt="Visit Visas" onerror="this.style.display='none'" />
+                <div class="jp-bar"><span class="jp-title">Visit Visas (UAE / KSA / Global)</span><span class="jp-arrow">→</span></div>
+              </div>
             </div>
           </div>
         </div>
@@ -283,14 +407,22 @@
           <div id="liveFlightsBody" style="margin-top:16px;"></div>
         </div>
 
-        <div id="tab-fares" class="card hidden">
-          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
-            <h3 id="faresTabHeading" style="margin:0;">🛫 Live Group Flights &amp; Packages</h3>
-            <button type="button" class="btn btn-sm btn-primary" onclick="openFareCategoryTab('ALL')">Show All</button>
+        <!-- Grouped Airline / Group Fares Booking View (AirSial Card Style) -->
+        <div id="tab-fares" class="hidden">
+          <div class="card" style="padding:16px 20px; margin-bottom:14px;">
+            <div class="fares-topbar" style="margin-bottom:8px;">
+              <h3 id="faresTabHeading" style="margin:0;">🛫 Live Group Flights &amp; Packages</h3>
+              <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <input type="text" id="faresQuickSearch" oninput="applyFaresFilter()" placeholder="Filter airline, route (ISB-RUH, JED)..." style="width:230px; padding:7px 12px; font-size:12.5px;" />
+                <button type="button" class="btn btn-sm btn-primary" onclick="openFareCategoryTab('ALL')">Show All</button>
+              </div>
+            </div>
+            <div class="fares-meta-bar" style="margin-bottom:0;">
+              <span id="faresShowingCount">Showing 0 bookable options</span>
+              <span class="live-avail-pill"><span class="live-dot"></span> Live Availability</span>
+            </div>
           </div>
-          <div style="overflow-x:auto;">
-            <table><thead><tr><th>Category &amp; Date</th><th>Route / Package Details</th><th>Status</th><th>B2B Fare</th><th>Action</th></tr></thead><tbody id="faresTableBody"></tbody></table>
-          </div>
+          <div id="faresGroupedContainer"></div>
         </div>
 
         <div id="tab-bookings" class="card hidden">
@@ -301,7 +433,7 @@
               <button type="button" class="btn btn-sm" style="background:#e2e8f0; color:#0f172a;" onclick="document.getElementById('adminBookingSearchInput').value='';filterBookingsTable();">✕</button>
             </div>
           </div>
-          <div>
+          <div style="overflow-x:auto;">
             <table><thead><tr><th>Booking ID</th><th>Date</th><th>Passenger &amp; Passport</th><th>Package / Flight</th><th>PNR / Ticket</th><th>Fare (PKR)</th><th>Status &amp; Timer</th><th>Action</th></tr></thead><tbody id="bookingsTableBody"></tbody></table>
           </div>
         </div>
@@ -335,6 +467,146 @@
             <div style="background:#fffbeb; padding:12px; border-radius:10px; border:1px solid #fde68a;"><div style="font-size:10px;font-weight:800;color:#92400e;">⚖️ WALLET BALANCE</div><div id="ldgNetBalance" style="font-size:17px;font-weight:900;color:#b45309;margin-top:3px;">PKR 0</div><div id="ldgBalanceNote" style="font-size:10px;color:#92400e;">Available Balance</div></div>
           </div>
           <div style="overflow-x:auto;"><table><thead><tr><th>Date</th><th>Ref / ID</th><th>Description</th><th>Type</th><th>Debit</th><th>Credit</th><th>Status</th></tr></thead><tbody id="ledgerTableBody"></tbody></table></div>
+        </div>
+
+        <!-- Team Contacts Tab -->
+        <div id="tab-contacts" class="hidden">
+          <div class="contacts-banner">
+            <h2>Team Contacts</h2>
+            <p>Contact our team for any assistance, seat holds, ticket issuance, or queries.</p>
+          </div>
+          <div class="card">
+            <h3 style="display:flex; align-items:center; gap:8px; margin-bottom:16px; color:#1d4ed8;">👥 Meet Our Team</h3>
+            <div class="team-grid">
+              <div class="team-card">
+                <div class="team-avatar" style="background:linear-gradient(135deg,#0b1f44,#1d4ed8);">S</div>
+                <div class="team-info">
+                  <h4>CEO SHAN CHAIRMAN</h4>
+                  <span class="team-role">CHIEF EXECUTIVE OFFICER</span>
+                  <div class="team-line"><strong>Phone:</strong> 0345-3326318</div>
+                  <div class="team-line"><strong>Support:</strong> Approvals, Limits &amp; VIP Desk</div>
+                  <div class="team-actions">
+                    <a class="contact-pill pill-call" href="tel:03453326318">📞 Call Now</a>
+                    <a class="contact-pill pill-wa" href="https://api.whatsapp.com/send?phone=923453326318" target="_blank" rel="noopener noreferrer">💬 WhatsApp</a>
+                  </div>
+                </div>
+              </div>
+
+              <div class="team-card">
+                <div class="team-avatar">T</div>
+                <div class="team-info">
+                  <h4>TARIQ MEHMOD</h4>
+                  <span class="team-role">SALES &amp; TICKETING DESK</span>
+                  <div class="team-line"><strong>Phone:</strong> 0341-6929324</div>
+                  <div class="team-line"><strong>Support:</strong> Group Fares &amp; Ticketing</div>
+                  <div class="team-actions">
+                    <a class="contact-pill pill-call" href="tel:03416929324">📞 Call Now</a>
+                    <a class="contact-pill pill-wa" href="https://api.whatsapp.com/send?phone=923416929324" target="_blank" rel="noopener noreferrer">💬 WhatsApp</a>
+                  </div>
+                </div>
+              </div>
+
+              <div class="team-card">
+                <div class="team-avatar">M</div>
+                <div class="team-info">
+                  <h4>MUHAMMAD UMER</h4>
+                  <span class="team-role">OPERATIONS &amp; VISA SUPPORT</span>
+                  <div class="team-line"><strong>Phone:</strong> 0331-6379110</div>
+                  <div class="team-line"><strong>Support:</strong> Umrah, Visit Visas &amp; PNRs</div>
+                  <div class="team-actions">
+                    <a class="contact-pill pill-call" href="tel:03316379110">📞 Call Now</a>
+                    <a class="contact-pill pill-wa" href="https://api.whatsapp.com/send?phone=923316379110" target="_blank" rel="noopener noreferrer">💬 WhatsApp</a>
+                  </div>
+                </div>
+              </div>
+
+              <div class="team-card">
+                <div class="team-avatar" style="background:linear-gradient(135deg,#0f4c5c,#0284c7);">P</div>
+                <div class="team-info">
+                  <h4>HEAD OFFICE PTCL</h4>
+                  <span class="team-role">OFFICIAL LANDLINE DESK</span>
+                  <div class="team-line"><strong>PTCL:</strong> 046-2512722</div>
+                  <div class="team-line"><strong>Office:</strong> Toba Tek Singh Head Office</div>
+                  <div class="team-actions">
+                    <a class="contact-pill pill-call" href="tel:0462512722">☎️ Call Landline</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Settings -> My Profile Tab -->
+        <div id="tab-profile" class="card hidden">
+          <h3>🏢 My Agency Profile &amp; Branding</h3>
+          <p class="sub-text">Upload your travel agency logo and manage your sub-agent details for B2B vouchers &amp; receipts.</p>
+          <div id="profileAlert" class="alert hidden"></div>
+          <div class="profile-grid">
+            <div class="logo-upload-box">
+              <div class="logo-preview-circle">
+                <img id="profileLogoPreview" alt="Agency Logo Preview" />
+              </div>
+              <h4 style="font-size:13.5px; color:#0b1f44; margin-bottom:4px;">Sub-Agent Agency Logo</h4>
+              <p style="font-size:11px; color:#64748b; margin-bottom:12px;">PNG or JPG recommended (Auto-optimized for vouchers)</p>
+              <input type="file" id="subAgentLogoInput" accept="image/*" onchange="handleLogoFileSelect(this)" style="background:#fff; border:1.5px dashed #163b7a; margin-bottom:10px; font-size:12px;" />
+              <div style="display:flex; gap:8px;">
+                <button type="button" class="btn btn-primary btn-sm" style="flex:1;" onclick="saveSubAgentProfile()">💾 Save Logo</button>
+                <button type="button" class="btn btn-sm" style="background:#fee2e2; color:#991b1b;" onclick="resetSubAgentLogo()">Reset</button>
+              </div>
+            </div>
+
+            <form onsubmit="saveSubAgentProfile(event)">
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div class="form-group"><label>Travel Agency Name *</label><input type="text" id="profAgencyName" required /></div>
+                <div class="form-group"><label>Registered Email (Login ID)</label><input type="email" id="profEmail" readonly style="background:#e2e8f0; color:#475569; cursor:not-allowed;" /></div>
+                <div class="form-group"><label>City *</label><input type="text" id="profCity" placeholder="e.g. Lahore / Faisalabad" required /></div>
+                <div class="form-group"><label>Mobile / WhatsApp *</label><input type="text" id="profMobile" placeholder="03XX-XXXXXXX" required /></div>
+                <div class="form-group"><label>Contact Person / Owner Name</label><input type="text" id="profContactPerson" placeholder="Owner / Manager Name" /></div>
+                <div class="form-group"><label>Voucher Header Branding</label>
+                  <select id="profUseCustomVoucher">
+                    <option value="custom">Use My Uploaded Logo &amp; Agency Name on PDF Vouchers</option>
+                    <option value="golan">Use Golan International Official Logo on PDF Vouchers</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group"><label>Office Address / Tagline (Printed on Receipts)</label><input type="text" id="profAddress" placeholder="Office # / Plaza / City" /></div>
+              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-top:8px;">
+                <span style="font-size:11.5px; color:#15803d; font-weight:700;">🔐 Protected by Google 2FA &amp; Midnight Lock</span>
+                <button type="submit" id="saveProfileBtn" class="btn btn-primary" style="width:auto; padding:10px 22px;">✅ Save Profile &amp; Branding</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Settings -> Change Password Tab -->
+        <div id="tab-password" class="card hidden" style="max-width:620px;">
+          <h3>🔑 Change Account Password</h3>
+          <p class="sub-text">Update your sub-agent portal password anytime. Minimum 6 characters required.</p>
+          <div id="passwordAlert" class="alert hidden"></div>
+          <form onsubmit="handleChangePassword(event)">
+            <div class="form-group">
+              <label>Current Password *</label>
+              <div class="pass-wrap">
+                <input type="password" id="cpCurrent" placeholder="Enter your current password" required />
+                <button type="button" class="pass-toggle" onclick="togglePassVis('cpCurrent',this)">Show</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>New Password (min 6 characters) *</label>
+              <div class="pass-wrap">
+                <input type="password" id="cpNew" minlength="6" placeholder="Enter new strong password" required />
+                <button type="button" class="pass-toggle" onclick="togglePassVis('cpNew',this)">Show</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Confirm New Password *</label>
+              <div class="pass-wrap">
+                <input type="password" id="cpConfirm" minlength="6" placeholder="Re-enter new password" required />
+                <button type="button" class="pass-toggle" onclick="togglePassVis('cpConfirm',this)">Show</button>
+              </div>
+            </div>
+            <button type="submit" id="changePassBtn" class="btn btn-primary">🔐 Update Password</button>
+          </form>
         </div>
 
         <div id="tab-admin" class="hidden">
@@ -442,6 +714,32 @@
     var currentEmail = '', currentToken = '', currentIsAdmin = false, selectedItem = null;
     var CURRENT_TRIP_TYPE = 'oneway', ACTIVE_GDS_IDX = 0, modalTimerInterval = null, expiryInterval = null;
     var isBookingSubmitting = false;
+    var pendingSubAgentLogoDataUrl = '';
+    var ACTIVE_FARE_CATEGORY = 'ALL';
+
+    /* Upgraded Professional Golan Eagle & Mountain Vector Crest Logo */
+    var GOLAN_SVG_LOGO = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">' +
+      '<defs>' +
+      '<linearGradient id="gNavy" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#071530"/><stop offset="100%" stop-color="#163b7a"/></linearGradient>' +
+      '<linearGradient id="gGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fcd34d"/><stop offset="50%" stop-color="#d97706"/><stop offset="100%" stop-color="#b45309"/></linearGradient>' +
+      '<linearGradient id="gSilver" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f8fafc"/><stop offset="100%" stop-color="#94a3b8"/></linearGradient>' +
+      '</defs>' +
+      '<circle cx="90" cy="90" r="84" fill="#ffffff" stroke="url(#gGold)" stroke-width="5"/>' +
+      '<circle cx="90" cy="90" r="76" fill="none" stroke="url(#gNavy)" stroke-width="2" stroke-dasharray="6 4"/>' +
+      '<path d="M90 54 C74 34, 48 26, 34 32 C48 44, 62 52, 78 58 L90 70 L102 58 C118 52, 132 44, 146 32 C132 26, 106 34, 90 54 Z" fill="url(#gGold)"/>' +
+      '<path d="M90 38 C85 38, 82 43, 84 48 L90 62 L96 48 C98 43, 95 38, 90 38 Z" fill="#b45309"/>' +
+      '<circle cx="90" cy="40" r="5" fill="#d97706"/>' +
+      '<polygon points="34,114 66,68 92,114" fill="url(#gNavy)"/>' +
+      '<polygon points="66,68 78,88 68,84 58,92" fill="url(#gSilver)"/>' +
+      '<polygon points="74,114 108,58 146,114" fill="#1e3a8a"/>' +
+      '<polygon points="108,58 122,82 110,77 98,86" fill="#ffffff"/>' +
+      '<path d="M28 114 Q90 104 152 114" fill="none" stroke="url(#gGold)" stroke-width="3.5" stroke-linecap="round"/>' +
+      '<text x="90" y="136" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-weight="900" font-size="25" letter-spacing="2" fill="#0b1f44">GOLAN</text>' +
+      '<text x="90" y="150" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-weight="700" font-size="7.5" letter-spacing="1.2" fill="#b45309">INTERNATIONAL TRAVEL &amp; TOURS</text>' +
+      '</svg>'
+    );
+
     var DEFAULT_BANKS = [{ BankName:'UBL (United Bank Limited)', AccountTitle:'Golan International Travel & Tourism', AccountNumber:'384263615', IBAN:'PK30UNIL0109000384263615' }];
     var AIRPORTS_LIST = [
       { code:'LYP', label:'Faisalabad, PK - Faisalabad (LYP)' },
@@ -515,7 +813,7 @@
             c.width = w; c.height = h;
             var ctx = c.getContext('2d');
             ctx.drawImage(img, 0, 0, w, h);
-            resolve(c.toDataURL('image/jpeg', quality || 0.65));
+            resolve(c.toDataURL('image/png', quality || 0.85));
           };
           img.onerror = function() { reject(new Error('Invalid image file.')); };
           img.src = ev.target.result;
@@ -523,6 +821,49 @@
         reader.onerror = function() { reject(new Error('Could not read file.')); };
         reader.readAsDataURL(file);
       });
+    }
+
+    function getProfileStorageKey() {
+      return 'golan_profile_' + (currentEmail || 'guest').toLowerCase();
+    }
+
+    function getLocalProfile() {
+      try {
+        return JSON.parse(localStorage.getItem(getProfileStorageKey()) || '{}') || {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function applyBrandLogos() {
+      var headerLogo = document.getElementById('mainHeaderLogo');
+      if (headerLogo) headerLogo.src = GOLAN_SVG_LOGO;
+      var prof = getLocalProfile();
+      var activeLogo = prof.logoDataUrl || GOLAN_SVG_LOGO;
+      var sideLogo = document.getElementById('sidebarBrandLogo');
+      if (sideLogo) sideLogo.src = activeLogo;
+      var prevLogo = document.getElementById('profileLogoPreview');
+      if (prevLogo) prevLogo.src = activeLogo;
+    }
+
+    function toggleSettingsMenu() {
+      var sub = document.getElementById('settingsSubmenu');
+      var chv = document.getElementById('settingsChevron');
+      if (!sub) return;
+      var isCollapsed = sub.classList.toggle('collapsed');
+      if (chv) chv.textContent = isCollapsed ? '⌄' : '⌃';
+    }
+
+    function togglePassVis(inputId, btn) {
+      var inp = document.getElementById(inputId);
+      if (!inp) return;
+      if (inp.type === 'password') {
+        inp.type = 'text';
+        btn.textContent = 'Hide';
+      } else {
+        inp.type = 'password';
+        btn.textContent = 'Show';
+      }
     }
 
     function openCeoWhatsApp() {
@@ -670,9 +1011,13 @@
       currentIsAdmin = !!isAdmin;
       document.getElementById('authSection').classList.add('hidden');
       document.getElementById('dashboardSection').classList.remove('hidden');
-      document.getElementById('dashAgencyName').textContent = agencyName || 'Partner';
-      document.getElementById('sideSubAgentName').textContent = agencyName || 'SUB-AGENT PORTAL';
+      var localProf = getLocalProfile();
+      var displayAgency = localProf.agencyName || agencyName || 'Partner';
+      document.getElementById('dashAgencyName').textContent = displayAgency;
+      document.getElementById('sideSubAgentName').textContent = displayAgency;
       document.getElementById('sideAdminBtn').classList.toggle('hidden', !isAdmin);
+      populateProfileForm(displayAgency);
+      applyBrandLogos();
       if (expiryInterval) clearInterval(expiryInterval);
       expiryInterval = setInterval(function() {
         if (Date.now() >= Number(expiry)) {
@@ -684,6 +1029,138 @@
       loadDashboardData();
     }
 
+    function populateProfileForm(fallbackAgency) {
+      var prof = getLocalProfile();
+      document.getElementById('profAgencyName').value = prof.agencyName || fallbackAgency || '';
+      document.getElementById('profEmail').value = currentEmail || '';
+      document.getElementById('profCity').value = prof.city || '';
+      document.getElementById('profMobile').value = prof.mobile || '';
+      document.getElementById('profContactPerson').value = prof.contactPerson || '';
+      document.getElementById('profAddress').value = prof.address || '';
+      document.getElementById('profUseCustomVoucher').value = prof.voucherBranding || 'custom';
+      pendingSubAgentLogoDataUrl = prof.logoDataUrl || '';
+      applyBrandLogos();
+    }
+
+    async function handleLogoFileSelect(inp) {
+      var file = inp && inp.files && inp.files[0];
+      if (!file) return;
+      try {
+        var dataUrl = await compressFileToDataUrl(file, 320, 0.85);
+        pendingSubAgentLogoDataUrl = dataUrl;
+        document.getElementById('profileLogoPreview').src = dataUrl;
+      } catch (err) {
+        alert('Logo error: ' + err.message);
+      }
+    }
+
+    function resetSubAgentLogo() {
+      pendingSubAgentLogoDataUrl = '';
+      var prof = getLocalProfile();
+      prof.logoDataUrl = '';
+      localStorage.setItem(getProfileStorageKey(), JSON.stringify(prof));
+      document.getElementById('subAgentLogoInput').value = '';
+      applyBrandLogos();
+      var box = document.getElementById('profileAlert');
+      box.className = 'alert alert-info';
+      box.textContent = 'Logo reset to official Golan International crest.';
+      box.classList.remove('hidden');
+    }
+
+    async function saveSubAgentProfile(e) {
+      if (e) e.preventDefault();
+      var btn = document.getElementById('saveProfileBtn');
+      var box = document.getElementById('profileAlert');
+      box.classList.add('hidden');
+      var payloadProfile = {
+        agencyName: document.getElementById('profAgencyName').value.trim(),
+        city: document.getElementById('profCity').value.trim(),
+        mobile: document.getElementById('profMobile').value.trim(),
+        contactPerson: document.getElementById('profContactPerson').value.trim(),
+        address: document.getElementById('profAddress').value.trim(),
+        voucherBranding: document.getElementById('profUseCustomVoucher').value,
+        logoDataUrl: pendingSubAgentLogoDataUrl || getLocalProfile().logoDataUrl || ''
+      };
+      if (!payloadProfile.agencyName) {
+        box.className = 'alert alert-error';
+        box.textContent = 'Agency Name is required.';
+        box.classList.remove('hidden');
+        return;
+      }
+      if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+      localStorage.setItem(getProfileStorageKey(), JSON.stringify(payloadProfile));
+      document.getElementById('dashAgencyName').textContent = payloadProfile.agencyName;
+      document.getElementById('sideSubAgentName').textContent = payloadProfile.agencyName;
+      applyBrandLogos();
+
+      try {
+        var res = await callBackend({
+          action: 'updateProfile',
+          email: currentEmail,
+          token: currentToken,
+          agencyName: payloadProfile.agencyName,
+          city: payloadProfile.city,
+          mobile: payloadProfile.mobile,
+          contactPerson: payloadProfile.contactPerson,
+          address: payloadProfile.address,
+          voucherBranding: payloadProfile.voucherBranding,
+          logoDataUrl: payloadProfile.logoDataUrl
+        });
+        box.className = 'alert ' + (res && res.ok ? 'alert-success' : 'alert-info');
+        box.textContent = (res && res.message) || '✅ Profile & logo saved!';
+      } catch (err) {
+        box.className = 'alert alert-success';
+        box.textContent = '✅ Logo & profile saved on this browser (backend sync will activate once backend is updated).';
+      } finally {
+        box.classList.remove('hidden');
+        if (btn) { btn.disabled = false; btn.textContent = '✅ Save Profile & Branding'; }
+      }
+    }
+
+    async function handleChangePassword(e) {
+      e.preventDefault();
+      var box = document.getElementById('passwordAlert');
+      var btn = document.getElementById('changePassBtn');
+      var curP = document.getElementById('cpCurrent').value;
+      var newP = document.getElementById('cpNew').value;
+      var confP = document.getElementById('cpConfirm').value;
+      box.classList.add('hidden');
+      if (newP.length < 6) {
+        box.className = 'alert alert-error';
+        box.textContent = 'New password must be at least 6 characters.';
+        box.classList.remove('hidden');
+        return;
+      }
+      if (newP !== confP) {
+        box.className = 'alert alert-error';
+        box.textContent = 'New Password and Confirm Password do not match.';
+        box.classList.remove('hidden');
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = 'Updating Password...';
+      try {
+        var res = await callBackend({
+          action: 'changePassword',
+          email: currentEmail,
+          token: currentToken,
+          currentPassword: curP,
+          newPassword: newP
+        });
+        box.className = 'alert ' + (res && res.ok ? 'alert-success' : 'alert-error');
+        box.textContent = (res && res.message) || (res && res.ok ? '✅ Password updated successfully!' : 'Could not update password.');
+        box.classList.remove('hidden');
+        if (res && res.ok) e.target.reset();
+      } catch (err) {
+        box.className = 'alert alert-error';
+        box.textContent = 'Error: ' + err.message;
+        box.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🔐 Update Password';
+      }
+    }
+
     function handleFareBookClick(btn) {
       openBookingModal(
         btn.getAttribute('data-cat') || 'Group Flight',
@@ -692,6 +1169,165 @@
         btn.getAttribute('data-fareid') || '',
         Number(btn.getAttribute('data-holdmins') || 0)
       );
+    }
+
+    /* Airline & Route Parser for Screenshot-Style Grouped Fares */
+    function parseFareMeta(f) {
+      var raw = String(f.Route || f.Title || f.PackageName || f.Category || '');
+      var fullTxt = (raw + ' ' + String(f.Timing || '') + ' ' + String(f.Stay || '') + ' ' + String(f.Details || '')).toUpperCase();
+      var airline = 'GOLAN GROUP FARES', tag = 'GL', color = '#0b1f44', bg = '#eff6ff';
+
+      if (/AIRSIAL|\bPF\b/i.test(fullTxt)) { airline = 'AIRSIAL'; tag = '★ AIRSIAL'; color = '#15803d'; bg = '#f0fdf4'; }
+      else if (/\bPIA\b|\bPK[-\s]?\d/i.test(fullTxt)) { airline = 'PIA (PAKISTAN INTL)'; tag = 'PIA'; color = '#166534'; bg = '#dcfce7'; }
+      else if (/SAUDIA|SAUDI|\bSV[-\s]?\d/i.test(fullTxt)) { airline = 'SAUDIA AIRLINES'; tag = 'SV'; color = '#065f46'; bg = '#ecfdf5'; }
+      else if (/AIRBLUE|\bPA[-\s]?\d/i.test(fullTxt)) { airline = 'AIRBLUE'; tag = 'airblue'; color = '#1d4ed8'; bg = '#eff6ff'; }
+      else if (/SERENE|\bER[-\s]?\d/i.test(fullTxt)) { airline = 'SERENEAIR'; tag = 'SERENE'; color = '#0f172a'; bg = '#fef3c7'; }
+      else if (/EMIRATES|\bEK[-\s]?\d/i.test(fullTxt)) { airline = 'EMIRATES'; tag = 'EK'; color = '#b91c1c'; bg = '#fef2f2'; }
+      else if (/FLYDUBAI|\bFZ[-\s]?\d/i.test(fullTxt)) { airline = 'FLYDUBAI'; tag = 'flydubai'; color = '#ea580c'; bg = '#fff7ed'; }
+      else if (/FLYNAS|\bXY[-\s]?\d/i.test(fullTxt)) { airline = 'FLYNAS'; tag = 'flynas'; color = '#0d9488'; bg = '#f0fdfa'; }
+      else if (/JAZEERA|\bJ9[-\s]?\d/i.test(fullTxt)) { airline = 'JAZEERA AIRWAYS'; tag = 'J9'; color = '#0284c7'; bg = '#e0f2fe'; }
+      else if (/QATAR|\bQR[-\s]?\d/i.test(fullTxt)) { airline = 'QATAR AIRWAYS'; tag = 'QR'; color = '#881337'; bg = '#fff1f2'; }
+      else if (/TURKISH|\bTK[-\s]?\d/i.test(fullTxt)) { airline = 'TURKISH AIRLINES'; tag = 'TK'; color = '#dc2626'; bg = '#fef2f2'; }
+      else if (/ETIHAD|\bEY[-\s]?\d/i.test(fullTxt)) { airline = 'ETIHAD AIRWAYS'; tag = 'EY'; color = '#b45309'; bg = '#fffbeb'; }
+      else if (/AZAL|AZERBAIJAN|\bJ2[-\s]?\d/i.test(fullTxt)) { airline = 'AZERBAIJAN AIRLINES'; tag = 'AZAL'; color = '#0369a1'; bg = '#e0f2fe'; }
+      else if (/SALAM|\bOV[-\s]?\d/i.test(fullTxt)) { airline = 'SALAMAIR'; tag = 'OV'; color = '#15803d'; bg = '#f0fdf4'; }
+      else if (f.Category === 'Umrah Package') { airline = 'UMRAH PACKAGES'; tag = '🕋 UMRAH'; color = '#b45309'; bg = '#fffbeb'; }
+      else if (f.Category === 'Visit Visa') { airline = 'VISIT VISAS'; tag = '🛂 VISA'; color = '#0f4c5c'; bg = '#ecfeff'; }
+
+      var routeMatch = raw.toUpperCase().match(/\b([A-Z]{3})\s*[-–\/]\s*([A-Z]{3})\b/);
+      var routeCode = routeMatch ? (routeMatch[1] + '-' + routeMatch[2]) : (f.Category === 'Visit Visa' ? 'GLOBAL VISA' : (f.Category === 'Umrah Package' ? 'KSA UMRAH' : raw.slice(0, 22)));
+      return { airline: airline, tag: tag, color: color, bg: bg, routeCode: routeCode, rawTitle: raw };
+    }
+
+    function renderGroupedFares(faresList) {
+      var list = faresList || [];
+      var countEl = document.getElementById('faresShowingCount');
+      var container = document.getElementById('faresGroupedContainer');
+      if (countEl) countEl.textContent = 'Showing ' + list.length + ' bookable option' + (list.length === 1 ? '' : 's');
+      if (!container) return;
+
+      if (!list.length) {
+        container.innerHTML = '<div class="card" style="text-align:center;color:#64748b;padding:34px;">No bookable fares or packages match this filter. <button type="button" class="btn btn-sm btn-primary" style="margin-left:8px;" onclick="openFareCategoryTab(\'ALL\')">Show All</button></div>';
+        return;
+      }
+
+      var groupsMap = {};
+      var groupsOrder = [];
+      list.forEach(function(f) {
+        var meta = parseFareMeta(f);
+        var key = meta.airline + '||' + meta.routeCode;
+        if (!groupsMap[key]) {
+          groupsMap[key] = { meta: meta, items: [] };
+          groupsOrder.push(key);
+        }
+        groupsMap[key].items.push(f);
+      });
+
+      container.innerHTML = groupsOrder.map(function(key) {
+        var grp = groupsMap[key];
+        var m = grp.meta;
+        var items = grp.items;
+
+        var rowsHtml = items.map(function(f) {
+          var isVisa = f.Category === 'Visit Visa';
+          var mainName = f.Route || f.Title || f.PackageName || f.Category;
+          var fullLabel = f.Category + ' - ' + mainName;
+          var isSoldOut = !isVisa && (String(f.Seats) === '0' || String(f.Seats) === 'Sold Out');
+
+          var depText = f.TravelDate || f.Date || (isVisa ? 'Open Validity' : 'Flexible');
+          var schedText = f.Timing || mainName;
+          var bagText = f.Luggage || (isVisa ? 'Official E-Visa' : '20+7 KG');
+          var mealStr = String(f.Meal || '').trim();
+          var hasNoMeal = /no\s*meal|none|not\s*included|n\/a/i.test(mealStr);
+          var mealBadge = (!mealStr || !hasNoMeal)
+            ? '<span class="meal-pill-yes">✓ ' + esc(mealStr || 'Included') + '</span>'
+            : '<span class="meal-pill-no">✕ ' + esc(mealStr) + '</span>';
+
+          var seatBadge = isSoldOut
+            ? '<span class="seat-pill-sold">Sold Out</span>'
+            : '<span class="seat-pill-avail">' + (currentIsAdmin && f.Seats && !isVisa ? (esc(f.Seats) + ' Seats') : 'Available') + '</span>';
+
+          var delBtn = currentIsAdmin
+            ? ' <button type="button" class="btn btn-sm btn-red" title="Delete Fare" data-fareid="' + esc(f.ID) + '" onclick="adminDeleteFareReq(this.getAttribute(\'data-fareid\'))">🗑️</button>'
+            : '';
+
+          return '<tr>'
+            + '<td><div style="font-weight:700;color:#0f172a;">' + esc(depText) + '</div>'
+            + (f.Stay || f.Details ? '<div style="font-size:11px;color:#64748b;margin-top:2px;">' + esc(f.Stay || f.Details) + '</div>' : '') + '</td>'
+            + '<td><span style="color:#475569;font-weight:600;">🕒 ' + esc(schedText) + '</span></td>'
+            + '<td><span style="color:#334155;font-weight:600;">🧳 ' + esc(bagText) + '</span></td>'
+            + '<td>' + mealBadge + '</td>'
+            + '<td>' + seatBadge + '</td>'
+            + '<td><div class="fare-price-main">' + Number(f.FarePKR || 0).toLocaleString() + '</div><div class="fare-price-sub">PKR / SEAT</div></td>'
+            + '<td style="text-align:right;white-space:nowrap;">'
+            + '<button type="button" class="btn-book-amber" ' + (isSoldOut ? 'disabled' : '') + ' data-cat="' + esc(f.Category) + '" data-title="' + esc(fullLabel) + '" data-fare="' + Number(f.FarePKR || 0) + '" data-fareid="' + esc(f.ID || '') + '" data-holdmins="' + Number(f.HoldMins || 30) + '" onclick="handleFareBookClick(this)">Book now <span>→</span></button>'
+            + delBtn + '</td></tr>';
+        }).join('');
+
+        return '<div class="airline-group-card">'
+          + '<div class="ag-header">'
+          + '  <div class="ag-brand">'
+          + '    <div class="ag-logo-badge" style="color:' + esc(m.color) + ';background:' + esc(m.bg) + ';border-color:' + esc(m.color) + '33;">' + esc(m.tag) + '</div>'
+          + '    <div><div class="ag-label">AIRLINE / PACKAGE</div><div class="ag-name">' + esc(m.airline) + '</div></div>'
+          + '  </div>'
+          + '  <span class="ag-count-pill">' + items.length + ' fare' + (items.length === 1 ? '' : 's') + '</span>'
+          + '</div>'
+          + '<div class="ag-subheader">'
+          + '  <div class="ag-brand">'
+          + '    <div class="ag-logo-badge" style="min-width:56px;height:30px;font-size:10.5px;color:' + esc(m.color) + ';background:' + esc(m.bg) + ';">' + esc(m.tag) + '</div>'
+          + '    <div><div class="ag-label">CARRIER</div><div style="font-size:13px;font-weight:800;color:#0f172a;">' + esc(m.airline) + '</div></div>'
+          + '  </div>'
+          + '  <div class="ag-route-box">'
+          + '    <div class="ag-plane-icon">✈️</div>'
+          + '    <div><div class="ag-label">ROUTE</div><div class="ag-route-code">' + esc(m.routeCode) + '</div></div>'
+          + '  </div>'
+          + '</div>'
+          + '<div class="ag-table-wrap">'
+          + '  <table class="ag-table"><thead><tr><th>DEPARTURE</th><th>SCHEDULE</th><th>BAGGAGE</th><th>MEAL</th><th>SEATS</th><th>FARE</th><th style="text-align:right;">ACTION</th></tr></thead>'
+          + '  <tbody>' + rowsHtml + '</tbody></table>'
+          + '</div>'
+          + '</div>';
+      }).join('');
+    }
+
+    function applyFaresFilter() {
+      var allFares = window.__ALL_FARES__ || [];
+      var catName = ACTIVE_FARE_CATEGORY || 'ALL';
+      var searchInput = document.getElementById('faresQuickSearch');
+      var q = searchInput ? searchInput.value.trim().toUpperCase() : '';
+
+      var mapKeys = {
+        DXB:['DXB','SHJ','AUH','UAE','DUBAI'],
+        JED:['JED','RUH','DMM','MED','KSA','SAUDI','JEDDAH','RIYADH'],
+        UMRAH_SEATS:['JED','MED','UMRAH','SEAT','SV','PK','PA','ER'],
+        KWI:['KWI','KUWAIT'],
+        GYD:['GYD','BAKU','AZERBAIJAN'],
+        EUROPE:['LHR','MAN','BHX','UK','LONDON','MANCHESTER','IST','EUROPE','SCHENGEN','PARIS','ROME'],
+        MCT:['MCT','SLL','MUSCAT','OMAN'],
+        BAH:['BAH','BAHRAIN'],
+        LHR:['LHR','MAN','BHX','UK','LONDON','MANCHESTER']
+      };
+
+      var filtered = allFares.filter(function(f) {
+        var rowTxt = (
+          String(f.Category || '') + ' ' +
+          String(f.Route || '') + ' ' +
+          String(f.Title || '') + ' ' +
+          String(f.PackageName || '') + ' ' +
+          String(f.Timing || '') + ' ' +
+          String(f.TravelDate || f.Date || '') + ' ' +
+          String(f.Stay || '') + ' ' +
+          String(f.Details || '')
+        ).toUpperCase();
+
+        var catMatch = (!catName || catName === 'ALL')
+          ? true
+          : (mapKeys[catName] ? mapKeys[catName].some(function(k) { return rowTxt.indexOf(k) !== -1; }) : rowTxt.indexOf(catName.toUpperCase()) !== -1);
+        var qMatch = !q || rowTxt.indexOf(q) !== -1;
+        return catMatch && qMatch;
+      });
+
+      renderGroupedFares(filtered);
     }
 
     function loadDashboardData() {
@@ -705,39 +1341,21 @@
           return;
         }
         window.__LAST_DASH_RES__ = res;
+        window.__ALL_FARES__ = res.fares || [];
         window.__ALL_BOOKINGS__ = res.bookings || [];
         window.__ALL_DEPOSITS__ = res.deposits || [];
         currentIsAdmin = !!res.isAdmin;
         var bal = Number(res.balancePKR || 0);
         document.getElementById('walletBadge').textContent = '💰 Wallet: PKR ' + bal.toLocaleString();
 
-        var fares = res.fares || [];
-        document.getElementById('statAvailGroups').textContent = fares.length;
-        document.getElementById('faresTableBody').innerHTML = fares.length ? fares.map(function(f) {
-          var isVisa = f.Category === 'Visit Visa', isUmrah = f.Category === 'Umrah Package';
-          var mainName = f.Route || f.Title || f.PackageName || f.Category;
-          var l1 = isVisa ? 'Processing:' : (isUmrah ? 'Route:' : 'Timing:');
-          var l2 = isVisa ? 'Validity:' : 'Baggage:';
-          var l3 = isVisa ? 'Entry:' : (isUmrah ? 'Meals:' : 'Meal:');
-          var l4 = isVisa ? 'Documents:' : (isUmrah ? 'Hotels:' : 'Flight Type:');
-          var meta = '<div style="margin-top:4px;font-size:11px;line-height:1.5;color:#475569;">'
-            + (f.Timing ? '<div><b>'+l1+'</b> '+esc(f.Timing)+'</div>' : '')
-            + (f.Luggage ? '<div><b>'+l2+'</b> '+esc(f.Luggage)+'</div>' : '')
-            + (f.Meal ? '<div><b>'+l3+'</b> '+esc(f.Meal)+'</div>' : '')
-            + (f.Stay ? '<div><b>'+l4+'</b> '+esc(f.Stay)+'</div>' : '')
-            + (f.Details ? '<div style="color:#0f4c5c;font-weight:600;">• '+esc(f.Details)+'</div>' : '') + '</div>';
-          var fullLabel = f.Category + ' - ' + mainName;
-          var isSoldOut = !isVisa && (String(f.Seats) === '0' || String(f.Seats) === 'Sold Out');
-          var seatBadge = isSoldOut
-            ? '<span class="status-badge st-CANCELED">Sold Out</span>'
-            : '<span class="status-badge st-APPROVED">'+(res.isAdmin && f.Seats ? esc(f.Seats)+' Seats' : 'Available')+'</span>';
-          var delBtn = res.isAdmin ? ' <button type="button" class="btn btn-sm btn-red" data-fareid="'+esc(f.ID)+'" onclick="adminDeleteFareReq(this.getAttribute(\'data-fareid\'))">🗑️</button>' : '';
-          return '<tr><td><span class="status-badge st-APPROVED">'+esc(f.Category)+'</span><div style="font-size:11px;color:#64748b;margin-top:4px;">'+esc(f.TravelDate||f.Date||'Open Validity')+'</div></td>'
-            + '<td><strong style="font-size:13.5px;color:#0b1f44;">'+esc(mainName)+'</strong>'+meta+'</td>'
-            + '<td>'+seatBadge+'</td>'
-            + '<td><strong style="font-size:13.5px;color:#0b1f44;">PKR '+Number(f.FarePKR||0).toLocaleString()+'</strong></td>'
-            + '<td style="white-space:nowrap;"><button type="button" class="btn btn-sm btn-primary" '+(isSoldOut?'disabled':'')+' data-cat="'+esc(f.Category)+'" data-title="'+esc(fullLabel)+'" data-fare="'+Number(f.FarePKR||0)+'" data-fareid="'+esc(f.ID||'')+'" data-holdmins="'+Number(f.HoldMins||30)+'" onclick="handleFareBookClick(this)">Book / Hold</button>'+delBtn+'</td></tr>';
-        }).join('') : '<tr><td colspan="5" style="text-align:center;color:#64748b;padding:20px;">No active records posted yet.</td></tr>';
+        if (res.profile) {
+          var merged = Object.assign({}, getLocalProfile(), res.profile);
+          localStorage.setItem(getProfileStorageKey(), JSON.stringify(merged));
+          populateProfileForm(res.profile.agencyName || document.getElementById('dashAgencyName').textContent);
+        }
+
+        document.getElementById('statAvailGroups').textContent = window.__ALL_FARES__.length;
+        applyFaresFilter();
 
         var banks = (res.banks && res.banks.length) ? res.banks : DEFAULT_BANKS;
         document.getElementById('banksGrid').innerHTML = banks.map(function(bk, idx) {
@@ -803,50 +1421,39 @@
       var isDash = (tabName === 'liveair');
       document.getElementById('dashHeroBanner').style.display = isDash ? 'flex' : 'none';
       document.getElementById('dashHomeBlocks').style.display = isDash ? 'block' : 'none';
-      ['liveair','fares','bookings','banks','ledger','admin'].forEach(function(id) {
+      ['liveair','fares','bookings','banks','ledger','contacts','profile','password','admin'].forEach(function(id) {
         var el = document.getElementById('tab-' + id);
         if (el) el.classList.toggle('hidden', id !== tabName);
       });
-      var targetBtn = (btnEl && btnEl.classList && btnEl.classList.contains('side-btn'))
+      var targetBtn = (btnEl && (btnEl.classList.contains('side-btn') || btnEl.classList.contains('sub-side-btn')))
         ? btnEl
-        : document.querySelector('.side-btn[data-tab="' + tabName + '"]');
-      document.querySelectorAll('.side-btn').forEach(function(b) { b.classList.remove('active'); });
+        : document.querySelector('[data-tab="' + tabName + '"]');
+      document.querySelectorAll('.side-btn, .sub-side-btn').forEach(function(b) { b.classList.remove('active'); });
       if (targetBtn) targetBtn.classList.add('active');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function openFareCategoryTab(catName, btnEl) {
+      ACTIVE_FARE_CATEGORY = catName || 'ALL';
       switchTab('fares', btnEl);
-      var mapKeys = {
-        DXB:['DXB','SHJ','AUH','UAE','DUBAI'],
-        JED:['JED','RUH','DMM','MED','KSA','SAUDI','JEDDAH','RIYADH'],
-        MCT:['MCT','SLL','MUSCAT','OMAN'],
-        BAH:['BAH','BAHRAIN'],
-        LHR:['LHR','MAN','BHX','UK','LONDON','MANCHESTER']
-      };
       var titles = {
         ALL:'🌐 All Group Fares, Packages & Visas',
         'Umrah Package':'🕋 Live Umrah Packages',
+        UMRAH_SEATS:'🕋 Umrah Groups (Only Seats)',
+        GYD:'🇦🇿 Baku Packages (GYD)',
+        DXB:'🇦🇪 UAE (United Arab Emirates)',
+        KWI:'🇰🇼 Kuwait (KWI) Group Fares',
+        JED:'🇸🇦 KSA Groups',
+        EUROPE:'🇪🇺 Europe & UK Group Fares',
         'Visit Visa':'🛂 Live Visit Visas',
-        DXB:'🇦🇪 UAE & Dubai Group Fares',
-        JED:'🇸🇦 KSA Group Fares',
         MCT:'🇴🇲 Muscat Group Fares',
         BAH:'🇧🇭 Bahrain Group Fares',
         LHR:'🇬🇧 UK & London Fares'
       };
-      document.getElementById('faresTabHeading').textContent = titles[catName] || ('🛫 ' + catName);
-      var oldEmpty = document.getElementById('quickJourneyEmptyRow');
-      if (oldEmpty) oldEmpty.remove();
-      var rows = document.querySelectorAll('#faresTableBody tr'), shown = 0;
-      rows.forEach(function(tr) {
-        var txt = (tr.textContent || '').toUpperCase();
-        var match = (!catName || catName === 'ALL') ? true : (mapKeys[catName] ? mapKeys[catName].some(function(k) { return txt.indexOf(k) !== -1; }) : txt.indexOf(catName.toUpperCase()) !== -1);
-        tr.style.display = match ? '' : 'none';
-        if (match) shown++;
-      });
-      if (shown === 0) {
-        document.getElementById('faresTableBody').insertAdjacentHTML('beforeend', '<tr id="quickJourneyEmptyRow"><td colspan="5" style="text-align:center;color:#64748b;padding:24px;">No seats posted for this filter yet. <button type="button" class="btn btn-sm btn-primary" style="margin-left:8px;" onclick="openFareCategoryTab(\'ALL\')">Show All</button></td></tr>');
-      }
+      document.getElementById('faresTabHeading').textContent = titles[ACTIVE_FARE_CATEGORY] || ('🛫 ' + ACTIVE_FARE_CATEGORY);
+      var searchInp = document.getElementById('faresQuickSearch');
+      if (searchInp && ACTIVE_FARE_CATEGORY === 'ALL') searchInp.value = '';
+      applyFaresFilter();
     }
 
     function renderBookingsTable(isAdmin) {
@@ -1423,15 +2030,21 @@
     function printSingleGolanTicket(bookingId) {
       var b = (window.__ALL_BOOKINGS__ || []).find(function(x) { return String(x.BookingID) === String(bookingId); });
       if (!b) return;
-      var logoEl = document.getElementById('mainHeaderLogo');
-      var logoSrc = (logoEl && logoEl.src) ? logoEl.src : '';
+      var prof = getLocalProfile();
+      var useCustom = (prof.voucherBranding !== 'golan' && prof.logoDataUrl);
+      var logoSrc = useCustom ? prof.logoDataUrl : GOLAN_SVG_LOGO;
+      var headerTitle = (useCustom && prof.agencyName) ? prof.agencyName.toUpperCase() : 'GOLAN INTERNATIONAL TRAVEL & TOURS';
+      var headerSub = (useCustom && (prof.address || prof.mobile))
+        ? ((prof.address || '') + (prof.mobile ? (' • ' + prof.mobile) : ''))
+        : 'Toba Tek Singh • PTCL: 046-2512722 • +92 345 3326318';
+
       var cleanTitle = String(b.ItemTitle || '').replace(/\s*\{DATE:.*?\}/g, '');
       var w = window.open('', '_blank', 'width=900,height=900');
       if (!w) { alert('Please allow pop-ups to print E-Ticket.'); return; }
       w.document.write(
         '<!DOCTYPE html><html><head><title>Voucher - '+esc(b.BookingID)+'</title>'
         + '<style>body{font-family:Segoe UI,Arial,sans-serif;padding:24px;color:#0f172a;} .box{max-width:780px;margin:auto;border:2px solid #0b1f44;border-radius:12px;overflow:hidden;} .hdr{background:#0b1f44;color:#fff;padding:18px 22px;display:flex;justify-content:space-between;align-items:center;border-bottom:4px solid #d97706;} table{width:100%;border-collapse:collapse;margin-top:14px;} th,td{border:1px solid #cbd5e1;padding:10px;text-align:left;font-size:13px;} th{background:#f1f5f9;color:#0b1f44;}</style></head>'
-        + '<body><div class="box"><div class="hdr"><div style="display:flex;align-items:center;gap:12px;">'+(logoSrc?'<img src="'+esc(logoSrc)+'" onerror="this.style.display=\'none\'" style="height:42px;border-radius:6px;background:#fff;padding:2px;"/>':'')+'<div><h2 style="margin:0;font-size:17px;">GOLAN INTERNATIONAL TRAVEL &amp; TOURS</h2><small style="color:#fbbf24;">Toba Tek Singh • +92 345 3326318</small></div></div><div style="text-align:right;"><div>Ref: <b>'+esc(b.BookingID)+'</b></div><div>PNR: <b style="color:#fbbf24;font-size:16px;">'+esc(b.PNR||'PENDING')+'</b></div></div></div>'
+        + '<body><div class="box"><div class="hdr"><div style="display:flex;align-items:center;gap:12px;"><img src="'+esc(logoSrc)+'" style="height:48px;width:48px;object-fit:contain;border-radius:8px;background:#fff;padding:3px;"/><div><h2 style="margin:0;font-size:17px;">'+esc(headerTitle)+'</h2><small style="color:#fbbf24;">'+esc(headerSub)+'</small></div></div><div style="text-align:right;"><div>Ref: <b>'+esc(b.BookingID)+'</b></div><div>PNR: <b style="color:#fbbf24;font-size:16px;">'+esc(b.PNR||'PENDING')+'</b></div></div></div>'
         + '<div style="padding:20px;"><table><tr><th>Agency Name</th><td>'+esc(b.AgencyName)+'</td><th>Booking Date</th><td>'+esc(b.CreatedAt)+'</td></tr><tr><th>Passenger Name</th><td><b>'+esc(b.PassengerName)+'</b></td><th>Passport No</th><td><b>'+esc(b.PassportNo)+'</b></td></tr><tr><th>Flight / Package</th><td colspan="3"><b>'+esc(cleanTitle)+'</b> ('+esc(b.Category)+')</td></tr><tr><th>Ticket Number</th><td>'+esc(b.TicketNo||'To be issued')+'</td><th>Status</th><td><b>'+esc(b.Status)+'</b></td></tr><tr><th>Total B2B Fare</th><td colspan="3"><b style="color:#15803d;font-size:15px;">PKR '+Number(b.FarePKR||0).toLocaleString()+'</b></td></tr></table>'
         + '<p style="margin-top:18px;font-size:11px;color:#64748b;text-align:center;">System Generated B2B Voucher — Golan International Travel &amp; Tours</p></div></div>'
         + '<script>window.onload=function(){window.print();};<\/script></body></html>'
@@ -1460,6 +2073,7 @@
     }, 1000);
 
     (function initPortalWidgets() {
+      applyBrandLogos();
       var pktToday = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Karachi' });
       ['srchDate', 'srchReturnDate', 'srchDate2'].forEach(function(id) {
         var el = document.getElementById(id);

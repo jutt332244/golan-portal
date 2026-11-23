@@ -1022,9 +1022,7 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({ ok: false, message: 'Backend Error: ' + err.message });
   }
 };
-File 2: Google Apps Script (Code.gs — apni Google Script mein lagayein aur New Deployment karein)
-Is se har Voucher aur Payment Receipt ka exact professional PDF attach hokar Gmail par jayega:
-JavaScript
+
 function doPost(e) {
   try {
     var d = JSON.parse(e.postData.contents || '{}');

@@ -6,6 +6,7 @@ const SB_URL = process.env.SUPABASE_URL || process.env.STORAGE_SUPABASE_URL || S
 const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.STORAGE_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.STORAGE_SUPABASE_ANON_KEY;
 const DUFFEL_KEY = process.env.DUFFEL_API_KEY || '';
 const GAS_URL = process.env.GAS_VOUCHER_URL || 'https://script.google.com/macros/s/AKfycbyw4rKuL8HLL7zrBjrYIzcxJs2ZLsOY2LcoM7lWQ4LPT0lmkDL0jbAr4vQIIArxofTGjQ/exec';
+const INVOICE_SIGN_SECRET = process.env.INVOICE_SIGN_SECRET || 'GOLAN_INV_HMAC_2026_SECURE';
 
 function hashPwd(pwd) {
   return crypto.createHash('sha256').update('GOLAN_SALT_2026_' + String(pwd || '')).digest('hex');
@@ -19,6 +20,29 @@ function generateSecret() {
   return s;
 }
 
+function escHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function signInvoice(bookingId, passportNo) {
+  return crypto
+    .createHmac('sha256', INVOICE_SIGN_SECRET)
+    .update(String(bookingId || '') + '|' + String(passportNo || '').toUpperCase())
+    .digest('hex')
+    .slice(0, 24);
+}
+
+function getBaseUrl(req) {
+  const host = (req && req.headers && (req.headers['x-forwarded-host'] || req.headers.host)) || 'golaninternational.vercel.app';
+  const proto = (req && req.headers && req.headers['x-forwarded-proto']) ? String(req.headers['x-forwarded-proto']).split(',')[0].trim() : 'https';
+  return `${proto}://${host}`;
+}
+
 function defaultState() {
   const adminPass = process.env.ADMIN_DEFAULT_PASS || 'Golan@786';
   return {
@@ -29,6 +53,10 @@ function defaultState() {
         AgencyName: 'Golan International Head Office',
         City: 'Toba Tek Singh',
         Mobile: '0345-3326318',
+        ContactPerson: 'Shan Chairman',
+        Address: 'Head Office, Toba Tek Singh',
+        VoucherBranding: 'golan',
+        LogoDataUrl: '',
         PasswordHash: hashPwd(adminPass),
         TotpSecret: generateSecret(),
         TotpVerified: 'NO',
@@ -124,8 +152,196 @@ function verifyTotp(secret, code) {
   return false;
 }
 
-async function sendVoucherEmail(recipients, bId, dtStr, agencyName, paxName, passportNo, category, itemTitle, farePKR, statusTxt) {
+function buildBookingEmailHtml({ agencyName, paxName, paxType, farePKR, passportNo, invoiceUrl, isIssued, pnr, ticketNo, itemTitle, bId }) {
+  const cleanTitle = String(itemTitle || '').replace(/\s*\{DATE:.*?\}/g, '');
+  const statusLine = isIssued
+    ? `Your booking with <strong>GOLAN INTERNATIONAL TRAVEL &amp; TOURS</strong> has been <strong>CONFIRMED &amp; ISSUED</strong> (PNR: <strong>${escHtml(pnr)}</strong>${ticketNo ? ` | Ticket: <strong>${escHtml(ticketNo)}</strong>` : ''}). Click the button below to view or print your ticket.`
+    : `Your booking with <strong>GOLAN INTERNATIONAL TRAVEL &amp; TOURS</strong> is on hold (PNR: <strong>${escHtml(pnr)}</strong>). Your ticket/invoice is attached or click on <strong>View Invoice</strong> below to view your ticket.`;
+
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>${isIssued ? 'Booking Confirmed' : 'Booking on hold'} - Golan International</title></head>
+<body style="margin:0;padding:0;background-color:#eef2f7;font-family:Arial,Helvetica,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#eef2f7;padding:30px 14px;">
+    <tr>
+      <td align="center">
+        <table width="650" cellpadding="0" cellspacing="0" style="max-width:650px;width:100%;">
+          <tr>
+            <td align="center" style="padding-bottom:18px;">
+              <h2 style="margin:0;color:#0b1f44;font-size:20px;letter-spacing:0.6px;">GOLAN INTERNATIONAL TRAVEL &amp; TOURS</h2>
+            </td>
+          </tr>
+        </table>
+        <table width="650" cellpadding="0" cellspacing="0" style="max-width:650px;width:100%;background:#ffffff;border-radius:8px;padding:34px;border-top:4px solid #0b1f44;box-shadow:0 2px 10px rgba(0,0,0,0.06);">
+          <tr>
+            <td>
+              <h3 style="margin:0 0 14px 0;color:#1e293b;font-size:18px;">Hello ${escHtml(agencyName || 'Partner')}!</h3>
+              <p style="margin:0 0 18px 0;color:#64748b;font-size:14px;line-height:1.6;">${statusLine}</p>
+              <p style="margin:0 0 18px 0;color:#334155;font-size:13px;"><strong>Booking Ref:</strong> ${escHtml(bId)} &nbsp;|&nbsp; <strong>Route / Package:</strong> ${escHtml(cleanTitle)}</p>
+
+              <h4 style="margin:0 0 10px 0;color:#1e293b;font-size:15px;">Passengers Detail</h4>
+              <table width="100%" cellpadding="10" cellspacing="0" style="border-collapse:collapse;font-size:13px;margin-bottom:24px;">
+                <thead>
+                  <tr style="background-color:#f8fafc;color:#0b1f44;text-align:left;">
+                    <th style="border:1px solid #334155;">Name</th>
+                    <th style="border:1px solid #334155;">Type</th>
+                    <th style="border:1px solid #334155;">Fares</th>
+                    <th style="border:1px solid #334155;">Passport</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style="border:1px solid #334155;color:#1e293b;font-weight:bold;">${escHtml(paxName)}</td>
+                    <td style="border:1px solid #334155;color:#334155;">${escHtml(paxType || 'ADULT')}</td>
+                    <td style="border:1px solid #334155;color:#15803d;font-weight:bold;">PKR ${Number(farePKR || 0).toLocaleString()}</td>
+                    <td style="border:1px solid #334155;color:#334155;">${escHtml(passportNo)}</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div style="text-align:center;margin:26px 0;">
+                <a href="${escHtml(invoiceUrl)}" target="_blank" style="background-color:#1e293b;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:6px;font-size:14px;font-weight:bold;display:inline-block;">View Invoice</a>
+              </div>
+
+              <p style="margin:0 0 14px 0;color:#64748b;font-size:14px;">Thank you for doing business with us!</p>
+              <p style="margin:0;color:#64748b;font-size:14px;line-height:1.6;">Regards,<br><strong style="color:#0b1f44;">GOLAN INTERNATIONAL TRAVEL &amp; TOURS</strong><br><span style="font-size:12px;">PTCL: 046-2512722 | CEO Shan Chairman: 0345-3326318</span></p>
+
+              <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;">
+              <p style="margin:0;color:#94a3b8;font-size:12px;line-height:1.5;word-break:break-all;">
+                If you're having trouble clicking the "View Invoice" button, copy and paste the URL below into your web browser:<br>
+                <a href="${escHtml(invoiceUrl)}" style="color:#2563eb;">${escHtml(invoiceUrl)}</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+        <table width="650" cellpadding="0" cellspacing="0" style="max-width:650px;width:100%;">
+          <tr>
+            <td align="center" style="padding-top:18px;color:#94a3b8;font-size:12px;">&copy; 2026 GOLAN INTERNATIONAL TRAVEL &amp; TOURS. All rights reserved.</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+function buildPrintableInvoicePage(bk, agent) {
+  const cleanTitle = String(bk.ItemTitle || '').replace(/\s*\{DATE:.*?\}/g, '');
+  const useCustom = agent && agent.VoucherBranding !== 'golan' && agent.LogoDataUrl;
+  const brandTitle = (useCustom && agent.AgencyName) ? agent.AgencyName.toUpperCase() : 'GOLAN INTERNATIONAL TRAVEL &amp; TOURS';
+  const brandSub = (useCustom && (agent.Address || agent.Mobile))
+    ? `${escHtml(agent.Address || '')}${agent.Mobile ? ' • ' + escHtml(agent.Mobile) : ''}`
+    : 'Toba Tek Singh • PTCL: 046-2512722 • +92 345 3326318';
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Invoice &amp; Voucher - ${escHtml(bk.BookingID)}</title>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #eef2f7; padding: 24px 12px; color: #0f172a; margin: 0; }
+    .box { max-width: 800px; margin: 0 auto; background: #fff; border: 2px solid #0b1f44; border-radius: 14px; overflow: hidden; box-shadow: 0 12px 32px rgba(11,31,68,0.12); }
+    .hdr { background: linear-gradient(135deg, #071530, #163b7a); color: #fff; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 4px solid #d97706; }
+    .hdr-left { display: flex; align-items: center; gap: 12px; }
+    .hdr-logo { width: 52px; height: 52px; border-radius: 10px; background: #fff; padding: 4px; object-fit: contain; }
+    .content { padding: 24px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { border: 1px solid #cbd5e1; padding: 11px 12px; text-align: left; font-size: 13.5px; }
+    th { background: #f8fafc; color: #0b1f44; font-weight: 700; width: 22%; }
+    .print-bar { text-align: center; margin-top: 20px; }
+    .print-btn { background: #0b1f44; color: #fff; border: none; padding: 11px 24px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; }
+    @media print { body { background: #fff; padding: 0; } .print-bar { display: none; } .box { box-shadow: none; } }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div class="hdr">
+      <div class="hdr-left">
+        ${useCustom ? `<img class="hdr-logo" src="${escHtml(agent.LogoDataUrl)}" alt="Logo" />` : ''}
+        <div>
+          <h2 style="margin:0;font-size:18px;">${brandTitle}</h2>
+          <small style="color:#fbbf24;">${brandSub}</small>
+        </div>
+      </div>
+      <div style="text-align:right;font-size:13px;">
+        <div>Ref: <b>${escHtml(bk.BookingID)}</b></div>
+        <div>PNR: <b style="color:#fbbf24;font-size:17px;">${escHtml(bk.PNR || 'PENDING')}</b></div>
+      </div>
+    </div>
+    <div class="content">
+      <h3 style="margin:0 0 10px;color:#0b1f44;">Booking Invoice &amp; Passenger Details</h3>
+      <table>
+        <tr><th>Agency Name</th><td>${escHtml(bk.AgencyName)}</td><th>Booking Date</th><td>${escHtml(bk.CreatedAt)}</td></tr>
+        <tr><th>Passenger Name</th><td><b>${escHtml(bk.PassengerName)}</b></td><th>Passport No</th><td><b>${escHtml(bk.PassportNo)}</b></td></tr>
+        <tr><th>Flight / Package</th><td colspan="3"><b>${escHtml(cleanTitle)}</b> (${escHtml(bk.Category)})</td></tr>
+        <tr><th>Ticket Number</th><td>${escHtml(bk.TicketNo || 'To be issued')}</td><th>Status</th><td><b>${escHtml(bk.Status)}</b></td></tr>
+        <tr><th>Total B2B Fare</th><td colspan="3"><b style="color:#15803d;font-size:16px;">PKR ${Number(bk.FarePKR || 0).toLocaleString()}</b></td></tr>
+      </table>
+      <p style="margin-top:18px;font-size:11.5px;color:#64748b;text-align:center;">System Generated B2B Voucher — Golan International Travel &amp; Tours</p>
+      <div class="print-bar"><button class="print-btn" onclick="window.print()">🖨 Print / Save as PDF</button></div>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+async function sendVoucherEmail(recipients, bId, dtStr, agencyName, paxName, passportNo, category, itemTitle, farePKR, statusTxt, opts) {
   if (!recipients || !GAS_URL) return '';
+  const options = opts || {};
+  const invoiceUrl = options.invoiceUrl || '';
+  const isIssued = !!options.isIssued;
+  const pnr = options.pnr || 'PENDING';
+  const ticketNo = options.ticketNo || '';
+  const subject = isIssued
+    ? `Ticket Issued & Confirmed - ${bId} (PNR: ${pnr})`
+    : `Booking on hold - ${bId}`;
+
+  const htmlBody = buildBookingEmailHtml({
+    agencyName,
+    paxName,
+    paxType: 'ADULT',
+    farePKR,
+    passportNo,
+    invoiceUrl,
+    isIssued,
+    pnr,
+    ticketNo,
+    itemTitle,
+    bId
+  });
+
+   try {
+    const postRes = await fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      redirect: 'follow',
+      body: JSON.stringify({
+        action: 'sendVoucherHtml',
+        to: recipients,
+        subject,
+        senderName: 'GOLAN INTERNATIONAL TRAVEL & TOURS',
+        htmlBody,
+        invoiceUrl,
+        bId,
+        dtStr,
+        agencyName: agencyName || '',
+        paxName: paxName || '',
+        passportNo: passportNo || '',
+        category: category || '',
+        itemTitle: itemTitle || '',
+        farePKR,
+        statusTxt
+      })
+    });
+    const postTxt = await postRes.text();
+    if (postTxt.indexOf('true') !== -1 || postTxt.indexOf('"ok":true') !== -1) {
+      return ' | Email: SENT';
+    }
+  } catch (e) {}
+
+  // 2) Fallback to existing GET endpoint so email never breaks
   try {
     const url = GAS_URL + '?action=sendVoucher&to=' + encodeURIComponent(recipients)
       + '&bId=' + encodeURIComponent(bId)
@@ -136,7 +352,8 @@ async function sendVoucherEmail(recipients, bId, dtStr, agencyName, paxName, pas
       + '&category=' + encodeURIComponent(category || '')
       + '&itemTitle=' + encodeURIComponent(itemTitle || '')
       + '&farePKR=' + encodeURIComponent(farePKR)
-      + '&statusTxt=' + encodeURIComponent(statusTxt);
+      + '&statusTxt=' + encodeURIComponent(statusTxt)
+      + '&invoiceUrl=' + encodeURIComponent(invoiceUrl);
     const r = await fetch(url, { method: 'GET', redirect: 'follow' });
     const txt = await r.text();
     return txt.indexOf('true') !== -1 ? ' | Email: SENT' : '';
@@ -164,6 +381,20 @@ module.exports = async function handler(req, res) {
     DB.banks = DB.banks || [];
     DB.deposits = DB.deposits || [];
 
+    // Public Signed Invoice Viewer (opened from "View Invoice" button in Golan Email)
+    if (action === 'viewInvoice') {
+      const bookingId = String(p.bookingId || '').trim();
+      const sig = String(p.sig || '').trim();
+      const bk = DB.bookings.find(b => b.BookingID === bookingId);
+      if (!bk || sig !== signInvoice(bk.BookingID, bk.PassportNo)) {
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        return res.status(403).end('<h3 style="font-family:Arial;text-align:center;margin-top:40px;color:#b91c1c;">Invalid or Expired Invoice Link</h3>');
+      }
+      const agent = DB.agents[bk.AgentEmail] || null;
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.status(200).end(buildPrintableInvoicePage(bk, agent));
+    }
+
     if (action === 'register') {
       const agencyName = String(p.agencyName || '').trim();
       const pwd = String(p.password || '');
@@ -175,6 +406,10 @@ module.exports = async function handler(req, res) {
         AgencyName: agencyName,
         City: String(p.city || '').trim(),
         Mobile: String(p.mobile || '').trim(),
+        ContactPerson: '',
+        Address: '',
+        VoucherBranding: 'custom',
+        LogoDataUrl: '',
         PasswordHash: hashPwd(pwd),
         TotpSecret: generateSecret(),
         TotpVerified: 'NO',
@@ -238,6 +473,53 @@ module.exports = async function handler(req, res) {
 
     if (action === 'checkSession') return res.json({ ok: true, agencyName: a.AgencyName, isAdmin, expiry: a.SessionExpiry });
 
+    if (action === 'updateProfile') {
+      const agencyName = String(p.agencyName || '').trim();
+      if (!agencyName) return res.json({ ok: false, message: 'Travel Agency Name is required.' });
+      const logoDataUrl = String(p.logoDataUrl || '');
+      if (logoDataUrl.length > 350000) return res.json({ ok: false, message: 'Logo image too large. Please upload a smaller PNG/JPG.' });
+
+      a.AgencyName = agencyName;
+      a.City = String(p.city || a.City || '').trim();
+      a.Mobile = String(p.mobile || a.Mobile || '').trim();
+      a.ContactPerson = String(p.contactPerson || '').trim();
+      a.Address = String(p.address || '').trim();
+      a.VoucherBranding = p.voucherBranding === 'golan' ? 'golan' : 'custom';
+      a.LogoDataUrl = logoDataUrl;
+      await saveDB(DB);
+
+      return res.json({
+        ok: true,
+        message: '✅ Profile & Agency Logo saved successfully!',
+        profile: {
+          agencyName: a.AgencyName,
+          city: a.City,
+          mobile: a.Mobile,
+          contactPerson: a.ContactPerson,
+          address: a.Address,
+          voucherBranding: a.VoucherBranding,
+          logoDataUrl: a.LogoDataUrl
+        }
+      });
+    }
+
+    if (action === 'changePassword') {
+      const curPwd = String(p.currentPassword || '');
+      const newPwd = String(p.newPassword || '');
+      if (!curPwd || a.PasswordHash !== hashPwd(curPwd)) {
+        return res.json({ ok: false, message: 'Current password is incorrect.' });
+      }
+      if (newPwd.length < 6) {
+        return res.json({ ok: false, message: 'New password must be at least 6 characters.' });
+      }
+      if (curPwd === newPwd) {
+        return res.json({ ok: false, message: 'New password must be different from current password.' });
+      }
+      a.PasswordHash = hashPwd(newPwd);
+      await saveDB(DB);
+      return res.json({ ok: true, message: '✅ Password updated successfully!' });
+    }
+
     if (action === 'getDashboardData' || action === 'getDashboard') {
       const rawBookings = isAdmin ? DB.bookings : DB.bookings.filter(b => b.AgentEmail === email);
       const bookings = rawBookings.map(b => {
@@ -259,7 +541,16 @@ module.exports = async function handler(req, res) {
         Status: x.Status, TotpVerified: x.TotpVerified, BalancePKR: Number(x.BalancePKR || 0)
       })) : [];
       const safeFares = isAdmin ? DB.fares : DB.fares.map(f => ({ ...f, Seats: Number(f.Seats) > 0 ? 'Available' : 'Sold Out' }));
-      return res.json({ ok: true, isAdmin, balancePKR: Number(a.BalancePKR || 0), fares: safeFares, banks: DB.banks, bookings, deposits, agents });
+      const profile = {
+        agencyName: a.AgencyName || '',
+        city: a.City || '',
+        mobile: a.Mobile || '',
+        contactPerson: a.ContactPerson || '',
+        address: a.Address || '',
+        voucherBranding: a.VoucherBranding || 'custom',
+        logoDataUrl: a.LogoDataUrl || ''
+      };
+      return res.json({ ok: true, isAdmin, balancePKR: Number(a.BalancePKR || 0), profile, fares: safeFares, banks: DB.banks, bookings, deposits, agents });
     }
 
     if (action === 'adminGetAttachment' && isAdmin) {
@@ -460,8 +751,14 @@ module.exports = async function handler(req, res) {
         Status: 'PENDING'
       });
       await saveDB(DB);
+
+      const invoiceUrl = `${getBaseUrl(req)}/api/backend?action=viewInvoice&bookingId=${encodeURIComponent(bId)}&sig=${signInvoice(bId, ppNo)}`;
       const recipients = [email, paxMail, ...(DB.admins || [])].filter((v, idx, arr) => v && v.includes('@') && arr.indexOf(v) === idx).join(',');
-      const mailNote = await sendVoucherEmail(recipients, bId, pkTime, a.AgencyName, paxName, ppNo, p.category, itStr, fare, 'HOLD / PENDING (PNR: ' + autoPnr + ')');
+      const mailNote = await sendVoucherEmail(
+        recipients, bId, pkTime, a.AgencyName, paxName, ppNo, p.category, itStr, fare,
+        'HOLD / PENDING (PNR: ' + autoPnr + ')',
+        { invoiceUrl, isIssued: false, pnr: autoPnr }
+      );
       return res.json({ ok: true, bookingId: bId, pnr: autoPnr, holdUntil, message: 'Booking Held (PENDING)! PNR: ' + autoPnr + mailNote });
     }
 
@@ -489,8 +786,13 @@ module.exports = async function handler(req, res) {
       bk.Status = 'CONFIRMED';
       await saveDB(DB);
 
+      const invoiceUrl = `${getBaseUrl(req)}/api/backend?action=viewInvoice&bookingId=${encodeURIComponent(bk.BookingID)}&sig=${signInvoice(bk.BookingID, bk.PassportNo)}`;
       const recipients = [bk.AgentEmail, bk.PassengerEmail, ...(DB.admins || [])].filter((v, idx, arr) => v && v.includes('@') && arr.indexOf(v) === idx).join(',');
-      await sendVoucherEmail(recipients, bk.BookingID, bk.CreatedAt, bk.AgencyName, bk.PassengerName, bk.PassportNo, bk.Category, bk.ItemTitle, fare, 'ISSUED / CONFIRMED (PNR: ' + (bk.PNR || '') + (bk.TicketNo ? ' | TKT: ' + bk.TicketNo : '') + ')');
+      await sendVoucherEmail(
+        recipients, bk.BookingID, bk.CreatedAt, bk.AgencyName, bk.PassengerName, bk.PassportNo, bk.Category, bk.ItemTitle, fare,
+        'ISSUED / CONFIRMED (PNR: ' + (bk.PNR || '') + (bk.TicketNo ? ' | TKT: ' + bk.TicketNo : '') + ')',
+        { invoiceUrl, isIssued: true, pnr: bk.PNR || '', ticketNo: bk.TicketNo || '' }
+      );
       return res.json({ ok: true, message: 'Ticket Issued & CONFIRMED! PNR: ' + bk.PNR });
     }
 
@@ -625,5 +927,33 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({ ok: false, message: 'Backend Error: ' + err.message });
   }
 };
- 
- 
+function doPost(e) {
+  try {
+    var d = JSON.parse(e.postData.contents || '{}');
+    if (d.action === 'sendVoucherHtml' && d.to) {
+      var pdfBlob = Utilities.newBlob(
+        '<html><body style="font-family:Arial;padding:24px;">' +
+        '<h2 style="color:#0b1f44;">GOLAN INTERNATIONAL TRAVEL &amp; TOURS</h2>' +
+        '<hr><p><b>Booking ID:</b> ' + d.bId + '</p>' +
+        '<p><b>Agency:</b> ' + d.agencyName + '</p>' +
+        '<p><b>Passenger:</b> ' + d.paxName + ' (' + d.passportNo + ')</p>' +
+        '<p><b>Item:</b> ' + d.itemTitle + '</p>' +
+        '<p><b>Fare:</b> PKR ' + d.farePKR + '</p>' +
+        '<p><b>Status:</b> ' + d.statusTxt + '</p>' +
+        '</body></html>',
+        'text/html',
+        'Invoice-' + d.bId + '.html'
+      ).getAs('application/pdf').setName('Invoice-' + d.bId + '.pdf');
+
+      GmailApp.sendEmail(d.to, d.subject || ('Booking on hold - ' + d.bId), 'Please view your invoice.', {
+        name: d.senderName || 'GOLAN INTERNATIONAL TRAVEL & TOURS',
+        htmlBody: d.htmlBody,
+        attachments: [pdfBlob]
+      });
+      return ContentService.createTextOutput(JSON.stringify({ ok: true })).setMimeType(ContentService.MimeType.JSON);
+    }
+    return ContentService.createTextOutput('false');
+  } catch (err) {
+    return ContentService.createTextOutput('false');
+  }
+}

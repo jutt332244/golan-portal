@@ -1,10 +1,17 @@
-const crypto = require('crypto');
+ const crypto = require('crypto');
 
 const SB_HOST = ['https:', '', ['yxnygfbamkvzgskgoxoy', 'supabase', 'co'].join('.')].join('/');
 const SB_URL = process.env.SUPABASE_URL || process.env.STORAGE_SUPABASE_URL || SB_HOST;
-const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.STORAGE_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.STORAGE_SUPABASE_ANON_KEY;
+const SB_KEY =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.STORAGE_SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SUPABASE_ANON_KEY ||
+  process.env.STORAGE_SUPABASE_ANON_KEY ||
+  '';
 const DUFFEL_KEY = process.env.DUFFEL_API_KEY || '';
-const GAS_URL = process.env.GAS_VOUCHER_URL || 'https://script.google.com/macros/s/AKfycbyw4rKuL8HLL7zrBjrYIzcxJs2ZLsOY2LcoM7lWQ4LPT0lmkDL0jbAr4vQIIArxofTGjQ/exec';
+const GAS_URL =
+  process.env.GAS_VOUCHER_URL ||
+  'https://script.google.com/macros/s/AKfycbyw4rKuL8HLL7zrBjrYIzcxJs2ZLsOY2LcoM7lWQ4LPT0lmkDL0jbAr4vQIIArxofTGjQ/exec';
 const INVOICE_SIGN_SECRET = process.env.INVOICE_SIGN_SECRET || 'GOLAN_INV_HMAC_2026_SECURE';
 
 const CITY_NAMES = {
@@ -17,8 +24,44 @@ const CITY_NAMES = {
   JFK: 'NEW YORK', YYZ: 'TORONTO', KUL: 'KUALA LUMPUR', BKK: 'BANGKOK', GYD: 'BAKU'
 };
 
-function hashPwd(pwd) {
+const RATES_PKR = { PKR: 1, USD: 280, EUR: 302, GBP: 355, SAR: 74.65, AED: 76.25 };
+
+async function fetchWithTimeout(url, options = {}, timeoutMs = 15000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function timingSafeStrEqual(a, b) {
+  const bufA = Buffer.from(String(a || ''), 'utf8');
+  const bufB = Buffer.from(String(b || ''), 'utf8');
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+}
+
+function legacyHashPwd(pwd) {
   return crypto.createHash('sha256').update('GOLAN_SALT_2026_' + String(pwd || '')).digest('hex');
+}
+
+function hashPwd(pwd) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const derived = crypto.scryptSync(String(pwd || ''), salt, 64).toString('hex');
+  return `scrypt$${salt}$${derived}`;
+}
+
+function verifyPwd(pwd, storedHash) {
+  const s = String(storedHash || '');
+  if (s.startsWith('scrypt$')) {
+    const parts = s.split('$');
+    if (parts.length !== 3) return false;
+    const derived = crypto.scryptSync(String(pwd || ''), parts[1], 64).toString('hex');
+    return timingSafeStrEqual(derived, parts[2]);
+  }
+  return timingSafeStrEqual(legacyHashPwd(pwd), s);
 }
 
 function generateSecret() {
@@ -36,6 +79,14 @@ function escHtml(s) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+function isSafeDataUrl(str, allowPdf = false) {
+  if (!str) return true;
+  const s = String(str).trim();
+  if (/^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+/=]+$/i.test(s)) return true;
+  if (allowPdf && /^data:application\/pdf;base64,[A-Za-z0-9+/=]+$/i.test(s)) return true;
+  return false;
 }
 
 function signInvoice(bookingId, passportNo) {
@@ -56,7 +107,9 @@ function signReceipt(depositId, agentEmail) {
 
 function getBaseUrl(req) {
   const host = (req && req.headers && (req.headers['x-forwarded-host'] || req.headers.host)) || 'golaninternational.vercel.app';
-  const proto = (req && req.headers && req.headers['x-forwarded-proto']) ? String(req.headers['x-forwarded-proto']).split(',')[0].trim() : 'https';
+  const proto = (req && req.headers && req.headers['x-forwarded-proto'])
+    ? String(req.headers['x-forwarded-proto']).split(',')[0].trim()
+    : 'https';
   return `${proto}://${host}`;
 }
 
@@ -67,6 +120,12 @@ function uniqueEmails(list) {
     if (c && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c) && !out.includes(c)) out.push(c);
   });
   return out.join(',');
+}
+
+function clampInt(val, min, max, fallback) {
+  const n = Math.round(Number(val));
+  if (!Number.isFinite(n)) return fallback;
+  return Math.max(min, Math.min(max, n));
 }
 
 function defaultState() {
@@ -95,20 +154,33 @@ function defaultState() {
       }
     },
     fares: [
-      { ID: 'F1', Category: 'Group Flight', Title: 'LHE - JED (Saudi Airlines SV-737)', Timing: 'Dep: 04:15 AM | Arr: 07:45 AM (Direct)', Luggage: '30 KG Check-in + 7 KG Hand Carry', Meal: 'Hot Halal Meal Included', Stay: 'Non-Stop Direct Flight', Details: 'Refundable Before 72 Hrs • Free Seat Selection', TravelDate: '25 Nov 2026', Seats: 18, HoldMins: 30, FarePKR: 138500, Status: 'ACTIVE' },
-      { ID: 'F2', Category: 'Umrah Package', Title: '15 Days Economy Umrah Package', Timing: 'LHE-JED-LHE Return Flights Included', Luggage: '30 KG + 7 KG + 5L Zamzam', Meal: 'Breakfast Optional / Room Only', Stay: 'Makkah 7N (Shuttle) + Madinah 7N (Markazia)', Details: 'Umrah Visa + Full Ziyarat & AC Transport Included', TravelDate: '01 Dec 2026', Seats: 25, HoldMins: 60, FarePKR: 215000, Status: 'ACTIVE' }
+      {
+        ID: 'F1', Category: 'Group Flight', Title: 'LHE - JED (Saudi Airlines SV-737)',
+        Timing: 'Dep: 04:15 AM | Arr: 07:45 AM (Direct)', Luggage: '30 KG Check-in + 7 KG Hand Carry',
+        Meal: 'Hot Halal Meal Included', Stay: 'Non-Stop Direct Flight',
+        Details: 'Refundable Before 72 Hrs • Free Seat Selection', TravelDate: '25 Nov 2026',
+        Seats: 18, HoldMins: 30, FarePKR: 138500, Status: 'ACTIVE'
+      },
+      {
+        ID: 'F2', Category: 'Umrah Package', Title: '15 Days Economy Umrah Package',
+        Timing: 'LHE-JED-LHE Return Flights Included', Luggage: '30 KG + 7 KG + 5L Zamzam',
+        Meal: 'Breakfast Optional / Room Only', Stay: 'Makkah 7N (Shuttle) + Madinah 7N (Markazia)',
+        Details: 'Umrah Visa + Full Ziyarat & AC Transport Included', TravelDate: '01 Dec 2026',
+        Seats: 25, HoldMins: 60, FarePKR: 215000, Status: 'ACTIVE'
+      }
     ],
     bookings: [],
     banks: [],
-    deposits: []
+    deposits: [],
+    offerCache: {}
   };
 }
 
 async function loadDB() {
   if (!SB_KEY) return globalThis.__FALLBACK_DB__ || (globalThis.__FALLBACK_DB__ = defaultState());
-  const r = await fetch(`${SB_URL}/rest/v1/golan_store?id=eq.main&select=data`, {
+  const r = await fetchWithTimeout(`${SB_URL}/rest/v1/golan_store?id=eq.main&select=data`, {
     headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` }
-  });
+  }, 15000);
   if (!r.ok) throw new Error('Database read error (' + r.status + ')');
   const rows = await r.json();
   if (Array.isArray(rows) && rows.length > 0 && rows[0].data) return rows[0].data;
@@ -122,7 +194,7 @@ async function loadDB() {
 
 async function saveDB(db) {
   if (!SB_KEY) { globalThis.__FALLBACK_DB__ = db; return; }
-  const r = await fetch(`${SB_URL}/rest/v1/golan_store`, {
+  const r = await fetchWithTimeout(`${SB_URL}/rest/v1/golan_store`, {
     method: 'POST',
     headers: {
       apikey: SB_KEY,
@@ -131,11 +203,43 @@ async function saveDB(db) {
       Prefer: 'resolution=merge-duplicates'
     },
     body: JSON.stringify({ id: 'main', data: db })
-  });
+  }, 15000);
   if (!r.ok) {
     const txt = await r.text().catch(() => '');
     throw new Error('Database save failed (' + r.status + '): ' + txt.slice(0, 80));
   }
+}
+
+function pruneOfferCache(DB) {
+  DB.offerCache = DB.offerCache || {};
+  const cutoff = Date.now() - 2 * 3600 * 1000;
+  let changed = false;
+  Object.keys(DB.offerCache).forEach(k => {
+    if (!DB.offerCache[k] || Number(DB.offerCache[k].ts || 0) < cutoff) {
+      delete DB.offerCache[k];
+      changed = true;
+    }
+  });
+  return changed;
+}
+
+function expireStaleHolds(DB) {
+  const now = Date.now();
+  let changed = false;
+  (DB.bookings || []).forEach(bk => {
+    const st = String(bk.Status || '').toUpperCase();
+    const holdUntil = Number(bk.HoldUntil || 0);
+    if (st === 'PENDING' && !bk.WasPaid && holdUntil > 0 && now > holdUntil) {
+      bk.Status = 'CANCELED';
+      bk.CancelReason = 'HOLD_EXPIRED';
+      if (bk.FareID && bk.Category !== 'Visit Visa') {
+        const matchedFare = (DB.fares || []).find(f => String(f.ID) === String(bk.FareID));
+        if (matchedFare) matchedFare.Seats = Number(matchedFare.Seats || 0) + 1;
+      }
+      changed = true;
+    }
+  });
+  return changed;
 }
 
 function getNextMidnightPKT() {
@@ -172,8 +276,12 @@ function verifyTotp(secret, code) {
     buf.writeUInt32BE(step >>> 0, 4);
     const hmac = crypto.createHmac('sha1', key).update(buf).digest();
     const off = hmac[hmac.length - 1] & 0x0f;
-    const bin = ((hmac[off] & 0x7f) << 24) | ((hmac[off + 1] & 0xff) << 16) | ((hmac[off + 2] & 0xff) << 8) | (hmac[off + 3] & 0xff);
-    if (String(bin % 1000000).padStart(6, '0') === code) return true;
+    const bin =
+      ((hmac[off] & 0x7f) << 24) |
+      ((hmac[off + 1] & 0xff) << 16) |
+      ((hmac[off + 2] & 0xff) << 8) |
+      (hmac[off + 3] & 0xff);
+    if (timingSafeStrEqual(String(bin % 1000000).padStart(6, '0'), code)) return true;
   }
   return false;
 }
@@ -238,7 +346,7 @@ function fmtTicketTime(val) {
   const s = String(val).trim();
   const ampm = s.match(/(\d{1,2}:\d{2}\s*(?:AM|PM))/i);
   if (ampm) return ampm[1].toUpperCase();
-  const hm = s.match(/(?:^|\s)(\d{2}):(\d{2})(?::\d{2})?(?:\s|$)/);
+  const hm = s.match(/(?:^|[\sT])(\d{1,2}):(\d{2})(?::\d{2})?(?:\s|$)/);
   if (hm) {
     const h = parseInt(hm[1], 10);
     const ap = h >= 12 ? 'PM' : 'AM';
@@ -262,6 +370,7 @@ function parseTicketSegments(bk, fi) {
   const dateLegs = String(fi.date || '').split(/\s*\/\s*|\s*;\s*/).filter(Boolean);
   const segments = [];
   const routeMatches = clean.match(/\b([A-Z]{3})\s*[-–to]+\s*([A-Z]{3})\b/gi) || [];
+  const hasIsoDate = v => /\d{4}-\d{2}-\d{2}/.test(String(v || ''));
 
   if (rawSegs.length > 1 && rawSegs.every(x => /[A-Z]{3}\s*[-–]\s*[A-Z]{3}/i.test(x))) {
     rawSegs.forEach((segTxt, i) => {
@@ -277,7 +386,9 @@ function parseTicketSegments(bk, fi) {
         flightNo: flm ? flm[1].replace('-', ' ').toUpperCase() : (airlineInfo.code + '-GRP'),
         depTime: times[0] ? fmtTicketTime(times[0]) : fmtTicketTime(fi.dep),
         arrTime: times[1] ? fmtTicketTime(times[1]) : fmtTicketTime(fi.arr),
-        depDate: dTxt, arrDate: dTxt, baggage: bag
+        depDate: dTxt,
+        arrDate: dTxt,
+        baggage: bag
       });
     });
   } else if (routeMatches.length > 1) {
@@ -294,7 +405,9 @@ function parseTicketSegments(bk, fi) {
         flightNo: fls[i] ? fls[i].replace('-', ' ').toUpperCase() : (fls[0] ? fls[0].replace('-', ' ').toUpperCase() : (airlineInfo.code + '-GRP')),
         depTime: times[0] ? fmtTicketTime(times[0]) : fmtTicketTime(fi.dep),
         arrTime: times[1] ? fmtTicketTime(times[1]) : fmtTicketTime(fi.arr),
-        depDate: dTxt, arrDate: dTxt, baggage: bag
+        depDate: dTxt,
+        arrDate: dTxt,
+        baggage: bag
       });
     });
   } else {
@@ -303,14 +416,18 @@ function parseTicketSegments(bk, fi) {
     const times = String(fi.timing || '').match(/\d{1,2}:\d{2}(?:\s*(?:AM|PM))?/gi) || [];
     const depT = fi.dep ? fmtTicketTime(fi.dep) : (times[0] ? fmtTicketTime(times[0]) : '--:--');
     const arrT = fi.arr ? fmtTicketTime(fi.arr) : (times[1] ? fmtTicketTime(times[1]) : '--:--');
-    const depD = fmtTicketDate(fi.dep || fi.date);
-    const arrD = fmtTicketDate(fi.arr || fi.date);
+    const depD = fmtTicketDate(hasIsoDate(fi.dep) ? fi.dep : fi.date);
+    const arrD = fmtTicketDate(hasIsoDate(fi.arr) ? fi.arr : fi.date);
     segments.push({
       origin: rm ? codeToCity(rm[1]) : clean.replace(/^(Group Flight|Umrah Package|Visit Visa|Live Airline)\s*[-–]\s*/i, '').slice(0, 22).toUpperCase(),
       dest: rm ? codeToCity(rm[2]) : (bk.Category === 'Visit Visa' ? 'E-VISA' : 'DESTINATION'),
       airline: airlineInfo.name,
       flightNo: flm ? flm[1].replace('-', ' ').toUpperCase() : (airlineInfo.code + '-GRP'),
-      depTime: depT, arrTime: arrT, depDate: depD, arrDate: arrD, baggage: bag
+      depTime: depT,
+      arrTime: arrT,
+      depDate: depD,
+      arrDate: arrD,
+      baggage: bag
     });
   }
   return { airlineInfo, segments };
@@ -375,12 +492,20 @@ function buildBookingEmailHtml({ agencyName, paxName, paxType, farePKR, passport
 </html>`;
 }
 
-// Table-based Electronic Ticket HTML (renders identically in Browser Print AND Google Apps Script PDF converter)
 function buildPrintableInvoicePage(bk, agent, matchedFare) {
-  const useCustom = agent && agent.VoucherBranding !== 'golan' && agent.LogoDataUrl;
-  const agencyName = (useCustom && agent.AgencyName) ? agent.AgencyName : (bk.AgencyName || 'Golan International Travel & Tours');
-  const agencyEmail = (useCustom && bk.AgentEmail) ? bk.AgentEmail : (bk.AgentEmail || 'golaninternational322@gmail.com');
-  const agencyContact = (useCustom && agent.Mobile) ? agent.Mobile : (bk.PaxMobile || (agent && agent.Mobile) || '03453326318');
+  const isGolanBranding = !agent || agent.VoucherBranding === 'golan';
+  const hasValidLogo = !!(agent && agent.LogoDataUrl && isSafeDataUrl(agent.LogoDataUrl, false));
+  const useCustomLogo = !isGolanBranding && hasValidLogo;
+  const agencyName = isGolanBranding
+    ? 'Golan International Travel & Tours'
+    : (agent.AgencyName || bk.AgencyName || 'Partner Travel Agency');
+  const agencyEmail = isGolanBranding
+    ? 'golaninternational322@gmail.com'
+    : (bk.AgentEmail || agent.Email || 'golaninternational322@gmail.com');
+  const agencyContact = isGolanBranding
+    ? '0345-3326318'
+    : (agent.Mobile || bk.PaxMobile || '0345-3326318');
+
   const fi = extractTicketMeta(bk, matchedFare);
   const parsed = parseTicketSegments(bk, fi);
   const air = parsed.airlineInfo;
@@ -390,7 +515,7 @@ function buildPrintableInvoicePage(bk, agent, matchedFare) {
   const ticketedAt = escHtml(bk.CreatedAt || '-');
 
   let rightLogoHtml = '';
-  if (useCustom && agent.LogoDataUrl) {
+  if (useCustomLogo) {
     rightLogoHtml = `<img src="${escHtml(agent.LogoDataUrl)}" style="height:44px;max-width:160px;object-fit:contain;" alt="Logo" />`;
   } else if (air.isSalam) {
     rightLogoHtml = `<div style="font-family:Arial,sans-serif;text-align:right;line-height:1.05;"><div style="font-size:10px;color:#84cc16;font-weight:bold;">السلام</div><div style="font-size:22px;font-weight:800;"><span style="color:#00a99d;">Salam</span><span style="color:#0284c7;">Air</span></div></div>`;
@@ -622,7 +747,7 @@ function buildDepositEmailHtml(d, receiptUrl) {
 async function sendGasEmail({ to, subject, htmlBody, pdfHtml, pdfName, bId, dtStr, agencyName, paxName, passportNo, category, itemTitle, farePKR, statusTxt, invoiceUrl }) {
   if (!to || !GAS_URL) return '';
   try {
-    const postRes = await fetch(GAS_URL, {
+    const postRes = await fetchWithTimeout(GAS_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       redirect: 'follow',
@@ -645,14 +770,13 @@ async function sendGasEmail({ to, subject, htmlBody, pdfHtml, pdfName, bId, dtSt
         farePKR: farePKR || 0,
         statusTxt: statusTxt || ''
       })
-    });
+    }, 15000);
     const postTxt = await postRes.text();
     if (postTxt.indexOf('true') !== -1 || postTxt.indexOf('"ok":true') !== -1) return ' | Email: SENT';
   } catch (e) {}
   return '';
 }
 
-// Sends separate dedicated Gmail to Sub-Agent (+Passenger) AND separate dedicated Gmail to Admin(s)
 async function sendBookingEmailsSeparate({ adminEmails, subAgentEmail, paxEmail, bId, dtStr, agencyName, paxName, passportNo, category, itemTitle, farePKR, statusTxt, opts }) {
   const options = opts || {};
   const invoiceUrl = options.invoiceUrl || '';
@@ -667,10 +791,8 @@ async function sendBookingEmailsSeparate({ adminEmails, subAgentEmail, paxEmail,
     : (isCanceled ? `Booking Canceled - ${bId} (PNR: ${pnr})` : `Electronic Ticket (HOLD) - ${bId} (PNR: ${pnr})`);
 
   const adminSubject = `[ADMIN COPY] ${agentSubject} | ${agencyName || 'Partner'}`;
-
   const tasks = [];
 
-  // 1. Sub-Agent (+ Passenger) Gmail
   const subAgentTo = uniqueEmails([subAgentEmail, paxEmail]);
   if (subAgentTo) {
     const agentHtml = buildBookingEmailHtml({
@@ -685,7 +807,6 @@ async function sendBookingEmailsSeparate({ adminEmails, subAgentEmail, paxEmail,
     }));
   }
 
-  // 2. Admin Gmail (Separate Email)
   const adminTo = uniqueEmails(adminEmails || []);
   if (adminTo) {
     const adminHtml = buildBookingEmailHtml({
@@ -705,16 +826,31 @@ async function sendBookingEmailsSeparate({ adminEmails, subAgentEmail, paxEmail,
 }
 
 module.exports = async function handler(req, res) {
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+
   try {
     let bodyObj = {};
     if (req.body && typeof req.body === 'object') bodyObj = req.body;
     else if (typeof req.body === 'string' && req.body.trim()) {
-      try { bodyObj = JSON.parse(req.body); } catch (e) {}
+      try { bodyObj = JSON.parse(req.body); } catch (e) {
+        return res.status(400).json({ ok: false, message: 'Invalid JSON request body.' });
+      }
     }
 
-    const p = Object.assign({}, req.query || {}, bodyObj);
-    const action = String(p.action || '').trim();
+    const q = req.query || {};
+    const action = String((bodyObj.action != null ? bodyObj.action : q.action) || '').trim();
+    const READ_GET_ACTIONS = new Set(['viewInvoice', 'viewReceipt', 'checkSession', 'getDashboardData', 'getDashboard', 'adminGetAttachment']);
+
+    if (req.method !== 'POST' && !READ_GET_ACTIONS.has(action)) {
+      return res.status(405).json({ ok: false, message: 'Method Not Allowed. Use POST for this action.' });
+    }
+
+    // For POST requests, read payload strictly from JSON body (only allow action from query if needed)
+    const p = req.method === 'POST' ? Object.assign({}, bodyObj, { action }) : Object.assign({}, q, bodyObj);
     const email = String(p.email || '').trim().toLowerCase();
+
     const DB = await loadDB();
     DB.admins = DB.admins || [];
     DB.agents = DB.agents || {};
@@ -722,13 +858,14 @@ module.exports = async function handler(req, res) {
     DB.bookings = DB.bookings || [];
     DB.banks = DB.banks || [];
     DB.deposits = DB.deposits || [];
+    DB.offerCache = DB.offerCache || {};
 
     // Public Signed Electronic Ticket PDF Viewer
     if (action === 'viewInvoice') {
       const bookingId = String(p.bookingId || '').trim();
       const sig = String(p.sig || '').trim();
       const bk = DB.bookings.find(b => b.BookingID === bookingId);
-      if (!bk || sig !== signInvoice(bk.BookingID, bk.PassportNo)) {
+      if (!bk || !timingSafeStrEqual(sig, signInvoice(bk.BookingID, bk.PassportNo))) {
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
         return res.status(403).end('<h3 style="font-family:Arial;text-align:center;margin-top:40px;color:#b91c1c;">Invalid or Expired Ticket Link</h3>');
       }
@@ -743,7 +880,7 @@ module.exports = async function handler(req, res) {
       const depositId = String(p.depositId || '').trim();
       const sig = String(p.sig || '').trim();
       const dep = DB.deposits.find(d => d.DepositID === depositId);
-      if (!dep || sig !== signReceipt(dep.DepositID, dep.AgentEmail)) {
+      if (!dep || !timingSafeStrEqual(sig, signReceipt(dep.DepositID, dep.AgentEmail))) {
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
         return res.status(403).end('<h3 style="font-family:Arial;text-align:center;margin-top:40px;color:#b91c1c;">Invalid or Expired Receipt Link</h3>');
       }
@@ -752,13 +889,14 @@ module.exports = async function handler(req, res) {
     }
 
     if (action === 'register') {
-      const agencyName = String(p.agencyName || '').trim();
-      const city = String(p.city || '').trim();
-      const mobile = String(p.mobile || '').trim();
+      const agencyName = String(p.agencyName || '').trim().slice(0, 120);
+      const city = String(p.city || '').trim().slice(0, 60);
+      const mobile = String(p.mobile || '').trim().slice(0, 30);
       const pwd = String(p.password || '');
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.json({ ok: false, message: 'Enter a valid email address.' });
       if (!agencyName || pwd.length < 6) return res.json({ ok: false, message: 'Agency name and password (min 6 chars) required.' });
       if (DB.agents[email]) return res.json({ ok: false, message: 'Email already registered.' });
+
       DB.agents[email] = {
         Email: email, AgencyName: agencyName, City: city, Mobile: mobile,
         ContactPerson: '', Address: '', VoucherBranding: 'custom', LogoDataUrl: '',
@@ -783,13 +921,20 @@ module.exports = async function handler(req, res) {
       if (isSuper) { a.Status = 'APPROVED'; a.FailedAttempts = 0; a.TotpFailedAttempts = 0; }
       if (a.Status === 'BLOCKED') return res.json({ ok: false, message: 'Account BLOCKED by Head Office.' });
       if (a.Status !== 'APPROVED') return res.json({ ok: false, message: 'Account PENDING approval from Admin.' });
-      if (a.PasswordHash !== hashPwd(p.password || '')) {
+
+      const pwd = String(p.password || '');
+      if (!verifyPwd(pwd, a.PasswordHash)) {
         if (!isSuper) {
           a.FailedAttempts = (a.FailedAttempts || 0) + 1;
           if (a.FailedAttempts >= 5) a.Status = 'BLOCKED';
           await saveDB(DB);
         }
         return res.json({ ok: false, message: 'Invalid password.' });
+      }
+
+      // Transparent upgrade from legacy SHA-256 to scrypt
+      if (!String(a.PasswordHash || '').startsWith('scrypt$')) {
+        a.PasswordHash = hashPwd(pwd);
       }
       a.FailedAttempts = 0;
       await saveDB(DB);
@@ -810,21 +955,35 @@ module.exports = async function handler(req, res) {
       }
       const token = crypto.randomUUID();
       const expiry = getNextMidnightPKT();
-      a.TotpVerified = 'YES'; a.TotpFailedAttempts = 0; a.SessionToken = token; a.SessionExpiry = expiry;
+      a.TotpVerified = 'YES';
+      a.TotpFailedAttempts = 0;
+      a.SessionToken = token;
+      a.SessionExpiry = expiry;
       await saveDB(DB);
       return res.json({ ok: true, token, expiry, agencyName: a.AgencyName, isAdmin: isSuper });
     }
 
+    // Authenticated Endpoints
     const a = DB.agents[email];
-    const validSess = a && a.Status === 'APPROVED' && a.SessionToken && a.SessionToken === p.token && Date.now() < Number(a.SessionExpiry || 0);
+    const validSess =
+      a &&
+      a.Status === 'APPROVED' &&
+      a.SessionToken &&
+      timingSafeStrEqual(a.SessionToken, p.token) &&
+      Date.now() < Number(a.SessionExpiry || 0);
     if (!validSess) return res.json({ ok: false, message: 'Session expired at 12:00 AM. Please verify 2FA again.' });
     const isAdmin = DB.admins.includes(email);
 
-    if (action === 'checkSession') return res.json({ ok: true, agencyName: a.AgencyName, isAdmin, expiry: a.SessionExpiry });
+    if (action === 'checkSession') {
+      return res.json({ ok: true, agencyName: a.AgencyName, isAdmin, expiry: a.SessionExpiry });
+    }
 
     if (action === 'sendEmailNotification') {
       const subj = String(p.subject || '');
-      const autoPrefixes = ['New Booking Hold [', 'Ticket Issued [', 'Booking Canceled [', 'New Deposit Slip Submitted [', 'Deposit Approved [', 'New B2B Sub-Agent Registration:'];
+      const autoPrefixes = [
+        'New Booking Hold [', 'Ticket Issued [', 'Booking Canceled [',
+        'New Deposit Slip Submitted [', 'Deposit Approved [', 'New B2B Sub-Agent Registration:'
+      ];
       if (autoPrefixes.some(pref => subj.startsWith(pref))) {
         return res.json({ ok: true, message: 'Notification already dispatched automatically.' });
       }
@@ -848,28 +1007,35 @@ module.exports = async function handler(req, res) {
     }
 
     if (action === 'updateProfile') {
-      const agencyName = String(p.agencyName || '').trim();
+      const agencyName = String(p.agencyName || '').trim().slice(0, 120);
       if (!agencyName) return res.json({ ok: false, message: 'Travel Agency Name is required.' });
-      const logoDataUrl = String(p.logoDataUrl || '');
+      const logoDataUrl = String(p.logoDataUrl || '').trim();
       if (logoDataUrl.length > 350000) return res.json({ ok: false, message: 'Logo image too large. Please upload a smaller PNG/JPG.' });
+      if (!isSafeDataUrl(logoDataUrl, false)) return res.json({ ok: false, message: 'Invalid logo image format. Only PNG, JPG, WEBP or GIF allowed.' });
+
       a.AgencyName = agencyName;
-      a.City = String(p.city || a.City || '').trim();
-      a.Mobile = String(p.mobile || a.Mobile || '').trim();
-      a.ContactPerson = String(p.contactPerson || '').trim();
-      a.Address = String(p.address || '').trim();
+      a.City = String(p.city || a.City || '').trim().slice(0, 60);
+      a.Mobile = String(p.mobile || a.Mobile || '').trim().slice(0, 30);
+      a.ContactPerson = String(p.contactPerson || '').trim().slice(0, 80);
+      a.Address = String(p.address || '').trim().slice(0, 200);
       a.VoucherBranding = p.voucherBranding === 'golan' ? 'golan' : 'custom';
       a.LogoDataUrl = logoDataUrl;
       await saveDB(DB);
       return res.json({
         ok: true,
         message: '✅ Profile & Agency Logo saved successfully!',
-        profile: { agencyName: a.AgencyName, city: a.City, mobile: a.Mobile, contactPerson: a.ContactPerson, address: a.Address, voucherBranding: a.VoucherBranding, logoDataUrl: a.LogoDataUrl }
+        profile: {
+          agencyName: a.AgencyName, city: a.City, mobile: a.Mobile,
+          contactPerson: a.ContactPerson, address: a.Address,
+          voucherBranding: a.VoucherBranding, logoDataUrl: a.LogoDataUrl
+        }
       });
     }
 
     if (action === 'changePassword') {
-      const curPwd = String(p.currentPassword || ''), newPwd = String(p.newPassword || '');
-      if (!curPwd || a.PasswordHash !== hashPwd(curPwd)) return res.json({ ok: false, message: 'Current password is incorrect.' });
+      const curPwd = String(p.currentPassword || '');
+      const newPwd = String(p.newPassword || '');
+      if (!curPwd || !verifyPwd(curPwd, a.PasswordHash)) return res.json({ ok: false, message: 'Current password is incorrect.' });
       if (newPwd.length < 6) return res.json({ ok: false, message: 'New password must be at least 6 characters.' });
       if (curPwd === newPwd) return res.json({ ok: false, message: 'New password must be different from current password.' });
       a.PasswordHash = hashPwd(newPwd);
@@ -878,17 +1044,38 @@ module.exports = async function handler(req, res) {
     }
 
     if (action === 'getDashboardData' || action === 'getDashboard') {
+      const expiredChanged = expireStaleHolds(DB);
+      const cacheChanged = pruneOfferCache(DB);
+      if (expiredChanged || cacheChanged) await saveDB(DB);
+
       const rawBookings = isAdmin ? DB.bookings : DB.bookings.filter(b => b.AgentEmail === email);
-      const bookings = rawBookings.map(b => { const c = Object.assign({}, b); c.HasDocs = !!(b.PassportDoc || b.PhotoDoc); delete c.PassportDoc; delete c.PhotoDoc; return c; });
+      const bookings = rawBookings.map(b => {
+        const c = Object.assign({}, b);
+        c.HasDocs = !!(b.PassportDoc || b.PhotoDoc);
+        delete c.PassportDoc;
+        delete c.PhotoDoc;
+        return c;
+      });
       const rawDeposits = isAdmin ? DB.deposits : DB.deposits.filter(d => d.AgentEmail === email);
-      const deposits = rawDeposits.map(d => { const c = Object.assign({}, d); c.HasSlip = !!d.SlipImage; delete c.SlipImage; return c; });
-      const agents = isAdmin ? Object.values(DB.agents).map(x => ({
-        Email: x.Email, AgencyName: x.AgencyName, City: x.City, Mobile: x.Mobile, Status: x.Status, TotpVerified: x.TotpVerified, BalancePKR: Number(x.BalancePKR || 0)
-      })) : [];
-      const safeFares = isAdmin ? DB.fares : DB.fares.map(f => ({ ...f, Seats: Number(f.Seats) > 0 ? 'Available' : 'Sold Out' }));
+      const deposits = rawDeposits.map(d => {
+        const c = Object.assign({}, d);
+        c.HasSlip = !!d.SlipImage;
+        delete c.SlipImage;
+        return c;
+      });
+      const agents = isAdmin
+        ? Object.values(DB.agents).map(x => ({
+            Email: x.Email, AgencyName: x.AgencyName, City: x.City, Mobile: x.Mobile,
+            Status: x.Status, TotpVerified: x.TotpVerified, BalancePKR: Number(x.BalancePKR || 0)
+          }))
+        : [];
+      const safeFares = isAdmin
+        ? DB.fares
+        : DB.fares.map(f => ({ ...f, Seats: Number(f.Seats) > 0 ? 'Available' : 'Sold Out' }));
       const profile = {
-        agencyName: a.AgencyName || '', city: a.City || '', mobile: a.Mobile || '', contactPerson: a.ContactPerson || '',
-        address: a.Address || '', voucherBranding: a.VoucherBranding || 'custom', logoDataUrl: a.LogoDataUrl || ''
+        agencyName: a.AgencyName || '', city: a.City || '', mobile: a.Mobile || '',
+        contactPerson: a.ContactPerson || '', address: a.Address || '',
+        voucherBranding: a.VoucherBranding || 'custom', logoDataUrl: a.LogoDataUrl || ''
       };
       return res.json({ ok: true, isAdmin, balancePKR: Number(a.BalancePKR || 0), profile, fares: safeFares, banks: DB.banks, bookings, deposits, agents });
     }
@@ -911,71 +1098,113 @@ module.exports = async function handler(req, res) {
       if (!DUFFEL_KEY) return res.json({ ok: false, message: 'Flight API Key not configured on Vercel.' });
       const origin = String(p.origin || '').trim().toUpperCase().slice(0, 3);
       const dest = String(p.dest || '').trim().toUpperCase().slice(0, 3);
-      const date = String(p.date || '').trim(), returnDate = String(p.returnDate || '').trim();
+      const date = String(p.date || '').trim();
+      const returnDate = String(p.returnDate || '').trim();
       const tripType = String(p.tripType || 'oneway').trim();
       const origin2 = String(p.origin2 || '').trim().toUpperCase().slice(0, 3);
       const dest2 = String(p.dest2 || '').trim().toUpperCase().slice(0, 3);
-      const date2 = String(p.date2 || '').trim(), cabin = String(p.cabin || 'economy').trim().toLowerCase();
-      if (origin.length !== 3 || dest.length !== 3) return res.json({ ok: false, message: 'Please select valid 3-letter Origin & Destination airports.' });
+      const date2 = String(p.date2 || '').trim();
+      const cabinRaw = String(p.cabin || 'economy').trim().toLowerCase();
+      const cabin = ['economy', 'premium_economy', 'business', 'first'].includes(cabinRaw) ? cabinRaw : 'economy';
+
+      if (!/^[A-Z]{3}$/.test(origin) || !/^[A-Z]{3}$/.test(dest)) return res.json({ ok: false, message: 'Please select valid 3-letter Origin & Destination airports.' });
       if (origin === dest) return res.json({ ok: false, message: 'Origin and Destination cannot be same.' });
-      if (!date) return res.json({ ok: false, message: 'Please select departure date.' });
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return res.json({ ok: false, message: 'Please select valid departure date (YYYY-MM-DD).' });
 
       const slices = [{ origin, destination: dest, departure_date: date }];
-      if (tripType === 'roundtrip' && returnDate) slices.push({ origin: dest, destination: origin, departure_date: returnDate });
-      else if (tripType === 'multicity' && origin2.length === 3 && dest2.length === 3 && date2) slices.push({ origin: origin2, destination: dest2, departure_date: date2 });
+      if (tripType === 'roundtrip' && /^\d{4}-\d{2}-\d{2}$/.test(returnDate)) {
+        slices.push({ origin: dest, destination: origin, departure_date: returnDate });
+      } else if (tripType === 'multicity' && /^[A-Z]{3}$/.test(origin2) && /^[A-Z]{3}$/.test(dest2) && /^\d{4}-\d{2}-\d{2}$/.test(date2)) {
+        slices.push({ origin: origin2, destination: dest2, departure_date: date2 });
+      }
 
       const duffelUrl = ['https:', '', ['api', 'duffel', 'com'].join('.'), 'air', 'offer_requests?return_offers=true'].join('/');
-      const r = await fetch(duffelUrl, {
+      const r = await fetchWithTimeout(duffelUrl, {
         method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + DUFFEL_KEY, 'Duffel-Version': 'v2', 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        headers: {
+          Authorization: 'Bearer ' + DUFFEL_KEY,
+          'Duffel-Version': 'v2',
+          'Content-Type': 'application/json',
+          Accept: 'application/json'
+        },
         body: JSON.stringify({ data: { slices, passengers: [{ type: 'adult' }], cabin_class: cabin } })
-      });
+      }, 20000);
+
       const rawTxt = await r.text();
       let json = {};
-      try { json = JSON.parse(rawTxt); } catch (e) { return res.json({ ok: false, message: 'GDS Response Error (' + r.status + '): ' + rawTxt.slice(0, 100) }); }
+      try { json = JSON.parse(rawTxt); } catch (e) {
+        return res.json({ ok: false, message: 'GDS Response Error (' + r.status + '): ' + rawTxt.slice(0, 100) });
+      }
       if (!r.ok || !json.data || !Array.isArray(json.data.offers) || json.data.offers.length === 0) {
         return res.json({ ok: false, message: (json.errors && json.errors[0] && json.errors[0].message) || 'No live flights found.' });
       }
-      const RATES_PKR = { PKR: 1, USD: 280, EUR: 302, GBP: 355, SAR: 74.65, AED: 76.25 };
+
       const AIRLINE_POOL = [
-        { name: 'Emirates', code: 'EK', num: '623' }, { name: 'flydubai', code: 'FZ', num: '392' },
+        { name: 'Emirates', code: 'EK', num: '623' },
+        { name: 'flydubai', code: 'FZ', num: '392' },
         { name: 'Pakistan International Airlines (PIA)', code: 'PK', num: '221' },
-        { name: 'Saudi Arabian Airlines', code: 'SV', num: '737' }, { name: 'Qatar Airways', code: 'QR', num: '629' }
+        { name: 'Saudi Arabian Airlines', code: 'SV', num: '737' },
+        { name: 'Qatar Airways', code: 'QR', num: '629' }
       ];
+
+      pruneOfferCache(DB);
+      const nowTs = Date.now();
       const offers = json.data.offers.slice(0, 15).map((o, idx) => {
-        const slice = o.slices && o.slices[0], seg0 = slice && slice.segments && slice.segments[0], segLast = slice && slice.segments && slice.segments[slice.segments.length - 1];
-        const stops = slice && slice.segments ? slice.segments.length - 1 : 0, sim = AIRLINE_POOL[idx % AIRLINE_POOL.length];
-        let rawAirline = (seg0 && seg0.operating_carrier && seg0.operating_carrier.name) || (seg0 && seg0.marketing_carrier && seg0.marketing_carrier.name) || (o.owner && o.owner.name) || '';
+        const slice = o.slices && o.slices[0];
+        const seg0 = slice && slice.segments && slice.segments[0];
+        const segLast = slice && slice.segments && slice.segments[slice.segments.length - 1];
+        const stops = slice && slice.segments ? slice.segments.length - 1 : 0;
+        const sim = AIRLINE_POOL[idx % AIRLINE_POOL.length];
+        const rawAirline =
+          (seg0 && seg0.operating_carrier && seg0.operating_carrier.name) ||
+          (seg0 && seg0.marketing_carrier && seg0.marketing_carrier.name) ||
+          (o.owner && o.owner.name) || '';
         const isDummy = !rawAirline || rawAirline.toLowerCase().includes('duffel');
         const airline = isDummy ? sim.name : rawAirline;
-        const flightNo = isDummy ? (sim.code + '-' + sim.num) : (seg0 && seg0.marketing_carrier ? (seg0.marketing_carrier.iata_code + '-' + seg0.marketing_carrier_flight_number) : sim.code + '-' + sim.num);
+        const flightNo = isDummy
+          ? (sim.code + '-' + sim.num)
+          : (seg0 && seg0.marketing_carrier ? (seg0.marketing_carrier.iata_code + '-' + seg0.marketing_carrier_flight_number) : sim.code + '-' + sim.num);
         const depTime = seg0 && seg0.departing_at ? seg0.departing_at.replace('T', ' ').slice(0, 16) : (date + ' 04:15');
         const arrTime = segLast && segLast.arriving_at ? segLast.arriving_at.replace('T', ' ').slice(0, 16) : (date + ' 07:45');
         const farePKR = Math.round(Number(o.total_amount || 0) * (RATES_PKR[o.total_currency] || 280));
+
+        if (o.id && farePKR > 0) {
+          DB.offerCache[o.id] = { farePKR, ts: nowTs };
+        }
+
         return {
           OfferID: o.id, Airline: airline, FlightNo: flightNo, Origin: origin, Dest: dest,
-          Route: tripType === 'roundtrip' ? (origin + ' ⇄ ' + dest) : (tripType === 'multicity' ? (origin + '→' + dest + ' / ' + origin2 + '→' + dest2) : (origin + ' → ' + dest)),
-          Stops: stops === 0 ? 'Non-Stop Direct' : stops + ' Stop(s)', DepTime: depTime, ArrTime: arrTime,
-          Baggage: '23-30 KG Checked + 7 KG Hand Carry', Luggage: '23-30 KG Checked + 7 KG Hand Carry', FarePKR: farePKR
+          Route: tripType === 'roundtrip'
+            ? (origin + ' ⇄ ' + dest)
+            : (tripType === 'multicity' ? (origin + '→' + dest + ' / ' + origin2 + '→' + dest2) : (origin + ' → ' + dest)),
+          Stops: stops === 0 ? 'Non-Stop Direct' : stops + ' Stop(s)',
+          DepTime: depTime, ArrTime: arrTime,
+          Baggage: '23-30 KG Checked + 7 KG Hand Carry',
+          Luggage: '23-30 KG Checked + 7 KG Hand Carry',
+          FarePKR: farePKR
         };
       });
+
+      await saveDB(DB);
       return res.json({ ok: true, offers });
     }
 
     if (action === 'requestDeposit' || action === 'submitDeposit') {
       const amt = Math.round(Number(p.amountPKR || 0));
-      if (!Number.isFinite(amt) || amt < 100) return res.json({ ok: false, message: 'Minimum deposit PKR 100.' });
-      const slipImg = String(p.slipImage || '');
+      if (!Number.isFinite(amt) || amt < 100 || amt > 50000000) return res.json({ ok: false, message: 'Deposit must be between PKR 100 and 50,000,000.' });
+      const slipImg = String(p.slipImage || '').trim();
       if (slipImg.length > 450000) return res.json({ ok: false, message: 'Slip image too large. Please upload a clearer/smaller image.' });
+      if (!isSafeDataUrl(slipImg, true)) return res.json({ ok: false, message: 'Invalid deposit slip format. Upload PNG, JPG, or PDF.' });
+
       const depId = 'DEP-' + crypto.randomInt(10000, 99999);
       const depObj = {
         DepositID: depId,
         CreatedAt: getPKTimeStr(),
         AgentEmail: email,
         AgencyName: a.AgencyName,
-        BankName: String(p.bankName || 'UBL').trim(),
+        BankName: String(p.bankName || 'UBL').trim().slice(0, 80),
         AmountPKR: amt,
-        TxRef: String(p.txRef || p.refNo || ('SLIP-' + Date.now().toString().slice(-6))).trim(),
+        TxRef: String(p.txRef || p.refNo || ('SLIP-' + Date.now().toString().slice(-6))).trim().slice(0, 60),
         SlipImage: slipImg,
         Status: 'PENDING'
       };
@@ -994,12 +1223,22 @@ module.exports = async function handler(req, res) {
     }
 
     if (action === 'addBooking') {
-      const paxName = String(p.passengerName || '').trim();
-      const ppNo = String(p.passportNo || '').trim().toUpperCase();
-      if (!paxName || !/^[A-Z0-9]{6,12}$/.test(ppNo)) return res.json({ ok: false, message: 'Invalid Passenger Name or Passport Number.' });
+      expireStaleHolds(DB);
+      pruneOfferCache(DB);
 
-      let fare = Number(p.farePKR || 0), holdMins = 0, matchedFare = null;
+      const paxName = String(p.passengerName || '').trim().slice(0, 100);
+      const ppNo = String(p.passportNo || '').trim().toUpperCase();
+      if (paxName.length < 2 || !/^[A-Z0-9]{6,12}$/.test(ppNo)) {
+        return res.json({ ok: false, message: 'Invalid Passenger Name or Passport Number.' });
+      }
+
+      const category = String(p.category || '').trim();
+      let fare = 0;
+      let holdMins = 0;
+      let matchedFare = null;
       const fareId = String(p.fareId || '').trim();
+      const offerId = String(p.offerId || p.OfferID || '').trim();
+
       if (fareId) {
         matchedFare = DB.fares.find(f => String(f.ID) === fareId);
         if (!matchedFare) return res.json({ ok: false, message: 'Selected fare/package is no longer available.' });
@@ -1009,14 +1248,43 @@ module.exports = async function handler(req, res) {
           matchedFare.Seats = seatsLeft - 1;
         }
         fare = Number(matchedFare.FarePKR || 0);
-        holdMins = Number(matchedFare.HoldMins || 30);
+        holdMins = clampInt(matchedFare.HoldMins, 5, 4320, 30);
+      } else if (offerId) {
+        if (DB.offerCache[offerId] && Number(DB.offerCache[offerId].farePKR) > 0) {
+          fare = Number(DB.offerCache[offerId].farePKR);
+        } else if (DUFFEL_KEY) {
+          const offerUrl = ['https:', '', ['api', 'duffel', 'com'].join('.'), 'air', 'offers', encodeURIComponent(offerId)].join('/');
+          const rOffer = await fetchWithTimeout(offerUrl, {
+            headers: { Authorization: 'Bearer ' + DUFFEL_KEY, 'Duffel-Version': 'v2', Accept: 'application/json' }
+          }, 12000);
+          if (rOffer.ok) {
+            const oj = await rOffer.json().catch(() => ({}));
+            if (oj.data && oj.data.total_amount) {
+              fare = Math.round(Number(oj.data.total_amount) * (RATES_PKR[oj.data.total_currency] || 280));
+            }
+          }
+        }
+        if (!Number.isFinite(fare) || fare <= 0) {
+          return res.json({ ok: false, message: 'Live flight offer expired. Please search flights again.' });
+        }
+      } else {
+        fare = Math.round(Number(p.farePKR || 0));
+        const minFare = category === 'Visit Visa' ? 1000 : 5000;
+        if (!Number.isFinite(fare) || fare < minFare) {
+          return res.json({ ok: false, message: 'Invalid or suspicious fare amount.' });
+        }
       }
+
       if (!Number.isFinite(fare) || fare <= 0) return res.json({ ok: false, message: 'Invalid fare amount.' });
 
-      const passportDoc = String(p.passportDoc || ''), photoDoc = String(p.photoDoc || '');
+      const passportDoc = String(p.passportDoc || '').trim();
+      const photoDoc = String(p.photoDoc || '').trim();
       if (passportDoc.length > 500000 || photoDoc.length > 500000) return res.json({ ok: false, message: 'Uploaded document file is too large.' });
+      if (!isSafeDataUrl(passportDoc, true) || !isSafeDataUrl(photoDoc, false)) {
+        return res.json({ ok: false, message: 'Invalid uploaded document format.' });
+      }
 
-      const itStr = String(p.itemTitle || '');
+      const itStr = String(p.itemTitle || '').trim().slice(0, 300);
       if (!holdMins) {
         const dMatch = itStr.match(/\{DATE:(\d{4}-\d{2}-\d{2})/);
         const depMs = (dMatch && dMatch[1]) ? Date.parse(dMatch[1] + 'T12:00:00Z') : (Date.now() + 10 * 86400000);
@@ -1027,7 +1295,7 @@ module.exports = async function handler(req, res) {
         else if (hrsToDep <= 24) holdMins = 120;
         else if (isLCC) holdMins = hrsToDep <= 72 ? 120 : 360;
         else if (hrsToDep <= 72) holdMins = 720;
-        if (p.holdMins) holdMins = Number(p.holdMins);
+        if (isAdmin && p.holdMins) holdMins = clampInt(p.holdMins, 5, 4320, holdMins);
       }
 
       const bId = 'GI-' + crypto.randomInt(100000, 999999);
@@ -1036,14 +1304,15 @@ module.exports = async function handler(req, res) {
       for (let i = 0; i < 6; i++) autoPnr += chars[crypto.randomInt(0, chars.length)];
       const holdUntil = Date.now() + (holdMins * 60 * 1000);
       const pkTime = getPKTimeStr();
-      const paxMail = String(p.passengerEmail || '').trim();
+      const paxMailRaw = String(p.passengerEmail || '').trim();
+      const paxMail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(paxMailRaw) ? paxMailRaw : '';
 
       const bkObj = {
-        BookingID: bId, FareID: fareId, CreatedAt: pkTime, HoldUntil: holdUntil,
+        BookingID: bId, FareID: fareId, OfferID: offerId, CreatedAt: pkTime, HoldUntil: holdUntil,
         AgentEmail: email, AgencyName: a.AgencyName, PassengerName: paxName, PassengerEmail: paxMail,
-        PassportNo: ppNo, Dob: String(p.dob || ''), PassportExpiry: String(p.passportExpiry || ''),
-        Nationality: String(p.nationality || 'Pakistani'), PaxMobile: String(p.paxMobile || ''),
-        Category: String(p.category || ''), ItemTitle: itStr,
+        PassportNo: ppNo, Dob: String(p.dob || '').slice(0, 20), PassportExpiry: String(p.passportExpiry || '').slice(0, 20),
+        Nationality: String(p.nationality || 'Pakistani').slice(0, 50), PaxMobile: String(p.paxMobile || '').slice(0, 30),
+        Category: category, ItemTitle: itStr,
         FlightDate: String(p.flightDate || (matchedFare && matchedFare.TravelDate) || ''),
         DepTime: String(p.depTime || ''), ArrTime: String(p.arrTime || ''),
         Timing: String(p.timing || (matchedFare && matchedFare.Timing) || ''),
@@ -1069,7 +1338,7 @@ module.exports = async function handler(req, res) {
         agencyName: a.AgencyName,
         paxName,
         passportNo: ppNo,
-        category: p.category,
+        category,
         itemTitle: itStr,
         farePKR: fare,
         statusTxt: 'HOLD / PENDING (PNR: ' + autoPnr + ')',
@@ -1090,15 +1359,22 @@ module.exports = async function handler(req, res) {
       const fare = Number(bk.FarePKR || 0);
       if (agentAcc && !DB.admins.includes(bk.AgentEmail)) {
         const bal = Number(agentAcc.BalancePKR || 0);
-        if (bal < fare) return res.json({ ok: false, message: 'Cannot Issue: Agent wallet balance (PKR ' + bal.toLocaleString() + ') is less than Fare (PKR ' + fare.toLocaleString() + ').' });
+        if (bal < fare) {
+          return res.json({
+            ok: false,
+            message: 'Cannot Issue: Agent wallet balance (PKR ' + bal.toLocaleString() + ') is less than Fare (PKR ' + fare.toLocaleString() + ').'
+          });
+        }
         agentAcc.BalancePKR = bal - fare;
         bk.WasPaid = true;
       } else {
         bk.WasPaid = true;
       }
-      if (p.pnr && String(p.pnr).trim()) bk.PNR = String(p.pnr).trim().toUpperCase();
-      bk.TicketNo = String(p.ticketNo || '').trim();
+
+      if (p.pnr && String(p.pnr).trim()) bk.PNR = String(p.pnr).trim().toUpperCase().slice(0, 12);
+      bk.TicketNo = String(p.ticketNo || '').trim().slice(0, 30);
       bk.Status = 'CONFIRMED';
+      bk.HoldUntil = 0;
       await saveDB(DB);
 
       const matchedFare = bk.FareID ? DB.fares.find(f => String(f.ID) === String(bk.FareID)) : null;
@@ -1139,8 +1415,10 @@ module.exports = async function handler(req, res) {
       if (prevSt === 'CANCELED') return res.json({ ok: false, message: 'Booking is already CANCELED.' });
 
       const agentAcc = DB.agents[bk.AgentEmail];
-      if (bk.WasPaid || prevSt === 'CONFIRMED' || prevSt === 'ISSUED') {
-        if (agentAcc && !DB.admins.includes(bk.AgentEmail)) agentAcc.BalancePKR = Number(agentAcc.BalancePKR || 0) + Number(bk.FarePKR || 0);
+      if ((bk.WasPaid || prevSt === 'CONFIRMED' || prevSt === 'ISSUED') && !bk.Refunded) {
+        if (agentAcc && !DB.admins.includes(bk.AgentEmail)) {
+          agentAcc.BalancePKR = Number(agentAcc.BalancePKR || 0) + Number(bk.FarePKR || 0);
+        }
         bk.Refunded = true;
       }
       if (bk.FareID && bk.Category !== 'Visit Visa') {
@@ -1174,17 +1452,19 @@ module.exports = async function handler(req, res) {
     }
 
     if (action === 'adminAddFare' && isAdmin) {
-      const fareVal = Number(p.farePKR || 0);
-      if (!p.title || fareVal <= 0) return res.json({ ok: false, message: 'Title and valid PKR fare required.' });
+      const fareVal = Math.round(Number(p.farePKR || 0));
+      if (!p.title || !Number.isFinite(fareVal) || fareVal <= 0) return res.json({ ok: false, message: 'Title and valid PKR fare required.' });
+      const holdMins = clampInt(p.holdMins, 5, 4320, 30);
+      const seats = clampInt(p.seats, 0, 500, 15);
       DB.fares.unshift({
         ID: 'FARE-' + Date.now(), Category: p.category || 'Group Flight', Title: String(p.title || '').trim(),
         Timing: String(p.timing || 'As per Schedule').trim(), Luggage: String(p.luggage || '30 KG + 7 KG').trim(),
         Meal: String(p.meal || 'Included').trim(), Stay: String(p.stay || 'Direct / N/A').trim(),
         Details: String(p.details || '').trim(), TravelDate: String(p.travelDate || '').trim(),
-        Seats: Number(p.seats || 15), HoldMins: Number(p.holdMins || 30), FarePKR: fareVal, Status: 'ACTIVE'
+        Seats: seats, HoldMins: holdMins, FarePKR: fareVal, Status: 'ACTIVE'
       });
       await saveDB(DB);
-      return res.json({ ok: true, message: 'Fare/Package published with ' + (p.holdMins || 30) + ' mins hold timer!' });
+      return res.json({ ok: true, message: 'Fare/Package published with ' + holdMins + ' mins hold timer!' });
     }
 
     if (action === 'adminDeleteFare' && isAdmin) {
@@ -1197,7 +1477,13 @@ module.exports = async function handler(req, res) {
 
     if (action === 'adminAddBank' && isAdmin) {
       if (!p.bankName || !p.accountNumber) return res.json({ ok: false, message: 'Bank Name and Account Number required.' });
-      DB.banks.push({ BankID: 'BNK-' + Date.now(), BankName: String(p.bankName).trim(), AccountTitle: String(p.accountTitle || '').trim(), AccountNumber: String(p.accountNumber).trim(), IBAN: String(p.iban || '').trim() });
+      DB.banks.push({
+        BankID: 'BNK-' + Date.now(),
+        BankName: String(p.bankName).trim(),
+        AccountTitle: String(p.accountTitle || '').trim(),
+        AccountNumber: String(p.accountNumber).trim(),
+        IBAN: String(p.iban || '').trim()
+      });
       await saveDB(DB);
       return res.json({ ok: true, message: 'Payment account added!' });
     }
@@ -1218,8 +1504,11 @@ module.exports = async function handler(req, res) {
       const targetEmail = String(p.targetEmail || '').trim().toLowerCase();
       const target = DB.agents[targetEmail];
       if (!target) return res.json({ ok: false, message: 'Agent not found.' });
+
       if (p.subAction === 'APPROVE') {
-        target.Status = 'APPROVED'; target.FailedAttempts = 0; target.TotpFailedAttempts = 0;
+        target.Status = 'APPROVED';
+        target.FailedAttempts = 0;
+        target.TotpFailedAttempts = 0;
         await saveDB(DB);
         const appBody = `<div style="font-family:Arial,sans-serif;padding:20px;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;"><h2 style="color:#15803d;margin-top:0;">✅ B2B Account Approved!</h2><p>Assalam-o-Alaikum <b>${escHtml(target.AgencyName)}</b>, aapka Golan International B2B account approve ho gaya hai. Ab aap portal par login karke Google Authenticator 2FA set kar sakte hain.</p></div>`;
         await Promise.all([
@@ -1228,26 +1517,33 @@ module.exports = async function handler(req, res) {
         ]);
         return res.json({ ok: true, message: 'Agent updated: APPROVE' });
       } else if (p.subAction === 'BLOCK') {
-        target.Status = 'BLOCKED'; target.SessionToken = '';
+        target.Status = 'BLOCKED';
+        target.SessionToken = '';
       } else if (p.subAction === 'ADD_LIMIT') {
-        const amt = Number(p.amountPKR || 0);
+        const amt = Math.round(Number(p.amountPKR || 0));
         if (!Number.isFinite(amt) || amt <= 0) return res.json({ ok: false, message: 'Enter valid positive PKR amount.' });
-        target.BalancePKR = Number(target.BalancePKR || 0) + Math.round(amt);
+        target.BalancePKR = Number(target.BalancePKR || 0) + amt;
         await saveDB(DB);
-        const limBody = `<div style="font-family:Arial,sans-serif;padding:20px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;"><h2 style="color:#0b1f44;margin-top:0;">💰 Wallet Limit Credited</h2><p><b>Agency:</b> ${escHtml(target.AgencyName)}</p><p><b>Added Amount:</b> PKR ${Math.round(amt).toLocaleString()}</p><p><b>New Balance:</b> PKR ${Number(target.BalancePKR || 0).toLocaleString()}</p></div>`;
+        const limBody = `<div style="font-family:Arial,sans-serif;padding:20px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;"><h2 style="color:#0b1f44;margin-top:0;">💰 Wallet Limit Credited</h2><p><b>Agency:</b> ${escHtml(target.AgencyName)}</p><p><b>Added Amount:</b> PKR ${amt.toLocaleString()}</p><p><b>New Balance:</b> PKR ${Number(target.BalancePKR || 0).toLocaleString()}</p></div>`;
         await Promise.all([
-          sendGasEmail({ to: targetEmail, subject: `Wallet Limit Added: PKR ${Math.round(amt).toLocaleString()} - ${target.AgencyName}`, htmlBody: limBody, agencyName: target.AgencyName }),
-          sendGasEmail({ to: uniqueEmails(DB.admins || []), subject: `[ADMIN] Wallet Limit Added: PKR ${Math.round(amt).toLocaleString()} - ${target.AgencyName}`, htmlBody: limBody, agencyName: target.AgencyName })
+          sendGasEmail({ to: targetEmail, subject: `Wallet Limit Added: PKR ${amt.toLocaleString()} - ${target.AgencyName}`, htmlBody: limBody, agencyName: target.AgencyName }),
+          sendGasEmail({ to: uniqueEmails(DB.admins || []), subject: `[ADMIN] Wallet Limit Added: PKR ${amt.toLocaleString()} - ${target.AgencyName}`, htmlBody: limBody, agencyName: target.AgencyName })
         ]);
         return res.json({ ok: true, message: 'Agent updated: ADD_LIMIT' });
       } else if (p.subAction === 'RESET_PASSWORD') {
         const np = String(p.newPassword || '');
         if (np.length < 6) return res.json({ ok: false, message: 'New password must be at least 6 characters.' });
-        target.PasswordHash = hashPwd(np); target.TotpSecret = generateSecret(); target.TotpVerified = 'NO';
-        target.Status = 'APPROVED'; target.FailedAttempts = 0; target.TotpFailedAttempts = 0; target.SessionToken = '';
+        target.PasswordHash = hashPwd(np);
+        target.TotpSecret = generateSecret();
+        target.TotpVerified = 'NO';
+        target.Status = 'APPROVED';
+        target.FailedAttempts = 0;
+        target.TotpFailedAttempts = 0;
+        target.SessionToken = '';
       } else {
         return res.json({ ok: false, message: 'Invalid admin sub-action.' });
       }
+
       await saveDB(DB);
       return res.json({ ok: true, message: 'Agent updated: ' + p.subAction });
     }
@@ -1273,6 +1569,7 @@ module.exports = async function handler(req, res) {
 
     return res.json({ ok: false, message: 'Invalid request' });
   } catch (err) {
-    return res.status(200).json({ ok: false, message: 'Backend Error: ' + err.message });
+    console.error('[Backend Error]', err);
+    return res.status(200).json({ ok: false, message: 'Backend Error: ' + (err && err.message ? err.message : 'Server error') });
   }
 };

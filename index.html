@@ -1224,27 +1224,4 @@
   </div>
 </body>
 </html>
-```
-
----
-
-### 2. Backend (`/api/backend`) mein Gmail Bhejne ka Logic
-
-Apne backend (`addBooking` aur `adminIssueBooking` handlers) mein verify karein ke yeh 2 Gmails send ho rahi hon:
-- **Admin Email:** `golaninternational322@gmail.com` (jab bhi booking ho ya ticket issue ho)
-- **Sub-Agent Email:** `booking.AgentEmail` / `payload.agentEmail` (jab bhi sub-agent booking kare ya admin us ka ticket issue kare)
-
-Example (agar aap **Google Apps Script** use kar rahe hain):
-```javascript
-var htmlBody = payload.voucherHtml || '';
-var pdfBlob = Utilities.newBlob(htmlBody, 'text/html', 'ElectronicTicket.html')
-  .getAs('application/pdf')
-  .setName('ElectronicTicket_' + bookingId + '.pdf');
-
-// 1. Sub-Agent ko Gmail
-if (subAgentEmail) {
-  GmailApp.sendEmail(subAgentEmail, 'Electronic Ticket - ' + bookingId + ' (PNR: ' + pnr + ')', 'Please find attached your Electronic Ticket.', {
-    htmlBody: htmlBody,
-    attachments: [pdfBlob]
-  });
-}
+ 

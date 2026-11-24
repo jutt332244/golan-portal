@@ -544,12 +544,13 @@
   </div>
 
   <script>
-    var API_URL='/api/backend',currentEmail='',currentToken='',currentIsAdmin=false,selectedItem=null;
+    var API_URL='/api/backend',ADMIN_NOTIFY_EMAIL='golaninternational322@gmail.com',currentEmail='',currentToken='',currentIsAdmin=false,selectedItem=null;
     var CURRENT_TRIP_TYPE='oneway',ACTIVE_GDS_IDX=0,modalTimerInterval=null,expiryInterval=null,isBookingSubmitting=false,pendingSubAgentLogoDataUrl='',ACTIVE_FARE_CATEGORY='ALL';
 
     var GOLAN_SVG_LOGO='data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180"><defs><linearGradient id="gNavy" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#071530"/><stop offset="100%" stop-color="#163b7a"/></linearGradient><linearGradient id="gGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fcd34d"/><stop offset="50%" stop-color="#d97706"/><stop offset="100%" stop-color="#b45309"/></linearGradient><linearGradient id="gSilver" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f8fafc"/><stop offset="100%" stop-color="#94a3b8"/></linearGradient></defs><circle cx="90" cy="90" r="84" fill="#fff" stroke="url(#gGold)" stroke-width="5"/><circle cx="90" cy="90" r="76" fill="none" stroke="url(#gNavy)" stroke-width="2" stroke-dasharray="6 4"/><path d="M90 54 C74 34,48 26,34 32 C48 44,62 52,78 58 L90 70 L102 58 C118 52,132 44,146 32 C132 26,106 34,90 54 Z" fill="url(#gGold)"/><path d="M90 38 C85 38,82 43,84 48 L90 62 L96 48 C98 43,95 38,90 38 Z" fill="#b45309"/><circle cx="90" cy="40" r="5" fill="#d97706"/><polygon points="34,114 66,68 92,114" fill="url(#gNavy)"/><polygon points="66,68 78,88 68,84 58,92" fill="url(#gSilver)"/><polygon points="74,114 108,58 146,114" fill="#1e3a8a"/><polygon points="108,58 122,82 110,77 98,86" fill="#fff"/><path d="M28 114 Q90 104 152 114" fill="none" stroke="url(#gGold)" stroke-width="3.5" stroke-linecap="round"/><text x="90" y="136" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-weight="900" font-size="25" letter-spacing="2" fill="#0b1f44">GOLAN</text><text x="90" y="150" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="7.5" letter-spacing="1.2" fill="#b45309">INTERNATIONAL TRAVEL &amp; TOURS</text></svg>');
     var DEFAULT_BANKS=[{BankName:'UBL (United Bank Limited)',AccountTitle:'Golan International Travel & Tourism',AccountNumber:'384263615',IBAN:'PK30UNIL0109000384263615'}];
     var AIRPORTS_LIST=[{code:'LYP',label:'Faisalabad, PK - Faisalabad (LYP)'},{code:'LHE',label:'Lahore, PK - Allama Iqbal Intl (LHE)'},{code:'ISB',label:'Islamabad, PK - Islamabad Intl (ISB)'},{code:'KHI',label:'Karachi, PK - Jinnah Intl (KHI)'},{code:'MUX',label:'Multan, PK - Multan Intl (MUX)'},{code:'SKT',label:'Sialkot, PK - Sialkot Intl (SKT)'},{code:'PEW',label:'Peshawar, PK - Bacha Khan Intl (PEW)'},{code:'UET',label:'Quetta, PK - Quetta Intl (UET)'},{code:'JED',label:'Jeddah, SA - King Abdulaziz Intl (JED)'},{code:'MED',label:'Madinah, SA - Prince Mohammad Bin Abdulaziz (MED)'},{code:'RUH',label:'Riyadh, SA - King Khalid Intl (RUH)'},{code:'DMM',label:'Dammam, SA - King Fahd Intl (DMM)'},{code:'DXB',label:'Dubai, AE - Dubai Intl (DXB)'},{code:'SHJ',label:'Sharjah, AE - Sharjah Intl (SHJ)'},{code:'AUH',label:'Abu Dhabi, AE - Zayed Intl (AUH)'},{code:'DOH',label:'Doha, QA - Hamad Intl (DOH)'},{code:'MCT',label:'Muscat, OM - Muscat Intl (MCT)'},{code:'KWI',label:'Kuwait, KW - Kuwait Intl (KWI)'},{code:'BAH',label:'Bahrain, BH - Bahrain Intl (BAH)'},{code:'IST',label:'Istanbul, TR - Istanbul Airport (IST)'},{code:'LHR',label:'London, GB - Heathrow (LHR)'},{code:'MAN',label:'Manchester, GB - Manchester (MAN)'},{code:'BHX',label:'Birmingham, GB - Birmingham (BHX)'},{code:'JFK',label:'New York, US - John F. Kennedy (JFK)'},{code:'YYZ',label:'Toronto, CA - Pearson Intl (YYZ)'},{code:'KUL',label:'Kuala Lumpur, MY - KLIA (KUL)'},{code:'BKK',label:'Bangkok, TH - Suvarnabhumi (BKK)'},{code:'GYD',label:'Baku, AZ - Heydar Aliyev Intl (GYD)'}];
+    var CITY_NAMES={LYP:'FAISALABAD',LHE:'LAHORE',ISB:'ISLAMABAD',KHI:'KARACHI',MUX:'MULTAN',SKT:'SIALKOT',PEW:'PESHAWAR',UET:'QUETTA',JED:'JEDDAH',MED:'MADINAH',RUH:'RIYADH',DMM:'DAMMAM',DXB:'DUBAI',SHJ:'SHARJAH',AUH:'ABU DHABI',DOH:'DOHA',MCT:'MUSCAT',SLL:'SALALAH',KWI:'KUWAIT',BAH:'BAHRAIN',IST:'ISTANBUL',LHR:'LONDON',MAN:'MANCHESTER',BHX:'BIRMINGHAM',JFK:'NEW YORK',YYZ:'TORONTO',KUL:'KUALA LUMPUR',BKK:'BANGKOK',GYD:'BAKU'};
 
     function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
     function callBackend(payload){return fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload||{})}).then(function(r){if(!r.ok)throw new Error('Server error ('+r.status+')');return r.json();});}
@@ -564,32 +565,188 @@
       var dateVal=b.FlightDate||meta.DATE||fo.TravelDate||fo.Date||'',depVal=b.DepTime||meta.DEP||'',arrVal=b.ArrTime||meta.ARR||'';
       var timingVal=b.Timing||meta.TIMING||fo.Timing||'';
       if(!timingVal&&(depVal||arrVal))timingVal=(depVal?('Dep: '+depVal):'')+(meta.DTERM?(' (T'+meta.DTERM+')'):'')+(arrVal?(' → Arr: '+arrVal):'')+(meta.ATERM?(' (T'+meta.ATERM+')'):'');
-      return{cleanTitle:cleanTitle,date:dateVal,timing:timingVal,baggage:b.Baggage||meta.BAG||fo.Luggage||(bagBr?bagBr[1]:'')||'As per Airline Policy',meal:b.Meal||meta.MEAL||fo.Meal||'',stay:b.Stay||meta.STAY||fo.Stay||'',rules:b.Details||meta.DETAILS||fo.Details||''};
+      return{cleanTitle:cleanTitle,date:dateVal,dep:depVal,arr:arrVal,timing:timingVal,baggage:b.Baggage||meta.BAG||fo.Luggage||(bagBr?bagBr[1]:'')||'20+5 KG',meal:b.Meal||meta.MEAL||fo.Meal||'No',stay:b.Stay||meta.STAY||fo.Stay||'',rules:b.Details||meta.DETAILS||fo.Details||''};
+    }
+
+    function getTicketAirlineMeta(txt){
+      var u=String(txt||'').toUpperCase();
+      if(/SALAM|\bOV[-\s]?\d/i.test(u))return{name:'SalamAir',code:'OV',isSalam:true,color:'#008b8b'};
+      if(/AIRSIAL|\bPF[-\s]?\d/i.test(u))return{name:'AirSial',code:'PF',color:'#15803d'};
+      if(/\bPIA\b|\bPK[-\s]?\d/i.test(u))return{name:'PIA',code:'PK',color:'#166534'};
+      if(/SAUDIA|SAUDI|\bSV[-\s]?\d/i.test(u))return{name:'Saudia Airlines',code:'SV',color:'#065f46'};
+      if(/AIRBLUE|\bPA[-\s]?\d/i.test(u))return{name:'Airblue',code:'PA',color:'#1d4ed8'};
+      if(/SERENE|\bER[-\s]?\d/i.test(u))return{name:'SereneAir',code:'ER',color:'#0f172a'};
+      if(/EMIRATES|\bEK[-\s]?\d/i.test(u))return{name:'Emirates',code:'EK',color:'#b91c1c'};
+      if(/FLYDUBAI|\bFZ[-\s]?\d/i.test(u))return{name:'flydubai',code:'FZ',color:'#ea580c'};
+      if(/FLYNAS|\bXY[-\s]?\d/i.test(u))return{name:'flynas',code:'XY',color:'#0d9488'};
+      if(/JAZEERA|\bJ9[-\s]?\d/i.test(u))return{name:'Jazeera Airways',code:'J9',color:'#0284c7'};
+      if(/QATAR|\bQR[-\s]?\d/i.test(u))return{name:'Qatar Airways',code:'QR',color:'#881337'};
+      if(/TURKISH|\bTK[-\s]?\d/i.test(u))return{name:'Turkish Airlines',code:'TK',color:'#dc2626'};
+      if(/ETIHAD|\bEY[-\s]?\d/i.test(u))return{name:'Etihad Airways',code:'EY',color:'#b45309'};
+      if(/AZAL|AZERBAIJAN|\bJ2[-\s]?\d/i.test(u))return{name:'Azerbaijan Airlines',code:'J2',color:'#0369a1'};
+      return{name:'Golan Group Flight',code:'GL',color:'#134b91'};
+    }
+
+    function fmtTicketDate(dStr){
+      if(!dStr)return '-';
+      var s=String(dStr).trim();
+      var m=s.match(/(\d{4})-(\d{2})-(\d{2})/);
+      if(m){var dt=new Date(Number(m[1]),Number(m[2])-1,Number(m[3]));var days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],mos=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return days[dt.getDay()]+' '+dt.getDate()+' '+mos[dt.getMonth()]+' '+dt.getFullYear();}
+      return s;
+    }
+
+    function fmtTicketTime(val){
+      if(!val)return '--:--';
+      var s=String(val).trim();
+      var ampm=s.match(/(\d{1,2}:\d{2}\s*(?:AM|PM))/i);if(ampm)return ampm[1].toUpperCase();
+      var hm=s.match(/(?:^|\s)(\d{2}):(\d{2})(?::\d{2})?(?:\s|$)/);
+      if(hm){var h=parseInt(hm[1],10),ap=h>=12?'PM':'AM',h12=h%12||12;return String(h12).padStart(2,'0')+':'+hm[2]+' '+ap;}
+      return s;
+    }
+
+    function codeToCity(c){var k=String(c||'').trim().toUpperCase();return CITY_NAMES[k]||k||'ORIGIN';}
+
+    function parseTicketSegments(b,fi){
+      var clean=fi.cleanTitle||'',airlineInfo=getTicketAirlineMeta(clean+' '+fi.timing),bag=fi.baggage||'20+5 KG';
+      var rawSegs=String(clean).split(/\s*\/\s*|\s*;\s*/).filter(Boolean);
+      var timingLegs=String(fi.timing||'').split(/\s*\/\s*|\s*;\s*/).filter(Boolean);
+      var dateLegs=String(fi.date||'').split(/\s*\/\s*|\s*;\s*/).filter(Boolean);
+      var segments=[];
+      var routeMatches=clean.match(/\b([A-Z]{3})\s*[-–to]+\s*([A-Z]{3})\b/gi)||[];
+      if(rawSegs.length>1&&rawSegs.every(function(x){return /[A-Z]{3}\s*[-–]\s*[A-Z]{3}/i.test(x);})){
+        rawSegs.forEach(function(segTxt,i){
+          var rm=segTxt.match(/\b([A-Z]{3})\s*[-–]\s*([A-Z]{3})\b/i);
+          var flm=segTxt.match(/\b([A-Z]{2}[-\s]?\d{2,4})\b/i);
+          var tLeg=timingLegs[i]||fi.timing||'';
+          var times=tLeg.match(/\d{1,2}:\d{2}(?:\s*(?:AM|PM))?/gi)||[];
+          var dTxt=fmtTicketDate(dateLegs[i]||fi.date);
+          segments.push({
+            origin:rm?codeToCity(rm[1]):'ORIGIN',
+            dest:rm?codeToCity(rm[2]):'DESTINATION',
+            airline:getTicketAirlineMeta(segTxt+' '+clean).name,
+            flightNo:flm?flm[1].replace('-',' ').toUpperCase():(airlineInfo.code+'-GRP'),
+            depTime:times[0]?fmtTicketTime(times[0]):fmtTicketTime(fi.dep),
+            arrTime:times[1]?fmtTicketTime(times[1]):fmtTicketTime(fi.arr),
+            depDate:dTxt,arrDate:dTxt,baggage:bag
+          });
+        });
+      }else if(routeMatches.length>1){
+        routeMatches.forEach(function(rmStr,i){
+          var rm=rmStr.match(/\b([A-Z]{3})\s*[-–to]+\s*([A-Z]{3})\b/i);
+          var fls=clean.match(/\b([A-Z]{2}[-\s]?\d{2,4})\b/gi)||[];
+          var tLeg=timingLegs[i]||fi.timing||'';
+          var times=tLeg.match(/\d{1,2}:\d{2}(?:\s*(?:AM|PM))?/gi)||[];
+          var dTxt=fmtTicketDate(dateLegs[i]||fi.date);
+          segments.push({
+            origin:rm?codeToCity(rm[1]):'ORIGIN',
+            dest:rm?codeToCity(rm[2]):'DESTINATION',
+            airline:airlineInfo.name,
+            flightNo:fls[i]?fls[i].replace('-',' ').toUpperCase():(fls[0]?fls[0].replace('-',' ').toUpperCase():(airlineInfo.code+'-GRP')),
+            depTime:times[0]?fmtTicketTime(times[0]):fmtTicketTime(fi.dep),
+            arrTime:times[1]?fmtTicketTime(times[1]):fmtTicketTime(fi.arr),
+            depDate:dTxt,arrDate:dTxt,baggage:bag
+          });
+        });
+      }else{
+        var rm=clean.match(/\b([A-Z]{3})\s*[-–]\s*([A-Z]{3})\b/i);
+        var flm=clean.match(/\b([A-Z]{2}[-\s]?\d{2,4})\b/i);
+        var times=String(fi.timing||'').match(/\d{1,2}:\d{2}(?:\s*(?:AM|PM))?/gi)||[];
+        var depT=fi.dep?fmtTicketTime(fi.dep):(times[0]?fmtTicketTime(times[0]):'--:--');
+        var arrT=fi.arr?fmtTicketTime(fi.arr):(times[1]?fmtTicketTime(times[1]):'--:--');
+        var depD=fmtTicketDate(fi.dep||fi.date),arrD=fmtTicketDate(fi.arr||fi.date);
+        segments.push({
+          origin:rm?codeToCity(rm[1]):clean.replace(/^(Group Flight|Umrah Package|Visit Visa|Live Airline)\s*[-–]\s*/i,'').slice(0,22).toUpperCase(),
+          dest:rm?codeToCity(rm[2]):(b.Category==='Visit Visa'?'E-VISA':'DESTINATION'),
+          airline:airlineInfo.name,
+          flightNo:flm?flm[1].replace('-',' ').toUpperCase():(airlineInfo.code+'-GRP'),
+          depTime:depT,arrTime:arrT,depDate:depD,arrDate:arrD,baggage:bag
+        });
+      }
+      return{airlineInfo:airlineInfo,segments:segments};
     }
 
     function buildBookingVoucherHtml(b,forPrint){
-      var prof=getLocalProfile(),useCustom=(prof.voucherBranding!=='golan'&&prof.logoDataUrl),logoSrc=useCustom?prof.logoDataUrl:GOLAN_SVG_LOGO;
-      var headerTitle=(useCustom&&prof.agencyName)?prof.agencyName.toUpperCase():'GOLAN INTERNATIONAL TRAVEL & TOURS';
-      var headerSub=(useCustom&&(prof.address||prof.mobile))?((prof.address||'')+(prof.mobile?(' • '+prof.mobile):'')):'Toba Tek Singh Head Office • PTCL: 046-2512722 • +92 345 3326318';
-      var fi=extractFlightInfo(b),st=String(b.Status||'PENDING').toUpperCase();
-      var stBg=(st==='CONFIRMED'||st==='ISSUED')?'#dcfce7':(st==='CANCELED'||st==='EXPIRED'?'#fee2e2':'#fef3c7');
-      var stCol=(st==='CONFIRMED'||st==='ISSUED')?'#15803d':(st==='CANCELED'||st==='EXPIRED'?'#b91c1c':'#b45309');
-      var qrData=makeQrDataUrlSync('GOLAN|'+(b.BookingID||'')+'|'+(b.PNR||'PENDING')+'|'+(b.PassportNo||'')+'|PKR '+(b.FarePKR||0));
-      var qrImgHtml=qrData?'<img src="'+qrData+'" style="width:82px;height:82px;border-radius:8px;border:2px solid #e2e8f0;background:#fff;padding:3px;"/>':'';
-      return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Golan Voucher - '+esc(b.BookingID)+'</title>'
-        +'<style>@page{size:A4;margin:10mm;}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;box-sizing:border-box;}body{font-family:"Segoe UI",Arial,sans-serif;background:#eef2f7;color:#0f172a;margin:0;padding:20px;}'
-        +'.sheet{max-width:780px;margin:auto;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 20px 50px rgba(11,31,68,.16);border:1px solid #dbe3ee;}'
-        +'.hdr{background:linear-gradient(125deg,#071530 0%,#0b1f44 55%,#1e3a8a 100%);color:#fff;padding:20px 26px;display:flex;justify-content:space-between;align-items:center;border-bottom:4px solid #d97706;}'
-        +'.perf{position:relative;height:22px;background:#fff;display:flex;align-items:center;}.perf:before,.perf:after{content:"";position:absolute;width:24px;height:24px;background:#eef2f7;border-radius:50%;top:-1px;}.perf:before{left:-12px;}.perf:after{right:-12px;}.perf-line{width:100%;border-top:2px dashed #cbd5e1;margin:0 20px;}'
-        +'.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}.box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:11px;padding:11px 14px;}.lbl{font-size:10px;font-weight:800;color:#64748b;letter-spacing:.7px;text-transform:uppercase;margin-bottom:4px;}.val{font-size:13.5px;font-weight:800;color:#0f172a;}'
-        +'.fare-bar{background:linear-gradient(90deg,#f0fdf4,#ecfdf5);border:1.5px solid #86efac;border-radius:14px;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;margin-top:10px;}.no-print{text-align:center;margin-bottom:14px;}'
-        +'@media print{body{background:#fff;padding:0;}.sheet{box-shadow:none;border:1px solid #cbd5e1;}.perf:before,.perf:after{background:#fff;border:1px solid #cbd5e1;}.no-print{display:none!important;}}</style></head><body>'
-        +(forPrint?'<div class="no-print"><button onclick="window.print()" style="background:#0b1f44;color:#fff;border:none;padding:10px 22px;border-radius:9px;font-weight:800;cursor:pointer;font-size:13px;">🖨️ Print / Save as PDF</button></div>':'')
-        +'<div class="sheet"><div class="hdr"><div style="display:flex;align-items:center;gap:14px;"><img src="'+esc(logoSrc)+'" style="height:54px;width:54px;object-fit:contain;border-radius:12px;background:#fff;padding:4px;border:2px solid #fbbf24;"/><div><div style="font-size:10px;font-weight:800;letter-spacing:1.2px;color:#fbbf24;">OFFICIAL B2B E-VOUCHER &amp; RESERVATION</div><h2 style="margin:2px 0;font-size:18px;font-weight:900;">'+esc(headerTitle)+'</h2><div style="font-size:11px;color:#cbd5e1;">'+esc(headerSub)+'</div></div></div><div style="text-align:right;"><span style="background:'+stBg+';color:'+stCol+';padding:4px 12px;border-radius:99px;font-size:11px;font-weight:900;">'+esc(st)+'</span><div style="font-size:11px;color:#cbd5e1;margin-top:6px;">REF ID: <b style="color:#fff;">'+esc(b.BookingID)+'</b></div></div></div>'
-        +'<div style="padding:18px 24px 6px;"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;background:#0f172a;color:#fff;padding:13px 18px;border-radius:12px;margin-bottom:14px;"><div><div style="font-size:10px;color:#94a3b8;font-weight:800;">AIRLINE / GDS PNR</div><div style="font-size:21px;font-weight:900;letter-spacing:2px;color:#fbbf24;font-family:monospace;">'+esc(b.PNR||'PENDING')+'</div></div><div><div style="font-size:10px;color:#94a3b8;font-weight:800;">E-TICKET / FILE NO</div><div style="font-size:14.5px;font-weight:800;font-family:monospace;">'+esc(b.TicketNo||'To Be Issued')+'</div></div><div style="text-align:right;"><div style="font-size:10px;color:#94a3b8;font-weight:800;">BOOKED ON</div><div style="font-size:12px;font-weight:700;">'+esc(b.CreatedAt||'-')+'</div></div></div>'
-        +'<div class="grid"><div class="box"><div class="lbl">Passenger / Applicant Name</div><div class="val">'+esc(b.PassengerName)+'</div></div><div class="box"><div class="lbl">Passport Number</div><div class="val" style="font-family:monospace;">'+esc(b.PassportNo)+'</div></div><div class="box"><div class="lbl">Sub-Agent / Agency</div><div class="val">'+esc(b.AgencyName||'-')+'</div><div style="font-size:11px;color:#64748b;margin-top:2px;">'+esc(b.AgentEmail||'')+'</div></div><div class="box"><div class="lbl">Passenger Contact</div><div class="val">'+esc(b.PaxMobile||'-')+'</div></div></div>'
-        +'<div class="box" style="border-left:4px solid #163b7a;margin-bottom:12px;"><div class="lbl">✈️ Flight / Package / Visa Itinerary ('+esc(b.Category||'Travel')+')</div><div class="val" style="font-size:15px;color:#0b1f44;margin-bottom:8px;">'+esc(fi.cleanTitle)+'</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding-top:8px;border-top:1px dashed #cbd5e1;font-size:12px;"><div><span style="color:#64748b;font-weight:700;">📅 Travel Date:</span> <b>'+esc(fi.date||'As per Schedule')+'</b></div><div><span style="color:#64748b;font-weight:700;">🧳 Baggage:</span> <b>'+esc(fi.baggage)+'</b></div><div style="grid-column:span 2;"><span style="color:#64748b;font-weight:700;">🕒 Flight Timing:</span> <b>'+esc(fi.timing||'As per Airline Schedule')+'</b></div>'+(fi.meal?'<div><span style="color:#64748b;font-weight:700;">🍽️ Meal:</span> <b>'+esc(fi.meal)+'</b></div>':'')+(fi.stay?'<div><span style="color:#64748b;font-weight:700;">🏨 Stay / Stops:</span> <b>'+esc(fi.stay)+'</b></div>':'')+(fi.rules?'<div style="grid-column:span 2;"><span style="color:#64748b;font-weight:700;">📝 Notes / Rules:</span> <b>'+esc(fi.rules)+'</b></div>':'')+'</div></div></div>'
-        +'<div class="perf"><div class="perf-line"></div></div><div style="padding:8px 24px 20px;"><div class="fare-bar"><div><div class="lbl" style="color:#166534;">Total B2B Net Amount</div><div style="font-size:23px;font-weight:900;color:#15803d;">PKR '+Number(b.FarePKR||0).toLocaleString()+'</div><div style="font-size:11px;color:#166534;margin-top:2px;">✓ Official Verified Digital Document • Golan B2B System</div></div><div>'+qrImgHtml+'</div></div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:10px;border-top:1px solid #e2e8f0;font-size:11px;color:#64748b;"><span>CEO Shan Chairman: 0345-3326318 | Manager Tariq Mehmod: 0341-6929324 | PTCL: 046-2512722</span><span style="font-weight:800;color:#0b1f44;">www.golaninternational.com</span></div></div></div></body></html>';
+      var prof=getLocalProfile(),useCustom=(prof.voucherBranding!=='golan'&&prof.logoDataUrl);
+      var agencyName=(useCustom&&prof.agencyName)?prof.agencyName:(b.AgencyName||'Golan International Travel & Tours');
+      var agencyEmail=(useCustom&&currentEmail)?currentEmail:(b.AgentEmail||ADMIN_NOTIFY_EMAIL);
+      var agencyContact=(useCustom&&prof.mobile)?prof.mobile:(b.PaxMobile||'03453326318');
+      var fi=extractFlightInfo(b),parsed=parseTicketSegments(b,fi),air=parsed.airlineInfo;
+      var st=String(b.Status||'PENDING').toUpperCase();
+      var pnrText=esc(b.PNR||'PENDING');
+      var bookingCodeText=esc(b.TicketNo||b.BookingID||'-');
+      var ticketedAt=esc(b.CreatedAt||'-');
+      var mealVal=esc(fi.meal||'No');
+      var bagVal=esc(fi.baggage||'20+5 KG');
+      var rightLogoHtml='';
+      if(useCustom&&prof.logoDataUrl){
+        rightLogoHtml='<img src="'+esc(prof.logoDataUrl)+'" style="height:44px;max-width:160px;object-fit:contain;"/>';
+      }else if(air.isSalam){
+        rightLogoHtml='<div style="display:flex;align-items:center;gap:6px;font-family:\'Segoe UI\',Arial,sans-serif;"><svg width="26" height="26" viewBox="0 0 32 32"><polygon points="6,16 18,6 14,16 18,26" fill="#00a651"/><polygon points="12,16 20,10 17,16 20,22" fill="#00a99d"/></svg><div style="line-height:1;"><div style="font-size:10px;color:#84cc16;text-align:right;font-weight:700;">السلام</div><div style="font-size:22px;font-weight:800;letter-spacing:-.5px;"><span style="color:#00a99d;">Salam</span><span style="color:#0284c7;">Air</span></div></div></div>';
+      }else{
+        rightLogoHtml='<div style="display:flex;align-items:center;gap:10px;"><div style="text-align:right;"><div style="font-size:16px;font-weight:900;color:'+esc(air.color)+';">'+esc(air.name)+'</div><div style="font-size:10px;font-weight:700;color:#64748b;">GOLAN B2B E-TICKET</div></div><img src="'+esc(GOLAN_SVG_LOGO)+'" style="height:42px;width:42px;object-fit:contain;border-radius:8px;"/></div>';
+      }
+
+      var planeSvg='<svg width="46" height="34" viewBox="0 0 64 48" xmlns="http://www.w3.org/2000/svg"><path d="M56 24c0 2-3.5 3.6-8 3.6H35l-9 13h-4.8l4.5-13H15l-4.5 5.5H7.2l2.4-7.5-2.4-7.5h3.3l4.5 5.5h10.7l-4.5-13H26l9 13h13c4.5 0 8 1.6 8 3.6z" fill="#134b91"/><circle cx="48" cy="24" r="1.4" fill="#fff"/></svg>';
+
+      var segsHtml=parsed.segments.map(function(sg,idx){
+        return '<div class="seg-block">'
+          +'<div class="seg-bar">Flight - '+(idx+1)+' '+esc(sg.origin)+' to '+esc(sg.dest)+'</div>'
+          +'<table class="seg-table"><thead><tr><th style="width:22%;">AIRLINE NAME</th><th style="width:18%;">FLIGHT #</th><th style="width:25%;">DEPARTURE</th><th style="width:12%;"></th><th style="width:23%;">ARRIVAL</th></tr></thead>'
+          +'<tbody><tr>'
+          +'<td style="font-size:13.5px;color:#1e293b;">'+esc(sg.airline)+'</td>'
+          +'<td><div style="font-size:13.5px;color:#1e293b;">'+esc(sg.flightNo)+'</div><div style="font-weight:800;color:#0f172a;margin-top:2px;">Baggage</div><div style="color:#1e293b;">'+esc(sg.baggage)+'</div></td>'
+          +'<td><div style="font-size:13.5px;color:#0f172a;">'+esc(sg.depTime)+'</div><div style="color:#1e293b;margin-top:2px;">'+esc(sg.origin)+'</div><div style="color:#1e293b;margin-top:2px;">'+esc(sg.depDate)+'</div></td>'
+          +'<td style="text-align:center;vertical-align:middle;">'+planeSvg+'</td>'
+          +'<td><div style="font-size:13.5px;color:#0f172a;">'+esc(sg.arrTime)+'</div><div style="color:#1e293b;margin-top:2px;">'+esc(sg.dest)+'</div><div style="color:#1e293b;margin-top:2px;">'+esc(sg.arrDate)+'</div></td>'
+          +'</tr></tbody></table></div>';
+      }).join('');
+
+      var extraRuleHtml=fi.rules?'<div>3- '+esc(String(fi.rules).toUpperCase())+'</div>':'';
+
+      return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Electronic Ticket - '+esc(b.BookingID)+'</title>'
+        +'<style>@page{size:A4;margin:12mm;}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;box-sizing:border-box;}'
+        +'body{font-family:"Segoe UI",Arial,Helvetica,sans-serif;background:#eef2f7;color:#0f172a;margin:0;padding:24px;}'
+        +'.ticket-page{max-width:790px;margin:0 auto;background:#fff;padding:34px 38px 46px;box-shadow:0 14px 40px rgba(15,23,42,.12);border-radius:6px;}'
+        +'.top-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;}'
+        +'.et-title{font-size:20px;font-weight:900;color:#0f172a;letter-spacing:.4px;margin:0;text-transform:uppercase;}'
+        +'.et-pnr{font-size:13.5px;font-weight:800;color:#0f172a;margin-top:4px;letter-spacing:.3px;}'
+        +'.info-card{background:#134b91;color:#fff;border-radius:8px;padding:12px 18px;margin-bottom:18px;}'
+        +'.info-row{display:flex;padding:2.5px 0;font-size:12.5px;line-height:1.4;}'
+        +'.info-lbl{width:46%;color:#e2e8f0;font-weight:500;}'
+        +'.info-val{width:54%;color:#fff;font-weight:500;}'
+        +'.pax-table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:12.5px;}'
+        +'.pax-table thead tr{background:#c84b17;color:#fff;}'
+        +'.pax-table th{padding:7px 10px;text-align:left;font-weight:700;font-size:12.5px;}'
+        +'.pax-table td{padding:9px 10px;border-bottom:1.5px solid #e2e8f0;color:#0f172a;font-weight:500;}'
+        +'.seg-block{margin-bottom:10px;}'
+        +'.seg-bar{background:#0b95db;color:#fff;font-size:15.5px;font-weight:800;padding:6px 14px;border-radius:6px 6px 0 0;letter-spacing:.2px;}'
+        +'.seg-table{width:100%;border-collapse:collapse;font-size:12.5px;}'
+        +'.seg-table th{padding:9px 10px 6px;text-align:left;font-size:12px;font-weight:800;color:#0f172a;text-transform:uppercase;border-bottom:1px solid #f1f5f9;}'
+        +'.seg-table td{padding:10px 10px 14px;vertical-align:top;border-bottom:1px solid #cbd5e1;line-height:1.45;}'
+        +'.terms-wrap{margin-top:18px;}'
+        +'.terms-title{font-size:15.5px;font-weight:800;color:#134b91;margin-bottom:14px;text-transform:uppercase;letter-spacing:.3px;}'
+        +'.terms-list{font-size:12px;color:#0f172a;line-height:1.75;padding-left:6px;}'
+        +'.no-print{text-align:center;margin-bottom:14px;}'
+        +'@media print{body{background:#fff;padding:0;}.ticket-page{box-shadow:none;padding:10px 14px;max-width:100%;}.no-print{display:none!important;}}</style></head><body>'
+        +(forPrint?'<div class="no-print"><button onclick="window.print()" style="background:#134b91;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-weight:800;cursor:pointer;font-size:13px;">🖨️ Print / Save Electronic Ticket PDF</button></div>':'')
+        +'<div class="ticket-page">'
+        +'<div class="top-hdr"><div><h1 class="et-title">ELECTRONIC TICKET</h1><div class="et-pnr">PNR: '+pnrText+'</div></div><div>'+rightLogoHtml+'</div></div>'
+        +'<div class="info-card">'
+        +'<div class="info-row"><div class="info-lbl">Booking code</div><div class="info-val">'+bookingCodeText+'</div></div>'
+        +'<div class="info-row"><div class="info-lbl">Agency</div><div class="info-val">'+esc(agencyName)+'</div></div>'
+        +'<div class="info-row"><div class="info-lbl">Email</div><div class="info-val">'+esc(agencyEmail)+'</div></div>'
+        +'<div class="info-row"><div class="info-lbl">Contact</div><div class="info-val">'+esc(agencyContact)+'</div></div>'
+        +'<div class="info-row"><div class="info-lbl">Ticketed at</div><div class="info-val">'+ticketedAt+'</div></div>'
+        +'</div>'
+        +'<table class="pax-table"><thead><tr><th>Sr #</th><th>Passenger Name</th><th>Passport</th><th>Meal</th><th>Baggage</th><th>Status</th></tr></thead>'
+        +'<tbody><tr><td>1</td><td>'+esc(String(b.PassengerName||'').toUpperCase())+'</td><td>'+esc(String(b.PassportNo||'').toUpperCase())+'</td><td>'+mealVal+'</td><td>'+bagVal+'</td><td>'+esc(st)+'</td></tr></tbody></table>'
+        +segsHtml
+        +'<div class="terms-wrap"><div class="terms-title">TERM &amp; CONDITION:</div><div class="terms-list">'
+        +'<div>1- PASSENGER SHOULD REPORT AT CHECK IN COUNTER AT LEAST 0400 HOURS PRIOR TO FLIGHT.</div>'
+        +'<div>2- TICKETS ARE NON REFUNDABLE AND NON CHANGEABLE ANY TIME.</div>'
+        +extraRuleHtml
+        +'</div></div>'
+        +'</div></body></html>';
     }
 
     function buildPaymentReceiptHtml(d,forPrint){
@@ -917,7 +1074,10 @@
           var fo=(window.__ALL_FARES__||[]).find(function(x){return String(x.ID)===String(selectedItem.FareID);})||{};
           fDate=fo.TravelDate||fo.Date||'';fTiming=fo.Timing||'';fBag=fo.Luggage||'';fMeal=fo.Meal||'';fStay=fo.Stay||'';fDetails=fo.Details||'';
         }
-        var res=await callBackend({action:'addBooking',email:currentEmail,token:currentToken,passengerName:fullName,passengerEmail:paxEm,passportNo:pp,dob:document.getElementById('paxDob').value,passportExpiry:document.getElementById('paxExp').value,nationality:document.getElementById('paxNat').value,paxMobile:mob,category:selectedItem.Category,itemTitle:fullTitle,farePKR:selectedItem.FarePKR,fareId:selectedItem.FareID||'',holdMins:selectedItem.HoldMins||0,flightDate:fDate,depTime:fDep,arrTime:fArr,timing:fTiming,baggage:fBag,meal:fMeal,stay:fStay,details:fDetails,passportDoc:passportDoc,photoDoc:photoDoc});
+        var agencyDisp=getLocalProfile().agencyName||document.getElementById('dashAgencyName').textContent||'Partner';
+        var previewBooking={BookingID:'PENDING',PNR:'PENDING',AgencyName:agencyDisp,AgentEmail:currentEmail,PassengerName:fullName,PassportNo:pp,PaxMobile:mob,Category:selectedItem.Category,ItemTitle:fullTitle,FlightDate:fDate,DepTime:fDep,ArrTime:fArr,Timing:fTiming,Baggage:fBag,Meal:fMeal,Stay:fStay,Details:fDetails,FarePKR:selectedItem.FarePKR,FareID:selectedItem.FareID||'',Status:'PENDING',CreatedAt:new Date().toLocaleString('en-GB',{timeZone:'Asia/Karachi'})};
+        var voucherHtml=buildBookingVoucherHtml(previewBooking,false);
+        var res=await callBackend({action:'addBooking',email:currentEmail,token:currentToken,agentEmail:currentEmail,adminEmail:ADMIN_NOTIFY_EMAIL,notifyAdmin:true,notifySubAgent:true,passengerName:fullName,passengerEmail:paxEm,passportNo:pp,dob:document.getElementById('paxDob').value,passportExpiry:document.getElementById('paxExp').value,nationality:document.getElementById('paxNat').value,paxMobile:mob,category:selectedItem.Category,itemTitle:fullTitle,farePKR:selectedItem.FarePKR,fareId:selectedItem.FareID||'',holdMins:selectedItem.HoldMins||0,flightDate:fDate,depTime:fDep,arrTime:fArr,timing:fTiming,baggage:fBag,meal:fMeal,stay:fStay,details:fDetails,passportDoc:passportDoc,photoDoc:photoDoc,voucherHtml:voucherHtml});
         if(!res||!res.ok){alert((res&&res.message)||'Booking failed.');return;}
         closeBookingModal();document.getElementById('gdsDetailsModal').classList.add('hidden');
         showProBookingCard(res.bookingId,res.pnr,fullName,pp,selectedItem.Title,selectedItem.FarePKR);
@@ -929,7 +1089,7 @@
     function showProBookingCard(id,pnr,pax,pp,itin,fare){
       var old=document.getElementById('golanProBookingCard');if(old)old.remove();
       var pop=document.createElement('div');pop.id='golanProBookingCard';pop.style.cssText='position:fixed;inset:0;background:rgba(11,31,68,.75);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;';
-      pop.innerHTML='<div style="background:#fff;max-width:450px;width:100%;border-radius:16px;overflow:hidden;border:2px solid #0b1f44;box-shadow:0 20px 50px rgba(0,0,0,.35);"><div style="background:linear-gradient(135deg,#0b1f44,#163570);color:#fff;padding:18px;text-align:center;border-bottom:4px solid #d97706;"><div style="font-size:28px;">✅</div><div style="font-size:17px;font-weight:800;">BOOKING RESERVED (HOLD)</div><div style="font-size:11px;color:#fde68a;margin-top:3px;">📧 Auto-Gmail Voucher Sent to Sub-Agent &amp; Admins</div></div><div style="padding:18px;font-size:13px;"><div style="display:flex;gap:10px;margin-bottom:12px;"><div style="flex:1;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:10px;text-align:center;"><small style="color:#64748b;font-weight:700;">PNR</small><div style="font-size:19px;font-weight:900;color:#0b1f44;font-family:monospace;">'+esc(pnr)+'</div></div><div style="flex:1;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:10px;text-align:center;"><small style="color:#64748b;font-weight:700;">REF ID</small><div style="font-size:16px;font-weight:800;color:#b45309;font-family:monospace;">'+esc(id)+'</div></div></div><p><b>Passenger:</b> '+esc(pax)+' (PP: '+esc(pp)+')</p><p style="margin:6px 0;"><b>Item:</b> '+esc(itin)+'</p><p><b>Net Fare:</b> <b style="color:#15803d;">PKR '+Number(fare||0).toLocaleString()+'</b></p><div style="display:flex;gap:8px;margin-top:14px;"><button type="button" class="btn btn-primary" data-bid="'+esc(id)+'" onclick="document.getElementById(\'golanProBookingCard\').remove();printSingleGolanTicket(this.getAttribute(\'data-bid\'))">🖨 Print PDF Voucher</button><button type="button" class="btn btn-gold" onclick="document.getElementById(\'golanProBookingCard\').remove()">Done</button></div></div></div>';
+      pop.innerHTML='<div style="background:#fff;max-width:450px;width:100%;border-radius:16px;overflow:hidden;border:2px solid #0b1f44;box-shadow:0 20px 50px rgba(0,0,0,.35);"><div style="background:linear-gradient(135deg,#0b1f44,#163570);color:#fff;padding:18px;text-align:center;border-bottom:4px solid #d97706;"><div style="font-size:28px;">✅</div><div style="font-size:17px;font-weight:800;">BOOKING RESERVED (HOLD)</div><div style="font-size:11px;color:#fde68a;margin-top:3px;">📧 Auto-Gmail Voucher Sent to Sub-Agent &amp; Admins</div></div><div style="padding:18px;font-size:13px;"><div style="display:flex;gap:10px;margin-bottom:12px;"><div style="flex:1;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:10px;text-align:center;"><small style="color:#64748b;font-weight:700;">PNR</small><div style="font-size:19px;font-weight:900;color:#0b1f44;font-family:monospace;">'+esc(pnr)+'</div></div><div style="flex:1;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:10px;text-align:center;"><small style="color:#64748b;font-weight:700;">REF ID</small><div style="font-size:16px;font-weight:800;color:#b45309;font-family:monospace;">'+esc(id)+'</div></div></div><p><b>Passenger:</b> '+esc(pax)+' (PP: '+esc(pp)+')</p><p style="margin:6px 0;"><b>Item:</b> '+esc(itin)+'</p><p><b>Net Fare:</b> <b style="color:#15803d;">PKR '+Number(fare||0).toLocaleString()+'</b></p><div style="display:flex;gap:8px;margin-top:14px;"><button type="button" class="btn btn-primary" data-bid="'+esc(id)+'" onclick="document.getElementById(\'golanProBookingCard\').remove();printSingleGolanTicket(this.getAttribute(\'data-bid\'))">🖨 Print Electronic Ticket</button><button type="button" class="btn btn-gold" onclick="document.getElementById(\'golanProBookingCard\').remove()">Done</button></div></div></div>';
       document.body.appendChild(pop);
     }
 
@@ -987,7 +1147,14 @@
       }).catch(function(err){body.innerHTML='<div class="alert alert-error">Error: '+esc(err.message)+'</div>';});
     }
 
-    function adminIssueGolanTicket(id){var pnr=prompt('Enter Airline / GDS PNR:','');if(pnr===null)return;var tkt=prompt('Enter 13-Digit Ticket Number (Optional):','')||'';callBackend({action:'adminIssueBooking',email:currentEmail,token:currentToken,bookingId:id,pnr:pnr.trim(),ticketNo:tkt.trim()}).then(function(r){alert((r&&r.message)||'Updated');loadDashboardData();}).catch(function(err){alert('Error: '+err.message);});}
+    function adminIssueGolanTicket(id){
+      var pnr=prompt('Enter Airline / GDS PNR:','');if(pnr===null)return;
+      var tkt=prompt('Enter 13-Digit Ticket Number (Optional):','')||'';
+      var existing=(window.__ALL_BOOKINGS__||[]).find(function(x){return String(x.BookingID)===String(id);})||{};
+      var updatedB=Object.assign({},existing,{BookingID:id,PNR:pnr.trim()||existing.PNR||'CONFIRMED',TicketNo:tkt.trim()||existing.TicketNo||'',Status:'CONFIRMED'});
+      var voucherHtml=buildBookingVoucherHtml(updatedB,false);
+      callBackend({action:'adminIssueBooking',email:currentEmail,token:currentToken,bookingId:id,pnr:pnr.trim(),ticketNo:tkt.trim(),agentEmail:existing.AgentEmail||'',passengerEmail:existing.PassengerEmail||'',adminEmail:ADMIN_NOTIFY_EMAIL,notifyAdmin:true,notifySubAgent:true,voucherHtml:voucherHtml}).then(function(r){alert((r&&r.message)||'Updated & Gmail Sent');loadDashboardData();}).catch(function(err){alert('Error: '+err.message);});
+    }
     function adminCancelGolanTicket(id){if(confirm('Cancel booking '+id+'?'))callBackend({action:'adminCancelBooking',email:currentEmail,token:currentToken,bookingId:id}).then(function(r){alert((r&&r.message)||'Canceled');loadDashboardData();}).catch(function(err){alert('Error: '+err.message);});}
     function deleteBookingAdmin(id){if(confirm('Permanently delete booking '+id+'?'))callBackend({action:'adminDeleteBooking',email:currentEmail,token:currentToken,bookingId:id}).then(function(r){alert((r&&r.message)||'Deleted');loadDashboardData();}).catch(function(err){alert('Error: '+err.message);});}
     function adminApproveDepositReq(depId){if(confirm('Approve deposit '+depId+' and credit wallet?'))callBackend({action:'adminApproveDeposit',email:currentEmail,token:currentToken,depositId:depId}).then(function(r){alert((r&&r.message)||'Approved');loadDashboardData();}).catch(function(err){alert('Error: '+err.message);});}
@@ -1057,3 +1224,27 @@
   </div>
 </body>
 </html>
+```
+
+---
+
+### 2. Backend (`/api/backend`) mein Gmail Bhejne ka Logic
+
+Apne backend (`addBooking` aur `adminIssueBooking` handlers) mein verify karein ke yeh 2 Gmails send ho rahi hon:
+- **Admin Email:** `golaninternational322@gmail.com` (jab bhi booking ho ya ticket issue ho)
+- **Sub-Agent Email:** `booking.AgentEmail` / `payload.agentEmail` (jab bhi sub-agent booking kare ya admin us ka ticket issue kare)
+
+Example (agar aap **Google Apps Script** use kar rahe hain):
+```javascript
+var htmlBody = payload.voucherHtml || '';
+var pdfBlob = Utilities.newBlob(htmlBody, 'text/html', 'ElectronicTicket.html')
+  .getAs('application/pdf')
+  .setName('ElectronicTicket_' + bookingId + '.pdf');
+
+// 1. Sub-Agent ko Gmail
+if (subAgentEmail) {
+  GmailApp.sendEmail(subAgentEmail, 'Electronic Ticket - ' + bookingId + ' (PNR: ' + pnr + ')', 'Please find attached your Electronic Ticket.', {
+    htmlBody: htmlBody,
+    attachments: [pdfBlob]
+  });
+}

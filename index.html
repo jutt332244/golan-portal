@@ -7,20 +7,20 @@
   <style>
     :root{--navy:#0b1f44;--blue:#163b7a;--teal:#0f4c5c;--gold:#d97706;--bg:#eef2f7;--text:#0f172a;--muted:#475569;--border:#dbe3ee;--green:#15803d;--red:#b91c1c}
     *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,-apple-system,sans-serif}
-    body{background:radial-gradient(circle at top right,#e0e7ff 0%,#f1f5f9 45%,#e2e8f0 100%);color:var(--text);min-height:100vh}
+    body{background:radial-gradient(circle at top right,#e0e7ff 0%,#f1f5f9 45%,#e2e8f0 100%);color:var(--text);min-height:100vh;overflow-x:hidden}
     .hidden{display:none!important}
-    .topbar{background:#050e24;color:#cbd5e1;font-size:11.5px;font-weight:600;letter-spacing:.4px;padding:8px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;border-bottom:1px solid rgba(251,191,36,.25)}
+    .topbar{background:#050e24;color:#cbd5e1;font-size:11.5px;font-weight:600;letter-spacing:.4px;padding:8px 18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;border-bottom:1px solid rgba(251,191,36,.25)}
     .badge{background:rgba(217,119,6,.18);color:#fbbf24;padding:3px 11px;border-radius:99px;font-weight:700;border:1px solid rgba(251,191,36,.45)}
     .wa-btn{background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;text-decoration:none;padding:5px 13px;border-radius:99px;font-weight:700;font-size:11.5px;box-shadow:0 2px 8px rgba(22,163,74,.35)}
-    header{background:linear-gradient(135deg,#071530 0%,#0b1f44 55%,#163b7a 100%);color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;border-bottom:3px solid var(--gold);box-shadow:0 6px 24px rgba(11,31,68,.22)}
+    header{background:linear-gradient(135deg,#071530 0%,#0b1f44 55%,#163b7a 100%);color:#fff;padding:12px 18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;border-bottom:3px solid var(--gold);box-shadow:0 6px 24px rgba(11,31,68,.22)}
     .brand{display:flex;align-items:center;gap:14px}
-    .logo-box{width:66px;height:62px;border-radius:14px;background:linear-gradient(145deg,#fff,#f1f5f9);overflow:hidden;flex-shrink:0;border:2px solid #fbbf24;box-shadow:0 4px 16px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;padding:4px}
+    .logo-box{width:62px;height:58px;border-radius:14px;background:linear-gradient(145deg,#fff,#f1f5f9);overflow:hidden;flex-shrink:0;border:2px solid #fbbf24;box-shadow:0 4px 16px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;padding:4px}
     .logo-box img,.logo-box svg{width:100%;height:100%;object-fit:contain;display:block}
-    .brand h1{font-size:20px;font-weight:900;letter-spacing:.6px}
+    .brand h1{font-size:19px;font-weight:900;letter-spacing:.6px}
     .brand p{font-size:11px;color:#fbbf24;font-weight:700;letter-spacing:.4px;margin-top:2px}
     .ceo-box{text-align:right;font-size:12px;background:rgba(255,255,255,.08);padding:8px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.16);cursor:pointer}
     .ceo-box strong{display:block;font-size:14px;color:#fbbf24;font-weight:800}
-    .container{max-width:1380px;margin:18px auto;padding:0 14px}
+    .container{max-width:1460px;margin:14px auto;padding:0 12px}
     .auth-grid{display:grid;grid-template-columns:1.12fr .88fr;gap:28px;align-items:center;margin-top:14px}
     .hero-panel h2{font-size:32px;font-weight:900;color:var(--navy);line-height:1.18;margin:14px 0}
     .hero-panel h2 span{color:var(--blue)}
@@ -30,9 +30,9 @@
     .f-card:hover{transform:translateY(-3px);border-top-color:var(--gold)}
     .f-card h4{color:var(--navy);font-size:14px;font-weight:800;margin-bottom:5px}
     .f-card p{font-size:12px;color:var(--muted);margin:0}
-    .card{background:#fff;border-radius:16px;padding:20px;border:1px solid var(--border);border-top:4px solid var(--navy);box-shadow:0 10px 28px rgba(11,31,68,.08);margin-bottom:16px}
-    .card h3{font-size:18.5px;font-weight:900;color:var(--navy);margin-bottom:6px}
-    .sub-text{font-size:12.5px;color:var(--muted);margin-bottom:16px}
+    .card{background:#fff;border-radius:16px;padding:18px;border:1px solid var(--border);border-top:4px solid var(--navy);box-shadow:0 10px 28px rgba(11,31,68,.08);margin-bottom:14px}
+    .card h3{font-size:18px;font-weight:900;color:var(--navy);margin-bottom:6px}
+    .sub-text{font-size:12.5px;color:var(--muted);margin-bottom:14px}
     .form-group{margin-bottom:12px;min-width:0}
     label{display:block;font-size:11.5px;font-weight:700;color:#1e293b;margin-bottom:4px}
     input,select,textarea{width:100%;padding:10px 11px;border:1.5px solid #cbd5e1;border-radius:9px;font-size:13px;background:#f8fafc;transition:.15s;min-width:0}
@@ -44,7 +44,7 @@
     .btn-gold{background:linear-gradient(135deg,#d97706 0%,#b45309 100%);color:#fff}
     .btn-green{background:linear-gradient(135deg,#16a34a,#15803d);color:#fff}
     .btn-red{background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff}
-    .btn-sm{width:auto;padding:6px 11px;font-size:11.5px;border-radius:7px}
+    .btn-sm{width:auto;padding:5px 9px;font-size:11px;border-radius:7px}
     .alert{padding:11px 14px;border-radius:9px;font-size:12.5px;margin-bottom:14px;font-weight:600}
     .alert-info{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
     .alert-error{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
@@ -52,29 +52,29 @@
     .qr-box{text-align:center;background:#f8fafc;border:2px dashed #94a3b8;border-radius:12px;padding:14px;margin-bottom:14px}
     .qr-box img{width:170px;height:170px;border-radius:8px;border:4px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,.1)}
     .secret-pill{display:inline-block;background:#e2e8f0;padding:4px 10px;border-radius:6px;font-family:monospace;font-size:13px;font-weight:800;color:var(--navy);margin-top:4px}
-    .dash-wrap{display:grid;grid-template-columns:215px minmax(0,1fr);gap:16px;align-items:start}
-    .sidebar{background:#fff;border-radius:16px;border:1px solid var(--border);padding:15px 11px;box-shadow:0 6px 20px rgba(15,23,42,.05);position:sticky;top:14px}
-    .side-brand-card{text-align:center;padding-bottom:12px;border-bottom:1px solid #e2e8f0;margin-bottom:10px}
-    .side-logo-wrap{width:68px;height:68px;margin:0 auto 8px;border-radius:14px;background:#f8fafc;border:1.5px solid #e2e8f0;display:flex;align-items:center;justify-content:center;padding:6px;overflow:hidden;box-shadow:0 4px 12px rgba(11,31,68,.08)}
+    .dash-wrap{display:grid;grid-template-columns:196px minmax(0,1fr);gap:14px;align-items:start}
+    .sidebar{background:#fff;border-radius:16px;border:1px solid var(--border);padding:14px 10px;box-shadow:0 6px 20px rgba(15,23,42,.05);position:sticky;top:12px}
+    .side-brand-card{text-align:center;padding-bottom:10px;border-bottom:1px solid #e2e8f0;margin-bottom:10px}
+    .side-logo-wrap{width:62px;height:62px;margin:0 auto 7px;border-radius:14px;background:#f8fafc;border:1.5px solid #e2e8f0;display:flex;align-items:center;justify-content:center;padding:5px;overflow:hidden;box-shadow:0 4px 12px rgba(11,31,68,.08)}
     .side-logo-wrap img{width:100%;height:100%;object-fit:contain}
-    .side-btn{width:100%;text-align:left;background:#fff;border:1px solid transparent;padding:8px 10px;border-radius:9px;font-weight:700;font-size:12px;cursor:pointer;color:#334155;transition:.15s;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .side-btn{width:100%;text-align:left;background:#fff;border:1px solid transparent;padding:8px 9px;border-radius:9px;font-weight:700;font-size:12px;cursor:pointer;color:#334155;transition:.15s;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;gap:6px}
     .side-btn:hover{background:#f1f5f9;color:var(--navy)}
     .side-btn.active{background:linear-gradient(135deg,#0b1f44,#163b7a);color:#fff;box-shadow:0 4px 12px rgba(11,31,68,.2)}
     .support-divider{display:flex;align-items:center;gap:8px;margin:10px 4px 8px;font-size:10px;font-weight:800;letter-spacing:.8px;color:#94a3b8;text-transform:uppercase}
     .support-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
-    .settings-toggle{width:100%;text-align:left;background:#f8fafc;border:1px solid #e2e8f0;padding:8px 10px;border-radius:9px;font-weight:700;font-size:12px;cursor:pointer;color:#334155;display:flex;align-items:center;justify-content:space-between;transition:.15s}
+    .settings-toggle{width:100%;text-align:left;background:#f8fafc;border:1px solid #e2e8f0;padding:8px 9px;border-radius:9px;font-weight:700;font-size:12px;cursor:pointer;color:#334155;display:flex;align-items:center;justify-content:space-between;transition:.15s}
     .settings-toggle:hover{background:#f1f5f9;color:var(--navy)}
-    .settings-submenu{padding:6px 0 4px 12px;display:flex;flex-direction:column;gap:3px}
+    .settings-submenu{padding:6px 0 4px 10px;display:flex;flex-direction:column;gap:3px}
     .settings-submenu.collapsed{display:none}
-    .sub-side-btn{width:100%;text-align:left;background:transparent;border:none;padding:6px 10px;border-radius:8px;font-size:12px;font-weight:600;color:#475569;cursor:pointer;transition:.15s}
+    .sub-side-btn{width:100%;text-align:left;background:transparent;border:none;padding:6px 9px;border-radius:8px;font-size:12px;font-weight:600;color:#475569;cursor:pointer;transition:.15s}
     .sub-side-btn:hover{background:#f1f5f9;color:var(--navy)}
     .sub-side-btn.active{background:#e0e7ff;color:#1e3a8a;font-weight:800}
     .tab-btn{background:#fff;border:1px solid var(--border);padding:8px 16px;border-radius:99px;font-weight:800;font-size:12.5px;cursor:pointer;color:#334155}
     .tab-btn.active{background:linear-gradient(135deg,#0b1f44,#163b7a);color:#fff;border-color:var(--navy)}
     .stats-4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
-    .stat-box{background:#fff;padding:13px 14px;border-radius:13px;border:1px solid #e2e8f0;display:flex;align-items:center;gap:10px;box-shadow:0 2px 8px rgba(15,23,42,.03);min-width:0}
-    .journey-photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-    .jp-card{position:relative;height:164px;border-radius:14px;overflow:hidden;cursor:pointer;box-shadow:0 8px 20px rgba(15,23,42,.1);transition:transform .22s ease,box-shadow .22s ease;border:1px solid rgba(255,255,255,.6)}
+    .stat-box{background:#fff;padding:12px 13px;border-radius:13px;border:1px solid #e2e8f0;display:flex;align-items:center;gap:10px;box-shadow:0 2px 8px rgba(15,23,42,.03);min-width:0}
+    .journey-photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .jp-card{position:relative;height:158px;border-radius:14px;overflow:hidden;cursor:pointer;box-shadow:0 8px 20px rgba(15,23,42,.1);transition:transform .22s ease,box-shadow .22s ease;border:1px solid rgba(255,255,255,.6)}
     .jp-card:hover{transform:translateY(-4px);box-shadow:0 14px 28px rgba(11,31,68,.18)}
     .jp-card img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s ease}
     .jp-card:hover img{transform:scale(1.06)}
@@ -86,49 +86,49 @@
     .fares-meta-bar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:14px;font-size:12.5px;color:#64748b;font-weight:600}
     .live-avail-pill{display:inline-flex;align-items:center;gap:6px;background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;padding:4px 10px;border-radius:99px;font-size:11.5px;font-weight:700}
     .live-dot{width:7px;height:7px;border-radius:50%;background:#10b981;display:inline-block}
-    .airline-group-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;margin-bottom:18px;overflow:hidden;box-shadow:0 4px 16px rgba(15,23,42,.04)}
-    .ag-header{padding:16px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid #eef2f6;background:#fff}
+    .airline-group-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;margin-bottom:16px;overflow:hidden;box-shadow:0 4px 16px rgba(15,23,42,.04)}
+    .ag-header{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid #eef2f6;background:#fff}
     .ag-brand{display:flex;align-items:center;gap:12px}
-    .ag-logo-badge{min-width:74px;height:38px;padding:4px 10px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px;letter-spacing:.4px}
+    .ag-logo-badge{min-width:72px;height:36px;padding:4px 10px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px;letter-spacing:.4px}
     .ag-label{font-size:10px;font-weight:700;color:#94a3b8;letter-spacing:.7px;text-transform:uppercase}
     .ag-name{font-size:14.5px;font-weight:800;color:#0f172a;margin-top:1px}
     .ag-count-pill{background:#f1f5f9;color:#334155;font-size:12px;font-weight:700;padding:5px 12px;border-radius:99px;border:1px solid #e2e8f0}
-    .ag-subheader{padding:12px 20px;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+    .ag-subheader{padding:10px 18px;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
     .ag-route-box{display:flex;align-items:center;gap:10px}
-    .ag-plane-icon{width:34px;height:34px;border-radius:9px;background:#e0f2fe;color:#0369a1;display:flex;align-items:center;justify-content:center;font-size:16px}
+    .ag-plane-icon{width:32px;height:32px;border-radius:9px;background:#e0f2fe;color:#0369a1;display:flex;align-items:center;justify-content:center;font-size:15px}
     .ag-route-code{font-size:13.5px;font-weight:800;color:#0f172a}
-    .ag-table-wrap{overflow-x:auto}
-    .ag-table{width:100%;border-collapse:collapse;min-width:760px}
-    .ag-table th{background:#fff;padding:11px 18px;font-size:10.5px;font-weight:800;color:#64748b;letter-spacing:.6px;text-transform:uppercase;border-bottom:1px solid #eef2f6}
-    .ag-table td{padding:14px 18px;border-bottom:1px solid #f1f5f9;font-size:13px;color:#1e293b;vertical-align:middle}
+    .ag-table-wrap{overflow-x:visible}
+    .ag-table{width:100%;border-collapse:collapse;min-width:0}
+    .ag-table th{background:#fff;padding:10px 12px;font-size:10.5px;font-weight:800;color:#64748b;letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid #eef2f6}
+    .ag-table td{padding:12px;border-bottom:1px solid #f1f5f9;font-size:12.5px;color:#1e293b;vertical-align:middle}
     .ag-table tr:last-child td{border-bottom:none}
     .ag-table tbody tr:hover{background:#fafcff}
-    .meal-pill-yes{display:inline-flex;align-items:center;gap:5px;background:#ecfdf5;color:#047857;border:1px solid #bbf7d0;padding:4px 10px;border-radius:7px;font-size:11.5px;font-weight:700}
-    .meal-pill-no{display:inline-flex;align-items:center;gap:5px;background:#f8fafc;color:#64748b;border:1px solid #e2e8f0;padding:4px 10px;border-radius:7px;font-size:11.5px;font-weight:700}
-    .seat-pill-avail{display:inline-block;background:#eff6ff;color:#1d4ed8;padding:4px 11px;border-radius:99px;font-size:11.5px;font-weight:700}
-    .seat-pill-sold{display:inline-block;background:#fee2e2;color:#b91c1c;padding:4px 11px;border-radius:99px;font-size:11.5px;font-weight:700}
-    .fare-price-main{font-size:15.5px;font-weight:900;color:#0f172a;line-height:1.1}
+    .meal-pill-yes{display:inline-flex;align-items:center;gap:5px;background:#ecfdf5;color:#047857;border:1px solid #bbf7d0;padding:4px 9px;border-radius:7px;font-size:11px;font-weight:700}
+    .meal-pill-no{display:inline-flex;align-items:center;gap:5px;background:#f8fafc;color:#64748b;border:1px solid #e2e8f0;padding:4px 9px;border-radius:7px;font-size:11px;font-weight:700}
+    .seat-pill-avail{display:inline-block;background:#eff6ff;color:#1d4ed8;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700}
+    .seat-pill-sold{display:inline-block;background:#fee2e2;color:#b91c1c;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700}
+    .fare-price-main{font-size:15px;font-weight:900;color:#0f172a;line-height:1.1}
     .fare-price-sub{font-size:10px;font-weight:700;color:#94a3b8;letter-spacing:.4px;margin-top:2px;text-transform:uppercase}
-    .btn-book-amber{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1e293b;border:none;padding:9px 16px;border-radius:9px;font-size:12.5px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:6px;box-shadow:0 3px 10px rgba(245,158,11,.25);transition:.15s;white-space:nowrap}
+    .btn-book-amber{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#1e293b;border:none;padding:8px 14px;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:5px;box-shadow:0 3px 10px rgba(245,158,11,.25);transition:.15s;white-space:nowrap}
     .btn-book-amber:hover:not(:disabled){background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;transform:translateY(-1px)}
     .btn-book-amber:disabled{opacity:.5;cursor:not-allowed}
-    .contacts-banner{background:linear-gradient(95deg,#2563eb 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;padding:26px 24px;border-radius:16px;text-align:center;margin-bottom:18px;box-shadow:0 10px 24px rgba(59,130,246,.22)}
+    .contacts-banner{background:linear-gradient(95deg,#2563eb 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;padding:24px;border-radius:16px;text-align:center;margin-bottom:16px;box-shadow:0 10px 24px rgba(59,130,246,.22)}
     .contacts-banner h2{font-size:24px;font-weight:800;margin-bottom:6px}
     .contacts-banner p{font-size:13px;color:#e0e7ff}
-    .team-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
-    .team-card{background:#f0f6ff;border:1px solid #dbeafe;border-radius:14px;padding:18px;display:flex;align-items:flex-start;gap:14px;transition:.18s}
+    .team-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+    .team-card{background:#f0f6ff;border:1px solid #dbeafe;border-radius:14px;padding:16px;display:flex;align-items:flex-start;gap:14px;transition:.18s}
     .team-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(37,99,235,.1);background:#e8f1ff}
-    .team-avatar{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;font-size:19px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 10px rgba(37,99,235,.28)}
-    .team-info h4{font-size:15px;font-weight:800;color:#0f172a;margin-bottom:2px;text-transform:uppercase}
+    .team-avatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 10px rgba(37,99,235,.28)}
+    .team-info h4{font-size:14.5px;font-weight:800;color:#0f172a;margin-bottom:2px;text-transform:uppercase}
     .team-role{font-size:11px;font-weight:800;color:#2563eb;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;display:block}
     .team-line{font-size:12.5px;color:#334155;margin-bottom:4px}
     .team-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
     .contact-pill{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:99px;font-size:11.5px;font-weight:700;text-decoration:none}
     .pill-call{background:#dbeafe;color:#1d4ed8}
     .pill-wa{background:#dcfce7;color:#15803d}
-    .profile-grid{display:grid;grid-template-columns:300px 1fr;gap:20px;align-items:start}
-    .logo-upload-box{background:#f8fafc;border:2px dashed #cbd5e1;border-radius:14px;padding:20px;text-align:center}
-    .logo-preview-circle{width:124px;height:124px;margin:0 auto 12px;border-radius:16px;background:#fff;border:2px solid #e2e8f0;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:8px;box-shadow:0 4px 14px rgba(15,23,42,.06)}
+    .profile-grid{display:grid;grid-template-columns:280px 1fr;gap:18px;align-items:start}
+    .logo-upload-box{background:#f8fafc;border:2px dashed #cbd5e1;border-radius:14px;padding:18px;text-align:center}
+    .logo-preview-circle{width:120px;height:120px;margin:0 auto 12px;border-radius:16px;background:#fff;border:2px solid #e2e8f0;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:8px;box-shadow:0 4px 14px rgba(15,23,42,.06)}
     .logo-preview-circle img{width:100%;height:100%;object-fit:contain}
     .pass-wrap{position:relative}
     .pass-toggle{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:13px;color:#475569;font-weight:700}
@@ -138,22 +138,25 @@
     .bank-card h4{color:#fbbf24;font-size:14.5px;margin-bottom:8px}
     .bank-card p{font-size:12.5px;margin:4px 0;color:#e2e8f0}
     .bank-card .mono{font-family:monospace;font-size:14px;font-weight:800;color:#fff}
-    .admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
-    table{width:100%;border-collapse:collapse;font-size:12px}
-    th{background:#f1f5f9;text-align:left;padding:9px 7px;color:#0b1f44;font-weight:800;font-size:10.5px;text-transform:uppercase;border-bottom:2px solid #cbd5e1;line-height:1.25}
-    td{padding:9px 7px;border-bottom:1px solid var(--border);vertical-align:middle}
-    #tab-bookings .bookings-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid #e2e8f0;border-radius:12px}
-    #tab-bookings table{width:100%;min-width:920px;border-collapse:collapse;font-size:11.5px;table-layout:auto}
-    #tab-bookings th{background:#f1f5f9;color:#0b1f44;padding:10px 9px;font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;white-space:nowrap;border-bottom:2px solid #cbd5e1}
-    #tab-bookings td{padding:10px 9px;border-bottom:1px solid #eef2f6;vertical-align:middle;word-break:normal;overflow-wrap:normal}
+    .admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+    .table-fit-wrap{overflow-x:visible;border:1px solid #e2e8f0;border-radius:12px}
+    table{width:100%;border-collapse:collapse;font-size:11.5px}
+    th{background:#f1f5f9;text-align:left;padding:9px 7px;color:#0b1f44;font-weight:800;font-size:10px;text-transform:uppercase;border-bottom:2px solid #cbd5e1;line-height:1.25}
+    td{padding:9px 7px;border-bottom:1px solid var(--border);vertical-align:middle;overflow-wrap:anywhere}
+
+    /* Full-fit Bookings Table: NO horizontal scroll on desktop */
+    #tab-bookings .bookings-scroll{overflow-x:visible;border:1px solid #e2e8f0;border-radius:12px}
+    #tab-bookings table{width:100%;min-width:0;border-collapse:collapse;font-size:11.5px;table-layout:fixed}
+    #tab-bookings th{background:#f1f5f9;color:#0b1f44;padding:9px 6px;font-size:9.5px;font-weight:800;letter-spacing:.35px;text-transform:uppercase;border-bottom:2px solid #cbd5e1}
+    #tab-bookings td{padding:9px 6px;border-bottom:1px solid #eef2f6;vertical-align:middle;word-break:break-word;overflow-wrap:break-word;line-height:1.35}
     #tab-bookings tbody tr:hover td{background:#f8fafc}
-    #tab-bookings .col-nowrap{white-space:nowrap}
-    #tab-bookings .pnr-pill{display:inline-block;background:#0b1f44;color:#fbbf24;padding:4px 9px;border-radius:6px;font-family:monospace;font-weight:800;font-size:11.5px;letter-spacing:.8px;white-space:nowrap}
-    #tab-bookings .act-wrap{display:flex;flex-wrap:nowrap;gap:4px;max-width:none;white-space:nowrap}
-    #tab-bookings .act-wrap .btn-sm{padding:5px 8px;font-size:10.5px;margin:0!important;white-space:nowrap}
-    .act-wrap{display:flex;flex-wrap:wrap;gap:4px;min-width:110px;max-width:165px}
-    .act-wrap .btn-sm{padding:4px 7px;font-size:10.5px;margin:0!important}
-    .status-badge{padding:3px 8px;border-radius:99px;font-size:10px;font-weight:800;display:inline-block;white-space:nowrap}
+    #tab-bookings .pnr-pill{display:inline-block;background:#0b1f44;color:#fbbf24;padding:3px 7px;border-radius:6px;font-family:monospace;font-weight:800;font-size:11px;letter-spacing:.6px;white-space:nowrap}
+    #tab-bookings .act-wrap{display:flex;flex-wrap:wrap;gap:4px;min-width:0;max-width:none}
+    #tab-bookings .act-wrap .btn-sm{padding:4px 7px;font-size:10.5px;margin:0!important;white-space:nowrap}
+
+    .act-wrap{display:flex;flex-wrap:wrap;gap:4px}
+    .act-wrap .btn-sm{padding:4px 7px;font-size:10.5px;margin:0!important;white-space:nowrap}
+    .status-badge{padding:3px 7px;border-radius:99px;font-size:9.5px;font-weight:800;display:inline-block;white-space:nowrap}
     .st-APPROVED,.st-CONFIRMED,.st-ACTIVE,.st-ISSUED{background:#dcfce7;color:#166534}
     .st-PENDING{background:#fef3c7;color:#92400e}
     .st-BLOCKED,.st-CANCELED,.st-EXPIRED{background:#fee2e2;color:#991b1b}
@@ -172,8 +175,23 @@
     .golan-orbit-plane{position:absolute;top:-7px;left:50%;transform:translateX(-50%) rotate(90deg);width:32px;height:32px;filter:drop-shadow(0 3px 6px rgba(11,31,68,.35))}
     .golan-loader-title{font-size:15.5px;font-weight:900;color:#0b1f44;letter-spacing:.3px}
     .golan-loader-sub{font-size:12px;color:#475569;margin-top:4px;font-weight:600}
-    @media(max-width:1040px){.dash-wrap{grid-template-columns:190px minmax(0,1fr);gap:12px}.search-row{grid-template-columns:minmax(0,1fr) 34px minmax(0,1fr) minmax(0,.9fr) minmax(0,.8fr) auto;gap:6px}}
-    @media(max-width:740px){.dash-wrap,.auth-grid,.admin-grid,.profile-grid,.team-grid{grid-template-columns:1fr}.sidebar{position:static}.stats-4{grid-template-columns:repeat(2,1fr)}.journey-photo-grid{grid-template-columns:repeat(2,1fr)}.search-row{grid-template-columns:1fr}}
+
+    @media(max-width:1040px){
+      .dash-wrap{grid-template-columns:182px minmax(0,1fr);gap:10px}
+      .search-row{grid-template-columns:minmax(0,1fr) 34px minmax(0,1fr) minmax(0,.9fr) minmax(0,.8fr) auto;gap:6px}
+    }
+    @media(max-width:900px){
+      #tab-bookings .bookings-scroll,.ag-table-wrap,.table-fit-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+      #tab-bookings table{min-width:780px;table-layout:auto}
+      .ag-table{min-width:680px}
+    }
+    @media(max-width:740px){
+      .dash-wrap,.auth-grid,.admin-grid,.profile-grid,.team-grid{grid-template-columns:1fr}
+      .sidebar{position:static}
+      .stats-4{grid-template-columns:repeat(2,1fr)}
+      .journey-photo-grid{grid-template-columns:repeat(2,1fr)}
+      .search-row{grid-template-columns:1fr}
+    }
     @media(max-width:520px){.feature-cards,.stats-4,.journey-photo-grid{grid-template-columns:1fr}}
   </style>
 </head>
@@ -257,7 +275,7 @@
       <aside class="sidebar">
         <div class="side-brand-card">
           <div class="side-logo-wrap"><img id="sidebarBrandLogo" alt="Agency Logo" /></div>
-          <div style="font-size:13px;font-weight:900;color:#0b1f44;">GOLAN INTERNATIONAL</div>
+          <div style="font-size:12.5px;font-weight:900;color:#0b1f44;">GOLAN INTERNATIONAL</div>
           <div id="sideSubAgentName" style="font-size:10.5px;font-weight:800;color:#d97706;margin-top:3px;text-transform:uppercase;">SUB-AGENT PORTAL</div>
         </div>
         <button type="button" class="side-btn active" data-tab="liveair" onclick="switchTab('liveair',this)"><span>🏠 Dashboard</span></button>
@@ -380,6 +398,16 @@
           </div>
           <div class="bookings-scroll">
             <table>
+              <colgroup>
+                <col style="width:10%;" />
+                <col style="width:10%;" />
+                <col style="width:15%;" />
+                <col style="width:22%;" />
+                <col style="width:10%;" />
+                <col style="width:11%;" />
+                <col style="width:10%;" />
+                <col style="width:12%;" />
+              </colgroup>
               <thead>
                 <tr>
                   <th>Booking ID</th>
@@ -425,7 +453,7 @@
             <div style="background:#eff6ff;padding:12px;border-radius:10px;border:1px solid #bfdbfe;"><div style="font-size:10px;font-weight:800;color:#1e40af;">🔄 CANCELED / REFUND</div><div id="ldgTotalRefund" style="font-size:17px;font-weight:900;color:#1d4ed8;margin-top:3px;">PKR 0</div></div>
             <div style="background:#fffbeb;padding:12px;border-radius:10px;border:1px solid #fde68a;"><div style="font-size:10px;font-weight:800;color:#92400e;">⚖️ WALLET BALANCE</div><div id="ldgNetBalance" style="font-size:17px;font-weight:900;color:#b45309;margin-top:3px;">PKR 0</div><div id="ldgBalanceNote" style="font-size:10px;color:#92400e;">Available Balance</div></div>
           </div>
-          <div style="overflow-x:auto;"><table><thead><tr><th>Date</th><th>Ref / ID</th><th>Description</th><th>Type</th><th>Debit</th><th>Credit</th><th>Status</th><th>PDF Receipt</th></tr></thead><tbody id="ledgerTableBody"></tbody></table></div>
+          <div class="table-fit-wrap"><table><thead><tr><th>Date</th><th>Ref / ID</th><th>Description</th><th>Type</th><th>Debit</th><th>Credit</th><th>Status</th><th>PDF Receipt</th></tr></thead><tbody id="ledgerTableBody"></tbody></table></div>
         </div>
 
         <div id="tab-contacts" class="hidden">
@@ -525,8 +553,8 @@
               </div>
             </div>
           </div>
-          <div class="card"><h3>💰 Deposit Limit Requests</h3><div style="overflow-x:auto;"><table><thead><tr><th>ID</th><th>Date</th><th>Agency</th><th>Bank</th><th>Amount</th><th>Slip / TID</th><th>Status</th><th>Action</th></tr></thead><tbody id="adminDepositsBody"></tbody></table></div></div>
-          <div class="card"><h3>🛡️ Sub-Agent Wallet &amp; Security Control</h3><div style="overflow-x:auto;"><table><thead><tr><th>Agency</th><th>Email</th><th>City / Mobile</th><th>Wallet (PKR)</th><th>Status</th><th>Controls</th></tr></thead><tbody id="adminAgentsBody"></tbody></table></div></div>
+          <div class="card"><h3>💰 Deposit Limit Requests</h3><div class="table-fit-wrap"><table><thead><tr><th>ID</th><th>Date</th><th>Agency</th><th>Bank</th><th>Amount</th><th>Slip / TID</th><th>Status</th><th>Action</th></tr></thead><tbody id="adminDepositsBody"></tbody></table></div></div>
+          <div class="card"><h3>🛡️ Sub-Agent Wallet &amp; Security Control</h3><div class="table-fit-wrap"><table><thead><tr><th>Agency</th><th>Email</th><th>City / Mobile</th><th>Wallet (PKR)</th><th>Status</th><th>Controls</th></tr></thead><tbody id="adminAgentsBody"></tbody></table></div></div>
         </div>
       </div>
     </div>
@@ -636,7 +664,7 @@
       if(!val)return '--:--';
       var s=String(val).trim(),ampm=s.match(/(\d{1,2}:\d{2}\s*(?:AM|PM))/i);
       if(ampm)return ampm[1].toUpperCase();
-      var hm=s.match(/(?:^|\s)(\d{2}):(\d{2})(?::\d{2})?(?:\s|$)/);
+      var hm=s.match(/(?:^|[\sT])(\d{1,2}):(\d{2})(?::\d{2})?(?:\s|$)/);
       if(hm){var h=parseInt(hm[1],10),ap=h>=12?'PM':'AM',h12=h%12||12;return String(h12).padStart(2,'0')+':'+hm[2]+' '+ap;}
       return s;
     }
@@ -647,6 +675,7 @@
       var clean=fi.cleanTitle||'',airlineInfo=getTicketAirlineMeta(clean+' '+fi.timing),bag=fi.baggage||'20+5 KG';
       var rawSegs=String(clean).split(/\s*\/\s*|\s*;\s*/).filter(Boolean),timingLegs=String(fi.timing||'').split(/\s*\/\s*|\s*;\s*/).filter(Boolean),dateLegs=String(fi.date||'').split(/\s*\/\s*|\s*;\s*/).filter(Boolean);
       var segments=[],routeMatches=clean.match(/\b([A-Z]{3})\s*[-–to]+\s*([A-Z]{3})\b/gi)||[];
+      var hasIsoDate=function(v){return /\d{4}-\d{2}-\d{2}/.test(String(v||''));};
       if(rawSegs.length>1&&rawSegs.every(function(x){return /[A-Z]{3}\s*[-–]\s*[A-Z]{3}/i.test(x);})){
         rawSegs.forEach(function(segTxt,i){
           var rm=segTxt.match(/\b([A-Z]{3})\s*[-–]\s*([A-Z]{3})\b/i),flm=segTxt.match(/\b([A-Z]{2}[-\s]?\d{2,4})\b/i),tLeg=timingLegs[i]||fi.timing||'',times=tLeg.match(/\d{1,2}:\d{2}(?:\s*(?:AM|PM))?/gi)||[],dTxt=fmtTicketDate(dateLegs[i]||fi.date);
@@ -659,16 +688,16 @@
         });
       }else{
         var rm=clean.match(/\b([A-Z]{3})\s*[-–]\s*([A-Z]{3})\b/i),flm=clean.match(/\b([A-Z]{2}[-\s]?\d{2,4})\b/i),times=String(fi.timing||'').match(/\d{1,2}:\d{2}(?:\s*(?:AM|PM))?/gi)||[];
-        segments.push({origin:rm?codeToCity(rm[1]):clean.replace(/^(Group Flight|Umrah Package|Visit Visa|Live Airline)\s*[-–]\s*/i,'').slice(0,22).toUpperCase(),dest:rm?codeToCity(rm[2]):(b.Category==='Visit Visa'?'E-VISA':'DESTINATION'),airline:airlineInfo.name,flightNo:flm?flm[1].replace('-',' ').toUpperCase():(airlineInfo.code+'-GRP'),depTime:fi.dep?fmtTicketTime(fi.dep):(times[0]?fmtTicketTime(times[0]):'--:--'),arrTime:fi.arr?fmtTicketTime(fi.arr):(times[1]?fmtTicketTime(times[1]):'--:--'),depDate:fmtTicketDate(fi.dep||fi.date),arrDate:fmtTicketDate(fi.arr||fi.date),baggage:bag});
+        segments.push({origin:rm?codeToCity(rm[1]):clean.replace(/^(Group Flight|Umrah Package|Visit Visa|Live Airline)\s*[-–]\s*/i,'').slice(0,22).toUpperCase(),dest:rm?codeToCity(rm[2]):(b.Category==='Visit Visa'?'E-VISA':'DESTINATION'),airline:airlineInfo.name,flightNo:flm?flm[1].replace('-',' ').toUpperCase():(airlineInfo.code+'-GRP'),depTime:fi.dep?fmtTicketTime(fi.dep):(times[0]?fmtTicketTime(times[0]):'--:--'),arrTime:fi.arr?fmtTicketTime(fi.arr):(times[1]?fmtTicketTime(times[1]):'--:--'),depDate:fmtTicketDate(hasIsoDate(fi.dep)?fi.dep:fi.date),arrDate:fmtTicketDate(hasIsoDate(fi.arr)?fi.arr:fi.date),baggage:bag});
       }
       return{airlineInfo:airlineInfo,segments:segments};
     }
 
     function buildBookingVoucherHtml(b,forPrint){
-      var prof=getLocalProfile(),useCustom=(prof.voucherBranding!=='golan'&&prof.logoDataUrl);
-      var agencyName=(useCustom&&prof.agencyName)?prof.agencyName:(b.AgencyName||'Golan International Travel & Tours');
-      var agencyEmail=(useCustom&&currentEmail)?currentEmail:(b.AgentEmail||ADMIN_NOTIFY_EMAIL);
-      var agencyContact=(useCustom&&prof.mobile)?prof.mobile:(b.PaxMobile||'03453326318');
+      var prof=getLocalProfile(),isGolanBranding=(prof.voucherBranding==='golan'),useCustomLogo=(!isGolanBranding&&!!prof.logoDataUrl);
+      var agencyName=isGolanBranding?'Golan International Travel & Tours':(prof.agencyName||b.AgencyName||'Partner Travel Agency');
+      var agencyEmail=isGolanBranding?ADMIN_NOTIFY_EMAIL:(currentEmail||b.AgentEmail||ADMIN_NOTIFY_EMAIL);
+      var agencyContact=isGolanBranding?'0345-3326318':(prof.mobile||b.PaxMobile||'0345-3326318');
       var fi=extractFlightInfo(b),parsed=parseTicketSegments(b,fi),air=parsed.airlineInfo;
       var st=String(b.Status||'PENDING').toUpperCase(),pnrText=esc(b.PNR||'PENDING'),bookingCodeText=esc(b.TicketNo||b.BookingID||'-'),ticketedAt=esc(b.CreatedAt||'-');
       var stBg=(st==='CONFIRMED'||st==='ISSUED')?'#dcfce7':(st==='CANCELED'||st==='EXPIRED'?'#fee2e2':'#fef3c7');
@@ -676,7 +705,7 @@
       var qrData=makeQrDataUrlSync('GOLAN-ETICKET|'+(b.BookingID||'')+'|'+(b.PNR||'PENDING')+'|'+(b.PassportNo||''));
       var qrHtml=qrData?'<img src="'+qrData+'" style="width:66px;height:66px;border:1px solid #cbd5e1;border-radius:6px;padding:2px;background:#fff;"/>':'';
       var rightLogoHtml='';
-      if(useCustom&&prof.logoDataUrl)rightLogoHtml='<img src="'+esc(prof.logoDataUrl)+'" style="height:46px;max-width:160px;object-fit:contain;"/>';
+      if(useCustomLogo)rightLogoHtml='<img src="'+esc(prof.logoDataUrl)+'" style="height:46px;max-width:160px;object-fit:contain;"/>';
       else if(air.isSalam)rightLogoHtml='<div style="display:flex;align-items:center;gap:6px;"><svg width="26" height="26" viewBox="0 0 32 32"><polygon points="6,16 18,6 14,16 18,26" fill="#00a651"/><polygon points="12,16 20,10 17,16 20,22" fill="#00a99d"/></svg><div style="line-height:1;"><div style="font-size:10px;color:#84cc16;text-align:right;font-weight:700;">السلام</div><div style="font-size:22px;font-weight:800;"><span style="color:#00a99d;">Salam</span><span style="color:#0284c7;">Air</span></div></div></div>';
       else rightLogoHtml='<div style="display:flex;align-items:center;gap:10px;"><div style="text-align:right;"><div style="font-size:16px;font-weight:900;color:'+esc(air.color)+';">'+esc(air.name)+'</div><div style="font-size:10px;font-weight:700;color:#64748b;">OFFICIAL B2B E-TICKET</div></div><img src="'+esc(GOLAN_SVG_LOGO)+'" style="height:44px;width:44px;object-fit:contain;border-radius:8px;"/></div>';
 
@@ -934,7 +963,7 @@
           var ags=res.agents||[];
           document.getElementById('adminAgentsBody').innerHTML=ags.length?ags.map(function(ag){
             var st=String(ag.Status||'PENDING').toUpperCase(),em=esc(ag.Email);
-            return '<tr><td><b>'+esc(ag.AgencyName)+'</b></td><td>'+em+'</td><td>'+esc(ag.City)+' • '+esc(ag.Mobile)+'</td><td style="font-weight:900;color:#0b1f44;">PKR '+Number(ag.BalancePKR||0).toLocaleString()+'</td><td><span class="status-badge st-'+esc(st)+'">'+esc(st)+'</span></td><td style="white-space:nowrap;display:flex;gap:4px;flex-wrap:wrap;"><button type="button" class="btn btn-sm btn-green" data-email="'+em+'" onclick="adminAgentCtrl(this.getAttribute(\'data-email\'),\'APPROVE\')">Approve</button><button type="button" class="btn btn-sm btn-primary" data-email="'+em+'" onclick="adminAgentCtrl(this.getAttribute(\'data-email\'),\'ADD_LIMIT\')">+ Limit</button><button type="button" class="btn btn-sm btn-red" data-email="'+em+'" onclick="adminAgentCtrl(this.getAttribute(\'data-email\'),\'BLOCK\')">Block</button><button type="button" class="btn btn-sm btn-gold" data-email="'+em+'" onclick="resetAgentPass(this.getAttribute(\'data-email\'))">Reset Pass</button></td></tr>';
+            return '<tr><td><b>'+esc(ag.AgencyName)+'</b></td><td>'+em+'</td><td>'+esc(ag.City)+' • '+esc(ag.Mobile)+'</td><td style="font-weight:900;color:#0b1f44;">PKR '+Number(ag.BalancePKR||0).toLocaleString()+'</td><td><span class="status-badge st-'+esc(st)+'">'+esc(st)+'</span></td><td><div class="act-wrap"><button type="button" class="btn btn-sm btn-green" data-email="'+em+'" onclick="adminAgentCtrl(this.getAttribute(\'data-email\'),\'APPROVE\')">Approve</button><button type="button" class="btn btn-sm btn-primary" data-email="'+em+'" onclick="adminAgentCtrl(this.getAttribute(\'data-email\'),\'ADD_LIMIT\')">+ Limit</button><button type="button" class="btn btn-sm btn-red" data-email="'+em+'" onclick="adminAgentCtrl(this.getAttribute(\'data-email\'),\'BLOCK\')">Block</button><button type="button" class="btn btn-sm btn-gold" data-email="'+em+'" onclick="resetAgentPass(this.getAttribute(\'data-email\'))">Reset</button></div></td></tr>';
           }).join(''):'<tr><td colspan="6" style="text-align:center;color:#64748b;padding:16px;">No sub-agents found.</td></tr>';
         }
       }).catch(function(err){console.error('Dashboard load error:',err);});
@@ -964,8 +993,8 @@
       document.getElementById('bookingsTableBody').innerHTML=list.length?list.map(function(b){
         var fi=extractFlightInfo(b),dtParts=String(b.CreatedAt||'').split(','),dateHtml=dtParts.length>1?('<div style="font-weight:700;color:#0f172a;">'+esc(dtParts[0].trim())+'</div><div style="font-size:10px;color:#64748b;margin-top:2px;">'+esc(dtParts.slice(1).join(',').trim())+'</div>'):esc(b.CreatedAt);
         var st=String(b.Status||'PENDING').toUpperCase(),isExp=(st==='PENDING'&&b.HoldUntil&&now>Number(b.HoldUntil)),badgeSt=isExp?'EXPIRED':st;
-        var timerHtml=(st==='PENDING'&&b.HoldUntil&&!isExp)?'<div style="margin-top:4px;"><span class="live-timer" data-until="'+esc(b.HoldUntil)+'" style="color:#dc2626;font-weight:800;font-size:10.5px;font-family:monospace;">⏳ ...</span></div>':'';
-        var pnrHtml='<span class="pnr-pill">'+esc(b.PNR||'PENDING')+'</span>'+(b.TicketNo?'<div style="font-size:10px;color:#15803d;font-weight:700;margin-top:4px;">TKT: '+esc(b.TicketNo)+'</div>':'');
+        var timerHtml=(st==='PENDING'&&b.HoldUntil&&!isExp)?'<div style="margin-top:4px;"><span class="live-timer" data-until="'+esc(b.HoldUntil)+'" style="color:#dc2626;font-weight:800;font-size:10px;font-family:monospace;">⏳ ...</span></div>':'';
+        var pnrHtml='<span class="pnr-pill">'+esc(b.PNR||'PENDING')+'</span>'+(b.TicketNo?'<div style="font-size:9.5px;color:#15803d;font-weight:700;margin-top:3px;">TKT: '+esc(b.TicketNo)+'</div>':'');
         var schedMini=(fi.date||fi.timing)?'<div style="font-size:10.5px;color:#475569;margin-top:3px;line-height:1.35;">'+(fi.date?'📅 '+esc(fi.date):'')+(fi.timing?' • 🕒 '+esc(fi.timing):'')+'</div>':'';
         var bid=esc(b.BookingID),btns='';
         if(isAdmin&&st==='PENDING')btns+='<button type="button" class="btn btn-sm btn-green" data-bid="'+bid+'" onclick="adminIssueGolanTicket(this.getAttribute(\'data-bid\'))">✓ Issue</button>';
@@ -974,14 +1003,14 @@
         if(isAdmin&&b.HasDocs)btns+='<button type="button" class="btn btn-sm" style="background:#0f4c5c;color:#fff;" data-bid="'+bid+'" onclick="viewAttachment(\'booking\',this.getAttribute(\'data-bid\'))">📎 Docs</button>';
         if(isAdmin)btns+='<button type="button" class="btn btn-sm" style="background:#e2e8f0;color:#991b1b;" data-bid="'+bid+'" onclick="deleteBookingAdmin(this.getAttribute(\'data-bid\'))">🗑️</button>';
         return '<tr>'
-          +'<td class="col-nowrap"><b style="color:#0b1f44;">'+bid+'</b><div style="font-size:10px;color:#64748b;font-weight:700;margin-top:2px;">'+esc(b.AgencyName)+'</div></td>'
-          +'<td class="col-nowrap">'+dateHtml+'</td>'
-          +'<td style="min-width:145px;"><b style="color:#0f172a;">'+esc(b.PassengerName)+'</b><div style="font-size:10.5px;color:#475569;margin-top:2px;font-family:monospace;">PP: '+esc(b.PassportNo)+'</div><div style="font-size:10.5px;color:#64748b;">'+esc(b.PaxMobile||'-')+'</div></td>'
-          +'<td style="min-width:210px;"><b style="color:#0b1f44;line-height:1.3;">'+esc(fi.cleanTitle)+'</b>'+schedMini+'</td>'
-          +'<td class="col-nowrap">'+pnrHtml+'</td>'
-          +'<td class="col-nowrap" style="font-weight:900;color:#15803d;">PKR '+Number(b.FarePKR||0).toLocaleString()+'</td>'
-          +'<td class="col-nowrap"><span class="status-badge st-'+esc(badgeSt)+'">'+esc(badgeSt)+'</span>'+timerHtml+'</td>'
-          +'<td class="col-nowrap"><div class="act-wrap">'+btns+'</div></td>'
+          +'<td><b style="color:#0b1f44;">'+bid+'</b><div style="font-size:10px;color:#64748b;font-weight:700;margin-top:2px;">'+esc(b.AgencyName)+'</div></td>'
+          +'<td>'+dateHtml+'</td>'
+          +'<td><b style="color:#0f172a;">'+esc(b.PassengerName)+'</b><div style="font-size:10px;color:#475569;margin-top:2px;font-family:monospace;">PP: '+esc(b.PassportNo)+'</div><div style="font-size:10px;color:#64748b;">'+esc(b.PaxMobile||'-')+'</div></td>'
+          +'<td><b style="color:#0b1f44;line-height:1.3;">'+esc(fi.cleanTitle)+'</b>'+schedMini+'</td>'
+          +'<td>'+pnrHtml+'</td>'
+          +'<td style="font-weight:900;color:#15803d;">PKR '+Number(b.FarePKR||0).toLocaleString()+'</td>'
+          +'<td><span class="status-badge st-'+esc(badgeSt)+'">'+esc(badgeSt)+'</span>'+timerHtml+'</td>'
+          +'<td><div class="act-wrap">'+btns+'</div></td>'
           +'</tr>';
       }).join(''):'<tr><td colspan="8" style="text-align:center;color:#64748b;padding:24px;">No bookings yet.</td></tr>';
     }
@@ -1007,8 +1036,8 @@
       document.getElementById('ledgerTableBody').innerHTML=rows.length?rows.join(''):'<tr><td colspan="8" style="text-align:center;color:#64748b;padding:18px;">No ledger entries yet.</td></tr>';
     }
 
-    function openBookingModal(cat,title,fare,fareId,holdMins){
-      selectedItem={Category:cat,Title:title,FarePKR:fare,FareID:fareId||'',HoldMins:holdMins||0};
+    function openBookingModal(cat,title,fare,fareId,holdMins,offerId){
+      selectedItem={Category:cat,Title:title,FarePKR:fare,FareID:fareId||'',HoldMins:holdMins||0,OfferID:offerId||''};
       var form=document.getElementById('bookingForm');if(form)form.reset();document.getElementById('paxNat').value='Pakistani';
       var isVisa=(cat==='Visit Visa');document.getElementById('flightFieldsWrap').classList.toggle('hidden',isVisa);document.getElementById('visaFieldsWrap').classList.toggle('hidden',!isVisa);
       document.getElementById('modalHeaderTitle').textContent=isVisa?'🛂 Apply Visit Visa (Documents)':'✈️ Confirm B2B Booking (Passport Details)';
@@ -1051,7 +1080,7 @@
         var agencyDisp=getLocalProfile().agencyName||document.getElementById('dashAgencyName').textContent||'Partner';
         var previewBooking={BookingID:'PENDING',PNR:'PENDING',AgencyName:agencyDisp,AgentEmail:currentEmail,PassengerName:fullName,PassportNo:pp,PaxMobile:mob,Category:selectedItem.Category,ItemTitle:fullTitle,FlightDate:fDate,DepTime:fDep,ArrTime:fArr,Timing:fTiming,Baggage:fBag,Meal:fMeal,Stay:fStay,Details:fDetails,FarePKR:selectedItem.FarePKR,FareID:selectedItem.FareID||'',Status:'PENDING',CreatedAt:new Date().toLocaleString('en-GB',{timeZone:'Asia/Karachi'})};
         var voucherHtml=buildBookingVoucherHtml(previewBooking,false);
-        var res=await callBackend({action:'addBooking',email:currentEmail,token:currentToken,agentEmail:currentEmail,adminEmail:ADMIN_NOTIFY_EMAIL,notifyAdmin:true,notifySubAgent:true,passengerName:fullName,passengerEmail:paxEm,passportNo:pp,dob:document.getElementById('paxDob').value,passportExpiry:document.getElementById('paxExp').value,nationality:document.getElementById('paxNat').value,paxMobile:mob,category:selectedItem.Category,itemTitle:fullTitle,farePKR:selectedItem.FarePKR,fareId:selectedItem.FareID||'',holdMins:selectedItem.HoldMins||0,flightDate:fDate,depTime:fDep,arrTime:fArr,timing:fTiming,baggage:fBag,meal:fMeal,stay:fStay,details:fDetails,passportDoc:passportDoc,photoDoc:photoDoc,voucherHtml:voucherHtml});
+        var res=await callBackend({action:'addBooking',email:currentEmail,token:currentToken,agentEmail:currentEmail,adminEmail:ADMIN_NOTIFY_EMAIL,notifyAdmin:true,notifySubAgent:true,passengerName:fullName,passengerEmail:paxEm,passportNo:pp,dob:document.getElementById('paxDob').value,passportExpiry:document.getElementById('paxExp').value,nationality:document.getElementById('paxNat').value,paxMobile:mob,category:selectedItem.Category,itemTitle:fullTitle,farePKR:selectedItem.FarePKR,fareId:selectedItem.FareID||'',offerId:selectedItem.OfferID||'',holdMins:selectedItem.HoldMins||0,flightDate:fDate,depTime:fDep,arrTime:fArr,timing:fTiming,baggage:fBag,meal:fMeal,stay:fStay,details:fDetails,passportDoc:passportDoc,photoDoc:photoDoc,voucherHtml:voucherHtml});
         if(!res||!res.ok){alert((res&&res.message)||'Booking failed.');return;}
         closeBookingModal();document.getElementById('gdsDetailsModal').classList.add('hidden');
         showProBookingCard(res.bookingId,res.pnr,fullName,pp,selectedItem.Title,selectedItem.FarePKR);
@@ -1076,7 +1105,7 @@
 
     function buildGolanPlaneSearchLoader(o1,d1){
       var jetSvg='<svg class="golan-orbit-plane" width="32" height="32" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><path d="M32 4c2.2 0 4 4.2 4 9.5V25l19 11.5v5L36 35.5V49l6.5 4.8V57L32 54.5 21.5 57v-3.2L28 49V35.5L9 41.5v-5L28 25V13.5C28 8.2 29.8 4 32 4z" fill="#0b1f44"/><path d="M32 6c1.1 0 2 3.4 2 7.5v13l16 9.5v2.2L34 32.5V48l4.5 3.3v1.3L32 51l-6.5 1.6v-1.3L30 48V32.5L14 38.2V36l16-9.5v-13C30 9.4 30.9 6 32 6z" fill="#1e3a8a"/><path d="M30.5 11h3v7h-3z" fill="#fbbf24"/></svg>';
-      return '<div class="golan-flight-loader"><div class="golan-orbit-stage"><div class="golan-pulse-ring"></div><div class="golan-orbit-ring"></div><div class="golan-center-logo"><img src="'+GOLAN_SVG_LOGO+'" alt="Golan International"/></div><div class="golan-plane-rotor">'+jetSvg+'</div></div><div class="golan-loader-title">Searching Best Live Flights ('+esc(o1)+' ✈️ '+esc(d1)+')</div><div class="golan-loader-sub">Golan International B2B Air Fare Engine • Please wait a moment...</div></div>';
+      return '<div class="golan-flight-loader"><div class="golan-orbit-stage"><div class="golan-orbit-ring"></div><div class="golan-orbit-logo"><img src="'+GOLAN_SVG_LOGO+'" alt="Golan International"/></div><div class="golan-orbit-track">'+jetSvg+'</div></div><div class="golan-loader-title">Searching Best Live Flights ('+esc(o1)+' ✈️ '+esc(d1)+')</div><div class="golan-loader-sub">Golan International B2B Air Fare Engine • Please wait a moment...</div></div>';
     }
 
     function handleLiveFlightSearch(e){
@@ -1101,7 +1130,12 @@
       if(tab==='fares')box.innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;"><div style="border:1px solid #cbd5e1;border-radius:12px;padding:14px;"><h4>Economy Light</h4><p style="font-size:12px;margin:8px 0;">✓ 7 KG Hand Carry<br>✕ Non-Refundable</p><b style="font-size:17px;">PKR '+base.toLocaleString()+'</b><button type="button" class="btn btn-primary" style="margin-top:10px;" onclick="bookGdsOffer('+ACTIVE_GDS_IDX+',\'Economy Light (7 KG)\','+base+')">Select Light</button></div><div style="border:2px solid #0284c7;border-radius:12px;padding:14px;background:#f0f9ff;"><h4>Economy Value</h4><p style="font-size:12px;margin:8px 0;">✓ 30 KG + 7 KG<br>✓ Date Change (Fee)</p><b style="font-size:17px;color:#0284c7;">PKR '+val.toLocaleString()+'</b><button type="button" class="btn btn-primary" style="margin-top:10px;" onclick="bookGdsOffer('+ACTIVE_GDS_IDX+',\'Economy Value (30 KG + 7 KG)\','+val+')">Select Value</button></div><div style="border:1px solid #f59e0b;border-radius:12px;padding:14px;background:#fffbeb;"><h4>Economy Flex</h4><p style="font-size:12px;margin:8px 0;">✓ 40 KG + 7 KG<br>✓ Free Change &amp; Meal</p><b style="font-size:17px;color:#b45309;">PKR '+flex.toLocaleString()+'</b><button type="button" class="btn btn-gold" style="margin-top:10px;" onclick="bookGdsOffer('+ACTIVE_GDS_IDX+',\'Economy Flex (40 KG + 7 KG)\','+flex+')">Select Flex</button></div></div>';
       else box.innerHTML='<div style="font-size:13.5px;line-height:1.8;"><b>Airline:</b> '+esc(o.Airline)+' ('+esc(o.FlightNo)+')<br><b>Route:</b> '+esc(o.Route)+'<br><b>Departure:</b> '+esc(o.DepTime)+'<br><b>Arrival:</b> '+esc(o.ArrTime)+'<br><b>Baggage:</b> '+esc(o.Baggage||o.Luggage)+'</div>';
     }
-    function bookGdsOffer(idx,bagLabel,finalFare){var o=(window.__GDS_OFFERS__||[])[idx];if(!o)return;ACTIVE_GDS_IDX=idx;document.getElementById('gdsDetailsModal').classList.add('hidden');openBookingModal('Live Airline',o.Airline+' '+o.FlightNo+' ('+o.Origin+' - '+o.Dest+') ['+bagLabel+']',Number(finalFare||o.FarePKR||0));}
+    function bookGdsOffer(idx,bagLabel,finalFare){
+      var o=(window.__GDS_OFFERS__||[])[idx];if(!o)return;
+      ACTIVE_GDS_IDX=idx;document.getElementById('gdsDetailsModal').classList.add('hidden');
+      var useOfferId=(Number(finalFare||o.FarePKR||0)===Number(o.FarePKR||0))?(o.OfferID||''):'';
+      openBookingModal('Live Airline',o.Airline+' '+o.FlightNo+' ('+o.Origin+' - '+o.Dest+') ['+bagLabel+']',Number(finalFare||o.FarePKR||0),'',0,useOfferId);
+    }
 
     function toggleVisaFields(){
       var cat=document.getElementById('admCat').value,isVisa=(cat==='Visit Visa'),isUmrah=(cat==='Umrah Package');
@@ -1174,8 +1208,15 @@
       var now=Date.now();
       document.querySelectorAll('.live-timer').forEach(function(el){
         var diff=Number(el.getAttribute('data-until')||0)-now;
-        if(diff<=0){el.textContent='⌛ EXPIRED';var b=el.parentElement?el.parentElement.querySelector('.status-badge'):null;if(b&&b.textContent==='PENDING'){b.textContent='EXPIRED';b.className='status-badge st-EXPIRED';}}
-        else{var h=Math.floor(diff/3600000),m=Math.floor((diff%3600000)/60000),s=Math.floor((diff%60000)/1000);el.textContent='⏳ '+(h>0?String(h).padStart(2,'0')+':':'')+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');}
+        if(diff<=0){
+          el.textContent='⌛ EXPIRED';
+          var td=el.parentElement?el.parentElement.parentElement:null;
+          var b=td?td.querySelector('.status-badge'):null;
+          if(b&&b.textContent==='PENDING'){b.textContent='EXPIRED';b.className='status-badge st-EXPIRED';}
+        }else{
+          var h=Math.floor(diff/3600000),m=Math.floor((diff%3600000)/60000),s=Math.floor((diff%60000)/1000);
+          el.textContent='⏳ '+(h>0?String(h).padStart(2,'0')+':':'')+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+        }
       });
     },1000);
 

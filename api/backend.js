@@ -1,4 +1,4 @@
- const crypto = require('crypto');
+const crypto = require('crypto');
 
 const SB_HOST = ['https:', '', ['yxnygfbamkvzgskgoxoy', 'supabase', 'co'].join('.')].join('/');
 const SB_URL = process.env.SUPABASE_URL || process.env.STORAGE_SUPABASE_URL || SB_HOST;
@@ -6,6 +6,16 @@ const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.STORAGE_SUPA
 const DUFFEL_KEY = process.env.DUFFEL_API_KEY || '';
 const GAS_URL = process.env.GAS_VOUCHER_URL || 'https://script.google.com/macros/s/AKfycbyw4rKuL8HLL7zrBjrYIzcxJs2ZLsOY2LcoM7lWQ4LPT0lmkDL0jbAr4vQIIArxofTGjQ/exec';
 const INVOICE_SIGN_SECRET = process.env.INVOICE_SIGN_SECRET || 'GOLAN_INV_HMAC_2026_SECURE';
+
+const CITY_NAMES = {
+  LYP: 'FAISALABAD', LHE: 'LAHORE', ISB: 'ISLAMABAD', KHI: 'KARACHI',
+  MUX: 'MULTAN', SKT: 'SIALKOT', PEW: 'PESHAWAR', UET: 'QUETTA',
+  JED: 'JEDDAH', MED: 'MADINAH', RUH: 'RIYADH', DMM: 'DAMMAM',
+  DXB: 'DUBAI', SHJ: 'SHARJAH', AUH: 'ABU DHABI', DOH: 'DOHA',
+  MCT: 'MUSCAT', SLL: 'SALALAH', KWI: 'KUWAIT', BAH: 'BAHRAIN',
+  IST: 'ISTANBUL', LHR: 'LONDON', MAN: 'MANCHESTER', BHX: 'BIRMINGHAM',
+  JFK: 'NEW YORK', YYZ: 'TORONTO', KUL: 'KUALA LUMPUR', BKK: 'BANGKOK', GYD: 'BAKU'
+};
 
 function hashPwd(pwd) {
   return crypto.createHash('sha256').update('GOLAN_SALT_2026_' + String(pwd || '')).digest('hex');
@@ -168,11 +178,149 @@ function verifyTotp(secret, code) {
   return false;
 }
 
-function buildBookingEmailHtml({ agencyName, paxName, paxType, farePKR, passportNo, invoiceUrl, isIssued, isCanceled, pnr, ticketNo, itemTitle, bId }) {
-  const cleanTitle = String(itemTitle || '').replace(/\s*\{DATE:.*?\}/g, '');
-  let statusLine = `Your booking with <strong>GOLAN INTERNATIONAL TRAVEL &amp; TOURS</strong> is on hold (PNR: <strong>${escHtml(pnr)}</strong>). Your PDF voucher is attached or click <strong>View Invoice / PDF</strong> below.`;
+function extractTicketMeta(bk, fareObj) {
+  const raw = String((bk && bk.ItemTitle) || '');
+  const meta = {};
+  const m = raw.match(/\{([^}]+)\}/);
+  if (m && m[1]) {
+    m[1].split('|').forEach(part => {
+      const idx = part.indexOf(':');
+      if (idx > 0) meta[part.slice(0, idx).trim().toUpperCase()] = part.slice(idx + 1).trim();
+    });
+  }
+  const fo = fareObj || {};
+  const bagBr = raw.match(/\[([^\]]+)\]/);
+  const cleanTitle = raw.replace(/\s*\{[^}]+\}/g, '').trim();
+  const dateVal = bk.FlightDate || meta.DATE || fo.TravelDate || fo.Date || '';
+  const depVal = bk.DepTime || meta.DEP || '';
+  const arrVal = bk.ArrTime || meta.ARR || '';
+  const timingVal = bk.Timing || meta.TIMING || fo.Timing || '';
+  const baggageVal = bk.Baggage || meta.BAG || fo.Luggage || (bagBr ? bagBr[1] : '') || '20+5 KG';
+  const mealVal = bk.Meal || meta.MEAL || fo.Meal || 'No';
+  const rulesVal = bk.Details || meta.DETAILS || fo.Details || '';
+  return { cleanTitle, date: dateVal, dep: depVal, arr: arrVal, timing: timingVal, baggage: baggageVal, meal: mealVal, rules: rulesVal };
+}
+
+function getTicketAirlineMeta(txt) {
+  const u = String(txt || '').toUpperCase();
+  if (/SALAM|\bOV[-\s]?\d/i.test(u)) return { name: 'SalamAir', code: 'OV', isSalam: true, color: '#008b8b' };
+  if (/AIRSIAL|\bPF[-\s]?\d/i.test(u)) return { name: 'AirSial', code: 'PF', color: '#15803d' };
+  if (/\bPIA\b|\bPK[-\s]?\d/i.test(u)) return { name: 'PIA', code: 'PK', color: '#166534' };
+  if (/SAUDIA|SAUDI|\bSV[-\s]?\d/i.test(u)) return { name: 'Saudia Airlines', code: 'SV', color: '#065f46' };
+  if (/AIRBLUE|\bPA[-\s]?\d/i.test(u)) return { name: 'Airblue', code: 'PA', color: '#1d4ed8' };
+  if (/SERENE|\bER[-\s]?\d/i.test(u)) return { name: 'SereneAir', code: 'ER', color: '#0f172a' };
+  if (/EMIRATES|\bEK[-\s]?\d/i.test(u)) return { name: 'Emirates', code: 'EK', color: '#b91c1c' };
+  if (/FLYDUBAI|\bFZ[-\s]?\d/i.test(u)) return { name: 'flydubai', code: 'FZ', color: '#ea580c' };
+  if (/FLYNAS|\bXY[-\s]?\d/i.test(u)) return { name: 'flynas', code: 'XY', color: '#0d9488' };
+  if (/JAZEERA|\bJ9[-\s]?\d/i.test(u)) return { name: 'Jazeera Airways', code: 'J9', color: '#0284c7' };
+  if (/QATAR|\bQR[-\s]?\d/i.test(u)) return { name: 'Qatar Airways', code: 'QR', color: '#881337' };
+  if (/TURKISH|\bTK[-\s]?\d/i.test(u)) return { name: 'Turkish Airlines', code: 'TK', color: '#dc2626' };
+  if (/ETIHAD|\bEY[-\s]?\d/i.test(u)) return { name: 'Etihad Airways', code: 'EY', color: '#b45309' };
+  if (/AZAL|AZERBAIJAN|\bJ2[-\s]?\d/i.test(u)) return { name: 'Azerbaijan Airlines', code: 'J2', color: '#0369a1' };
+  return { name: 'Golan Group Flight', code: 'GL', color: '#134b91' };
+}
+
+function fmtTicketDate(dStr) {
+  if (!dStr) return '-';
+  const s = String(dStr).trim();
+  const m = s.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (m) {
+    const dt = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const mos = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${days[dt.getUTCDay()]} ${dt.getUTCDate()} ${mos[dt.getUTCMonth()]} ${dt.getUTCFullYear()}`;
+  }
+  return s;
+}
+
+function fmtTicketTime(val) {
+  if (!val) return '--:--';
+  const s = String(val).trim();
+  const ampm = s.match(/(\d{1,2}:\d{2}\s*(?:AM|PM))/i);
+  if (ampm) return ampm[1].toUpperCase();
+  const hm = s.match(/(?:^|\s)(\d{2}):(\d{2})(?::\d{2})?(?:\s|$)/);
+  if (hm) {
+    const h = parseInt(hm[1], 10);
+    const ap = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 || 12;
+    return String(h12).padStart(2, '0') + ':' + hm[2] + ' ' + ap;
+  }
+  return s;
+}
+
+function codeToCity(c) {
+  const k = String(c || '').trim().toUpperCase();
+  return CITY_NAMES[k] || k || 'ORIGIN';
+}
+
+function parseTicketSegments(bk, fi) {
+  const clean = fi.cleanTitle || '';
+  const airlineInfo = getTicketAirlineMeta(clean + ' ' + fi.timing);
+  const bag = fi.baggage || '20+5 KG';
+  const rawSegs = String(clean).split(/\s*\/\s*|\s*;\s*/).filter(Boolean);
+  const timingLegs = String(fi.timing || '').split(/\s*\/\s*|\s*;\s*/).filter(Boolean);
+  const dateLegs = String(fi.date || '').split(/\s*\/\s*|\s*;\s*/).filter(Boolean);
+  const segments = [];
+  const routeMatches = clean.match(/\b([A-Z]{3})\s*[-–to]+\s*([A-Z]{3})\b/gi) || [];
+
+  if (rawSegs.length > 1 && rawSegs.every(x => /[A-Z]{3}\s*[-–]\s*[A-Z]{3}/i.test(x))) {
+    rawSegs.forEach((segTxt, i) => {
+      const rm = segTxt.match(/\b([A-Z]{3})\s*[-–]\s*([A-Z]{3})\b/i);
+      const flm = segTxt.match(/\b([A-Z]{2}[-\s]?\d{2,4})\b/i);
+      const tLeg = timingLegs[i] || fi.timing || '';
+      const times = tLeg.match(/\d{1,2}:\d{2}(?:\s*(?:AM|PM))?/gi) || [];
+      const dTxt = fmtTicketDate(dateLegs[i] || fi.date);
+      segments.push({
+        origin: rm ? codeToCity(rm[1]) : 'ORIGIN',
+        dest: rm ? codeToCity(rm[2]) : 'DESTINATION',
+        airline: getTicketAirlineMeta(segTxt + ' ' + clean).name,
+        flightNo: flm ? flm[1].replace('-', ' ').toUpperCase() : (airlineInfo.code + '-GRP'),
+        depTime: times[0] ? fmtTicketTime(times[0]) : fmtTicketTime(fi.dep),
+        arrTime: times[1] ? fmtTicketTime(times[1]) : fmtTicketTime(fi.arr),
+        depDate: dTxt, arrDate: dTxt, baggage: bag
+      });
+    });
+  } else if (routeMatches.length > 1) {
+    routeMatches.forEach((rmStr, i) => {
+      const rm = rmStr.match(/\b([A-Z]{3})\s*[-–to]+\s*([A-Z]{3})\b/i);
+      const fls = clean.match(/\b([A-Z]{2}[-\s]?\d{2,4})\b/gi) || [];
+      const tLeg = timingLegs[i] || fi.timing || '';
+      const times = tLeg.match(/\d{1,2}:\d{2}(?:\s*(?:AM|PM))?/gi) || [];
+      const dTxt = fmtTicketDate(dateLegs[i] || fi.date);
+      segments.push({
+        origin: rm ? codeToCity(rm[1]) : 'ORIGIN',
+        dest: rm ? codeToCity(rm[2]) : 'DESTINATION',
+        airline: airlineInfo.name,
+        flightNo: fls[i] ? fls[i].replace('-', ' ').toUpperCase() : (fls[0] ? fls[0].replace('-', ' ').toUpperCase() : (airlineInfo.code + '-GRP')),
+        depTime: times[0] ? fmtTicketTime(times[0]) : fmtTicketTime(fi.dep),
+        arrTime: times[1] ? fmtTicketTime(times[1]) : fmtTicketTime(fi.arr),
+        depDate: dTxt, arrDate: dTxt, baggage: bag
+      });
+    });
+  } else {
+    const rm = clean.match(/\b([A-Z]{3})\s*[-–]\s*([A-Z]{3})\b/i);
+    const flm = clean.match(/\b([A-Z]{2}[-\s]?\d{2,4})\b/i);
+    const times = String(fi.timing || '').match(/\d{1,2}:\d{2}(?:\s*(?:AM|PM))?/gi) || [];
+    const depT = fi.dep ? fmtTicketTime(fi.dep) : (times[0] ? fmtTicketTime(times[0]) : '--:--');
+    const arrT = fi.arr ? fmtTicketTime(fi.arr) : (times[1] ? fmtTicketTime(times[1]) : '--:--');
+    const depD = fmtTicketDate(fi.dep || fi.date);
+    const arrD = fmtTicketDate(fi.arr || fi.date);
+    segments.push({
+      origin: rm ? codeToCity(rm[1]) : clean.replace(/^(Group Flight|Umrah Package|Visit Visa|Live Airline)\s*[-–]\s*/i, '').slice(0, 22).toUpperCase(),
+      dest: rm ? codeToCity(rm[2]) : (bk.Category === 'Visit Visa' ? 'E-VISA' : 'DESTINATION'),
+      airline: airlineInfo.name,
+      flightNo: flm ? flm[1].replace('-', ' ').toUpperCase() : (airlineInfo.code + '-GRP'),
+      depTime: depT, arrTime: arrT, depDate: depD, arrDate: arrD, baggage: bag
+    });
+  }
+  return { airlineInfo, segments };
+}
+
+function buildBookingEmailHtml({ agencyName, paxName, paxType, farePKR, passportNo, invoiceUrl, isIssued, isCanceled, pnr, ticketNo, itemTitle, bId, isAdminCopy, agentEmail }) {
+  const cleanTitle = String(itemTitle || '').replace(/\s*\{[^}]+\}/g, '');
+  let statusLine = `Your booking with <strong>GOLAN INTERNATIONAL TRAVEL &amp; TOURS</strong> is on hold (PNR: <strong>${escHtml(pnr)}</strong>). Your Electronic Ticket PDF is attached below.`;
   if (isIssued) {
-    statusLine = `Your booking with <strong>GOLAN INTERNATIONAL TRAVEL &amp; TOURS</strong> has been <strong style="color:#15803d;">CONFIRMED &amp; ISSUED</strong> (PNR: <strong>${escHtml(pnr)}</strong>${ticketNo ? ` | Ticket: <strong>${escHtml(ticketNo)}</strong>` : ''}). Your official PDF ticket is attached below.`;
+    statusLine = `Your booking with <strong>GOLAN INTERNATIONAL TRAVEL &amp; TOURS</strong> has been <strong style="color:#15803d;">CONFIRMED &amp; ISSUED</strong> (PNR: <strong>${escHtml(pnr)}</strong>${ticketNo ? ` | Ticket: <strong>${escHtml(ticketNo)}</strong>` : ''}). Your official Electronic Ticket PDF is attached below.`;
   } else if (isCanceled) {
     statusLine = `Your booking with <strong>GOLAN INTERNATIONAL TRAVEL &amp; TOURS</strong> (Ref: <strong>${escHtml(bId)}</strong>, PNR: <strong>${escHtml(pnr)}</strong>) has been <strong style="color:#b91c1c;">CANCELED</strong>.`;
   }
@@ -185,23 +333,26 @@ function buildBookingEmailHtml({ agencyName, paxName, paxType, farePKR, passport
     <tr><td align="center">
       <table width="650" cellpadding="0" cellspacing="0" style="max-width:650px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 6px 20px rgba(11,31,68,0.1);">
         <tr>
-          <td style="background:linear-gradient(125deg,#071530,#163b7a);padding:22px 28px;color:#ffffff;border-bottom:4px solid #d97706;">
-            <div style="font-size:11px;color:#fbbf24;font-weight:bold;letter-spacing:1px;">OFFICIAL B2B PORTAL NOTIFICATION</div>
+          <td style="background:#134b91;padding:22px 28px;color:#ffffff;border-bottom:4px solid #c84b17;">
+            <div style="font-size:11px;color:#fbbf24;font-weight:bold;letter-spacing:1px;">${isAdminCopy ? 'ADMIN NOTIFICATION COPY • B2B PORTAL' : 'OFFICIAL ELECTRONIC TICKET • B2B PORTAL'}</div>
             <h2 style="margin:4px 0 0;font-size:20px;">GOLAN INTERNATIONAL TRAVEL &amp; TOURS</h2>
           </td>
         </tr>
         <tr>
           <td style="padding:28px;">
-            <h3 style="margin:0 0 12px 0;color:#0b1f44;font-size:18px;">Assalam-o-Alaikum ${escHtml(agencyName || 'Partner')}!</h3>
+            <h3 style="margin:0 0 12px 0;color:#0b1f44;font-size:18px;">${isAdminCopy ? `Admin Alert — ${escHtml(agencyName || 'Sub-Agent')}` : `Assalam-o-Alaikum ${escHtml(agencyName || 'Partner')}!`}</h3>
             <p style="margin:0 0 16px 0;color:#475569;font-size:14px;line-height:1.6;">${statusLine}</p>
-            <p style="margin:0 0 16px 0;color:#0f172a;font-size:13px;"><strong>Booking Ref:</strong> ${escHtml(bId)} &nbsp;|&nbsp; <strong>Route / Package:</strong> ${escHtml(cleanTitle)}</p>
+            <p style="margin:0 0 16px 0;color:#0f172a;font-size:13px;">
+              <strong>Booking Ref:</strong> ${escHtml(bId)} &nbsp;|&nbsp; <strong>Route / Package:</strong> ${escHtml(cleanTitle)}
+              ${isAdminCopy && agentEmail ? `<br/><strong>Sub-Agent Email:</strong> ${escHtml(agentEmail)}` : ''}
+            </p>
             <table width="100%" cellpadding="10" cellspacing="0" style="border-collapse:collapse;font-size:13px;margin-bottom:22px;">
               <thead>
-                <tr style="background-color:#f8fafc;color:#0b1f44;text-align:left;">
-                  <th style="border:1px solid #cbd5e1;">Passenger</th>
-                  <th style="border:1px solid #cbd5e1;">Type</th>
-                  <th style="border:1px solid #cbd5e1;">B2B Fare</th>
-                  <th style="border:1px solid #cbd5e1;">Passport</th>
+                <tr style="background-color:#c84b17;color:#ffffff;text-align:left;">
+                  <th style="border:1px solid #c84b17;">Passenger</th>
+                  <th style="border:1px solid #c84b17;">Type</th>
+                  <th style="border:1px solid #c84b17;">B2B Fare</th>
+                  <th style="border:1px solid #c84b17;">Passport</th>
                 </tr>
               </thead>
               <tbody>
@@ -213,7 +364,7 @@ function buildBookingEmailHtml({ agencyName, paxName, paxType, farePKR, passport
                 </tr>
               </tbody>
             </table>
-            ${invoiceUrl ? `<div style="text-align:center;margin:22px 0;"><a href="${escHtml(invoiceUrl)}" target="_blank" style="background-color:#0b1f44;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:bold;display:inline-block;">🖨️ View / Download PDF Voucher</a></div>` : ''}
+            ${invoiceUrl ? `<div style="text-align:center;margin:22px 0;"><a href="${escHtml(invoiceUrl)}" target="_blank" style="background-color:#134b91;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:bold;display:inline-block;">🖨️ View / Print Electronic Ticket PDF</a></div>` : ''}
             <p style="margin:0;color:#64748b;font-size:13px;line-height:1.6;">Regards,<br><strong style="color:#0b1f44;">GOLAN INTERNATIONAL TRAVEL &amp; TOURS</strong><br><span style="font-size:12px;">CEO Shan Chairman: 0345-3326318 | Manager Tariq Mehmod: 0341-6929324 | PTCL: 046-2512722</span></p>
           </td>
         </tr>
@@ -224,81 +375,145 @@ function buildBookingEmailHtml({ agencyName, paxName, paxType, farePKR, passport
 </html>`;
 }
 
-function buildPrintableInvoicePage(bk, agent) {
-  const cleanTitle = String(bk.ItemTitle || '').replace(/\s*\{DATE:.*?\}/g, '');
+// Table-based Electronic Ticket HTML (renders identically in Browser Print AND Google Apps Script PDF converter)
+function buildPrintableInvoicePage(bk, agent, matchedFare) {
   const useCustom = agent && agent.VoucherBranding !== 'golan' && agent.LogoDataUrl;
-  const brandTitle = (useCustom && agent.AgencyName) ? agent.AgencyName.toUpperCase() : 'GOLAN INTERNATIONAL TRAVEL &amp; TOURS';
-  const brandSub = (useCustom && (agent.Address || agent.Mobile))
-    ? `${escHtml(agent.Address || '')}${agent.Mobile ? ' • ' + escHtml(agent.Mobile) : ''}`
-    : 'Toba Tek Singh Head Office • PTCL: 046-2512722 • +92 345 3326318';
+  const agencyName = (useCustom && agent.AgencyName) ? agent.AgencyName : (bk.AgencyName || 'Golan International Travel & Tours');
+  const agencyEmail = (useCustom && bk.AgentEmail) ? bk.AgentEmail : (bk.AgentEmail || 'golaninternational322@gmail.com');
+  const agencyContact = (useCustom && agent.Mobile) ? agent.Mobile : (bk.PaxMobile || (agent && agent.Mobile) || '03453326318');
+  const fi = extractTicketMeta(bk, matchedFare);
+  const parsed = parseTicketSegments(bk, fi);
+  const air = parsed.airlineInfo;
   const st = String(bk.Status || 'PENDING').toUpperCase();
-  const stBg = (st === 'CONFIRMED' || st === 'ISSUED') ? '#dcfce7' : (st === 'CANCELED' || st === 'EXPIRED' ? '#fee2e2' : '#fef3c7');
-  const stCol = (st === 'CONFIRMED' || st === 'ISSUED') ? '#15803d' : (st === 'CANCELED' || st === 'EXPIRED' ? '#b91c1c' : '#b45309');
+  const pnrText = escHtml(bk.PNR || 'PENDING');
+  const bookingCodeText = escHtml(bk.TicketNo || bk.BookingID || '-');
+  const ticketedAt = escHtml(bk.CreatedAt || '-');
+
+  let rightLogoHtml = '';
+  if (useCustom && agent.LogoDataUrl) {
+    rightLogoHtml = `<img src="${escHtml(agent.LogoDataUrl)}" style="height:44px;max-width:160px;object-fit:contain;" alt="Logo" />`;
+  } else if (air.isSalam) {
+    rightLogoHtml = `<div style="font-family:Arial,sans-serif;text-align:right;line-height:1.05;"><div style="font-size:10px;color:#84cc16;font-weight:bold;">السلام</div><div style="font-size:22px;font-weight:800;"><span style="color:#00a99d;">Salam</span><span style="color:#0284c7;">Air</span></div></div>`;
+  } else {
+    rightLogoHtml = `<div style="text-align:right;"><div style="font-size:17px;font-weight:900;color:${escHtml(air.color)};">${escHtml(air.name)}</div><div style="font-size:10px;font-weight:bold;color:#64748b;">GOLAN B2B E-TICKET</div></div>`;
+  }
+
+  const planeIcon = `<span style="font-size:24px;color:#134b91;font-weight:bold;">&#9992;</span>`;
+
+  const segsHtml = parsed.segments.map((sg, idx) => `
+    <div style="margin-bottom:10px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+        <tr>
+          <td style="background:#0b95db;color:#ffffff;font-size:15px;font-weight:bold;padding:6px 14px;border-radius:6px 6px 0 0;">
+            Flight - ${idx + 1} ${escHtml(sg.origin)} to ${escHtml(sg.dest)}
+          </td>
+        </tr>
+      </table>
+      <table width="100%" cellpadding="8" cellspacing="0" style="border-collapse:collapse;font-size:12.5px;">
+        <thead>
+          <tr style="border-bottom:1px solid #f1f5f9;">
+            <th align="left" style="width:22%;font-size:11.5px;font-weight:800;color:#0f172a;text-transform:uppercase;padding-top:9px;">AIRLINE NAME</th>
+            <th align="left" style="width:18%;font-size:11.5px;font-weight:800;color:#0f172a;text-transform:uppercase;padding-top:9px;">FLIGHT #</th>
+            <th align="left" style="width:25%;font-size:11.5px;font-weight:800;color:#0f172a;text-transform:uppercase;padding-top:9px;">DEPARTURE</th>
+            <th align="center" style="width:12%;"></th>
+            <th align="left" style="width:23%;font-size:11.5px;font-weight:800;color:#0f172a;text-transform:uppercase;padding-top:9px;">ARRIVAL</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td valign="top" style="border-bottom:1px solid #cbd5e1;padding:10px 8px 14px;color:#1e293b;">${escHtml(sg.airline)}</td>
+            <td valign="top" style="border-bottom:1px solid #cbd5e1;padding:10px 8px 14px;color:#1e293b;">
+              <div>${escHtml(sg.flightNo)}</div>
+              <div style="font-weight:bold;color:#0f172a;margin-top:2px;">Baggage</div>
+              <div>${escHtml(sg.baggage)}</div>
+            </td>
+            <td valign="top" style="border-bottom:1px solid #cbd5e1;padding:10px 8px 14px;color:#1e293b;">
+              <div style="color:#0f172a;">${escHtml(sg.depTime)}</div>
+              <div style="margin-top:2px;">${escHtml(sg.origin)}</div>
+              <div style="margin-top:2px;">${escHtml(sg.depDate)}</div>
+            </td>
+            <td align="center" valign="middle" style="border-bottom:1px solid #cbd5e1;padding:10px 8px 14px;">${planeIcon}</td>
+            <td valign="top" style="border-bottom:1px solid #cbd5e1;padding:10px 8px 14px;color:#1e293b;">
+              <div style="color:#0f172a;">${escHtml(sg.arrTime)}</div>
+              <div style="margin-top:2px;">${escHtml(sg.dest)}</div>
+              <div style="margin-top:2px;">${escHtml(sg.arrDate)}</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `).join('');
+
+  const extraRuleHtml = fi.rules ? `<div>3- ${escHtml(String(fi.rules).toUpperCase())}</div>` : '';
 
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Golan Voucher - ${escHtml(bk.BookingID)}</title>
+  <title>Electronic Ticket - ${escHtml(bk.BookingID)}</title>
   <style>
     @page { size: A4; margin: 12mm; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; background: #eef2f7; padding: 24px 12px; color: #0f172a; margin: 0; }
-    .sheet { max-width: 780px; margin: 0 auto; background: #fff; border-radius: 18px; overflow: hidden; box-shadow: 0 20px 50px rgba(11,31,68,0.16); border: 1px solid #dbe3ee; }
-    .hdr { background: linear-gradient(125deg, #071530 0%, #0b1f44 55%, #1e3a8a 100%); color: #fff; padding: 22px 26px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid #d97706; }
-    .perf { position: relative; height: 22px; background: #fff; display: flex; align-items: center; }
-    .perf:before, .perf:after { content: ""; position: absolute; width: 24px; height: 24px; background: #eef2f7; border-radius: 50%; top: -1px; }
-    .perf:before { left: -12px; } .perf:after { right: -12px; }
-    .perf-line { width: 100%; border-top: 2px dashed #cbd5e1; margin: 0 20px; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
-    .box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 14px; }
-    .lbl { font-size: 10px; font-weight: 800; color: #64748b; letter-spacing: 0.7px; text-transform: uppercase; margin-bottom: 4px; }
-    .val { font-size: 14px; font-weight: 800; color: #0f172a; }
-    .fare-bar { background: linear-gradient(90deg, #f0fdf4, #ecfdf5); border: 1.5px solid #86efac; border-radius: 14px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, Helvetica, sans-serif; background: #eef2f7; padding: 24px 12px; color: #0f172a; margin: 0; }
+    .ticket-page { max-width: 780px; margin: 0 auto; background: #ffffff; padding: 32px 36px 42px; border-radius: 6px; box-shadow: 0 14px 40px rgba(15,23,42,0.12); }
     .print-bar { text-align: center; margin-bottom: 14px; }
-    .print-btn { background: #0b1f44; color: #fff; border: none; padding: 10px 22px; border-radius: 9px; font-size: 13px; font-weight: 800; cursor: pointer; }
-    @media print { body { background: #fff; padding: 0; } .print-bar { display: none; } .sheet { box-shadow: none; } .perf:before, .perf:after { background: #fff; border: 1px solid #cbd5e1; } }
+    .print-btn { background: #134b91; color: #fff; border: none; padding: 10px 24px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; }
+    @media print { body { background: #fff; padding: 0; } .print-bar { display: none !important; } .ticket-page { box-shadow: none; padding: 8px 10px; max-width: 100%; } }
   </style>
 </head>
 <body>
-  <div class="print-bar"><button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button></div>
-  <div class="sheet">
-    <div class="hdr">
-      <div style="display:flex;align-items:center;gap:14px;">
-        ${useCustom ? `<img src="${escHtml(agent.LogoDataUrl)}" style="height:54px;width:54px;object-fit:contain;border-radius:12px;background:#fff;padding:4px;border:2px solid #fbbf24;" alt="Logo" />` : ''}
-        <div>
-          <div style="font-size:10px;font-weight:800;letter-spacing:1.2px;color:#fbbf24;">OFFICIAL B2B E-VOUCHER &amp; RESERVATION</div>
-          <h2 style="margin:2px 0;font-size:18px;font-weight:900;">${brandTitle}</h2>
-          <div style="font-size:11px;color:#cbd5e1;">${brandSub}</div>
-        </div>
-      </div>
-      <div style="text-align:right;">
-        <span style="background:${stBg};color:${stCol};padding:4px 12px;border-radius:99px;font-size:11px;font-weight:900;">${escHtml(st)}</span>
-        <div style="font-size:11px;color:#cbd5e1;margin-top:6px;">REF ID: <b style="color:#fff;">${escHtml(bk.BookingID)}</b></div>
-      </div>
-    </div>
-    <div style="padding:20px 26px 8px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;background:#0f172a;color:#fff;padding:14px 18px;border-radius:12px;margin-bottom:16px;">
-        <div><div style="font-size:10px;color:#94a3b8;font-weight:800;">AIRLINE / GDS PNR</div><div style="font-size:22px;font-weight:900;letter-spacing:2px;color:#fbbf24;font-family:monospace;">${escHtml(bk.PNR || 'PENDING')}</div></div>
-        <div><div style="font-size:10px;color:#94a3b8;font-weight:800;">E-TICKET / FILE NO</div><div style="font-size:15px;font-weight:800;font-family:monospace;">${escHtml(bk.TicketNo || 'To Be Issued')}</div></div>
-        <div style="text-align:right;"><div style="font-size:10px;color:#94a3b8;font-weight:800;">BOOKED ON</div><div style="font-size:12.5px;font-weight:700;">${escHtml(bk.CreatedAt || '-')}</div></div>
-      </div>
-      <div class="grid">
-        <div class="box"><div class="lbl">Passenger / Applicant Name</div><div class="val">${escHtml(bk.PassengerName)}</div></div>
-        <div class="box"><div class="lbl">Passport Number</div><div class="val" style="font-family:monospace;">${escHtml(bk.PassportNo)}</div></div>
-        <div class="box"><div class="lbl">Sub-Agent / Agency</div><div class="val">${escHtml(bk.AgencyName || '-')}</div></div>
-        <div class="box"><div class="lbl">Passenger Contact</div><div class="val">${escHtml(bk.PaxMobile || '-')}</div></div>
-      </div>
-      <div class="box" style="border-left:4px solid #163b7a;"><div class="lbl">Itinerary / Package / Visa Details (${escHtml(bk.Category || 'Travel')})</div><div class="val" style="font-size:15px;color:#0b1f44;">${escHtml(cleanTitle)}</div></div>
-    </div>
-    <div class="perf"><div class="perf-line"></div></div>
-    <div style="padding:10px 26px 22px;">
-      <div class="fare-bar">
-        <div><div class="lbl" style="color:#166534;">Total B2B Net Amount</div><div style="font-size:24px;font-weight:900;color:#15803d;">PKR ${Number(bk.FarePKR || 0).toLocaleString()}</div></div>
-        <div style="text-align:right;font-size:11px;color:#166534;font-weight:700;">✓ Official Verified Digital Voucher<br/>Golan B2B System</div>
-      </div>
-      <div style="margin-top:16px;padding-top:12px;border-top:1px solid #e2e8f0;text-align:center;font-size:11px;color:#64748b;">
-        CEO Shan Chairman: 0345-3326318 | Manager Tariq Mehmod: 0341-6929324 | PTCL: 046-2512722
+  <div class="print-bar"><button class="print-btn" onclick="window.print()">🖨️ Print / Save Electronic Ticket PDF</button></div>
+  <div class="ticket-page">
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
+      <tr>
+        <td valign="top">
+          <div style="font-size:20px;font-weight:900;color:#0f172a;letter-spacing:0.4px;">ELECTRONIC TICKET</div>
+          <div style="font-size:13.5px;font-weight:800;color:#0f172a;margin-top:4px;">PNR: ${pnrText}</div>
+        </td>
+        <td valign="top" align="right">${rightLogoHtml}</td>
+      </tr>
+    </table>
+
+    <table width="100%" cellpadding="4" cellspacing="0" style="background:#134b91;color:#ffffff;border-radius:8px;padding:10px 16px;margin-bottom:18px;font-size:12.5px;">
+      <tr><td style="width:46%;color:#e2e8f0;padding:3px 8px;">Booking code</td><td style="width:54%;color:#ffffff;padding:3px 8px;">${bookingCodeText}</td></tr>
+      <tr><td style="width:46%;color:#e2e8f0;padding:3px 8px;">Agency</td><td style="width:54%;color:#ffffff;padding:3px 8px;">${escHtml(agencyName)}</td></tr>
+      <tr><td style="width:46%;color:#e2e8f0;padding:3px 8px;">Email</td><td style="width:54%;color:#ffffff;padding:3px 8px;">${escHtml(agencyEmail)}</td></tr>
+      <tr><td style="width:46%;color:#e2e8f0;padding:3px 8px;">Contact</td><td style="width:54%;color:#ffffff;padding:3px 8px;">${escHtml(agencyContact)}</td></tr>
+      <tr><td style="width:46%;color:#e2e8f0;padding:3px 8px;">Ticketed at</td><td style="width:54%;color:#ffffff;padding:3px 8px;">${ticketedAt}</td></tr>
+    </table>
+
+    <table width="100%" cellpadding="8" cellspacing="0" style="border-collapse:collapse;margin-bottom:16px;font-size:12.5px;">
+      <thead>
+        <tr style="background:#c84b17;color:#ffffff;">
+          <th align="left">Sr #</th>
+          <th align="left">Passenger Name</th>
+          <th align="left">Passport</th>
+          <th align="left">Meal</th>
+          <th align="left">Baggage</th>
+          <th align="left">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="border-bottom:1.5px solid #e2e8f0;color:#0f172a;">1</td>
+          <td style="border-bottom:1.5px solid #e2e8f0;color:#0f172a;">${escHtml(String(bk.PassengerName || '').toUpperCase())}</td>
+          <td style="border-bottom:1.5px solid #e2e8f0;color:#0f172a;">${escHtml(String(bk.PassportNo || '').toUpperCase())}</td>
+          <td style="border-bottom:1.5px solid #e2e8f0;color:#0f172a;">${escHtml(fi.meal || 'No')}</td>
+          <td style="border-bottom:1.5px solid #e2e8f0;color:#0f172a;">${escHtml(fi.baggage || '20+5 KG')}</td>
+          <td style="border-bottom:1.5px solid #e2e8f0;color:#0f172a;">${escHtml(st)}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    ${segsHtml}
+
+    <div style="margin-top:18px;">
+      <div style="font-size:15.5px;font-weight:800;color:#134b91;margin-bottom:12px;">TERM &amp; CONDITION:</div>
+      <div style="font-size:12px;color:#0f172a;line-height:1.75;padding-left:6px;">
+        <div>1- PASSENGER SHOULD REPORT AT CHECK IN COUNTER AT LEAST 0400 HOURS PRIOR TO FLIGHT.</div>
+        <div>2- TICKETS ARE NON REFUNDABLE AND NON CHANGEABLE ANY TIME.</div>
+        ${extraRuleHtml}
       </div>
     </div>
   </div>
@@ -418,7 +633,7 @@ async function sendGasEmail({ to, subject, htmlBody, pdfHtml, pdfName, bId, dtSt
         senderName: 'GOLAN INTERNATIONAL TRAVEL & TOURS',
         htmlBody: htmlBody || '',
         pdfHtml: pdfHtml || '',
-        pdfName: pdfName || ('Document-' + (bId || Date.now()) + '.pdf'),
+        pdfName: pdfName || ('ElectronicTicket-' + (bId || Date.now()) + '.pdf'),
         invoiceUrl: invoiceUrl || '',
         bId: bId || '',
         dtStr: dtStr || getPKTimeStr(),
@@ -437,48 +652,56 @@ async function sendGasEmail({ to, subject, htmlBody, pdfHtml, pdfName, bId, dtSt
   return '';
 }
 
-async function sendVoucherEmail(recipients, bId, dtStr, agencyName, paxName, passportNo, category, itemTitle, farePKR, statusTxt, opts) {
-  if (!recipients || !GAS_URL) return '';
+// Sends separate dedicated Gmail to Sub-Agent (+Passenger) AND separate dedicated Gmail to Admin(s)
+async function sendBookingEmailsSeparate({ adminEmails, subAgentEmail, paxEmail, bId, dtStr, agencyName, paxName, passportNo, category, itemTitle, farePKR, statusTxt, opts }) {
   const options = opts || {};
   const invoiceUrl = options.invoiceUrl || '';
   const isIssued = !!options.isIssued;
   const isCanceled = !!options.isCanceled;
   const pnr = options.pnr || 'PENDING';
   const ticketNo = options.ticketNo || '';
-  const subject = isIssued
-    ? `Ticket Issued & Confirmed - ${bId} (PNR: ${pnr})`
-    : (isCanceled ? `Booking Canceled - ${bId} (PNR: ${pnr})` : `Booking on hold - ${bId} (PNR: ${pnr})`);
-
-  const htmlBody = buildBookingEmailHtml({
-    agencyName, paxName, paxType: 'ADULT', farePKR, passportNo,
-    invoiceUrl, isIssued, isCanceled, pnr, ticketNo, itemTitle, bId
-  });
   const pdfHtml = options.pdfHtml || '';
 
-  const sent = await sendGasEmail({
-    to: recipients, subject, htmlBody, pdfHtml, pdfName: `Voucher-${bId}.pdf`,
-    invoiceUrl, bId, dtStr, agencyName, paxName, passportNo, category, itemTitle, farePKR, statusTxt
-  });
-  if (sent) return sent;
+  const agentSubject = isIssued
+    ? `Electronic Ticket CONFIRMED - ${bId} (PNR: ${pnr})`
+    : (isCanceled ? `Booking Canceled - ${bId} (PNR: ${pnr})` : `Electronic Ticket (HOLD) - ${bId} (PNR: ${pnr})`);
 
-  try {
-    const url = GAS_URL + '?action=sendVoucher&to=' + encodeURIComponent(recipients)
-      + '&bId=' + encodeURIComponent(bId)
-      + '&dtStr=' + encodeURIComponent(dtStr)
-      + '&agencyName=' + encodeURIComponent(agencyName || '')
-      + '&paxName=' + encodeURIComponent(paxName || '')
-      + '&passportNo=' + encodeURIComponent(passportNo || '')
-      + '&category=' + encodeURIComponent(category || '')
-      + '&itemTitle=' + encodeURIComponent(itemTitle || '')
-      + '&farePKR=' + encodeURIComponent(farePKR)
-      + '&statusTxt=' + encodeURIComponent(statusTxt)
-      + '&invoiceUrl=' + encodeURIComponent(invoiceUrl);
-    const r = await fetch(url, { method: 'GET', redirect: 'follow' });
-    const txt = await r.text();
-    return txt.indexOf('true') !== -1 ? ' | Email: SENT' : '';
-  } catch (e) {
-    return '';
+  const adminSubject = `[ADMIN COPY] ${agentSubject} | ${agencyName || 'Partner'}`;
+
+  const tasks = [];
+
+  // 1. Sub-Agent (+ Passenger) Gmail
+  const subAgentTo = uniqueEmails([subAgentEmail, paxEmail]);
+  if (subAgentTo) {
+    const agentHtml = buildBookingEmailHtml({
+      agencyName, paxName, paxType: 'ADULT', farePKR, passportNo,
+      invoiceUrl, isIssued, isCanceled, pnr, ticketNo, itemTitle, bId,
+      isAdminCopy: false, agentEmail: subAgentEmail
+    });
+    tasks.push(sendGasEmail({
+      to: subAgentTo, subject: agentSubject, htmlBody: agentHtml, pdfHtml,
+      pdfName: `ElectronicTicket-${bId}.pdf`, invoiceUrl, bId, dtStr,
+      agencyName, paxName, passportNo, category, itemTitle, farePKR, statusTxt
+    }));
   }
+
+  // 2. Admin Gmail (Separate Email)
+  const adminTo = uniqueEmails(adminEmails || []);
+  if (adminTo) {
+    const adminHtml = buildBookingEmailHtml({
+      agencyName, paxName, paxType: 'ADULT', farePKR, passportNo,
+      invoiceUrl, isIssued, isCanceled, pnr, ticketNo, itemTitle, bId,
+      isAdminCopy: true, agentEmail: subAgentEmail
+    });
+    tasks.push(sendGasEmail({
+      to: adminTo, subject: adminSubject, htmlBody: adminHtml, pdfHtml,
+      pdfName: `ElectronicTicket-${bId}.pdf`, invoiceUrl, bId, dtStr,
+      agencyName, paxName, passportNo, category, itemTitle, farePKR, statusTxt
+    }));
+  }
+
+  const results = await Promise.all(tasks);
+  return results.some(Boolean) ? ' | Email: SENT (Admin & Sub-Agent)' : '';
 }
 
 module.exports = async function handler(req, res) {
@@ -500,18 +723,19 @@ module.exports = async function handler(req, res) {
     DB.banks = DB.banks || [];
     DB.deposits = DB.deposits || [];
 
-    // Public Signed Invoice / Voucher PDF Viewer
+    // Public Signed Electronic Ticket PDF Viewer
     if (action === 'viewInvoice') {
       const bookingId = String(p.bookingId || '').trim();
       const sig = String(p.sig || '').trim();
       const bk = DB.bookings.find(b => b.BookingID === bookingId);
       if (!bk || sig !== signInvoice(bk.BookingID, bk.PassportNo)) {
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
-        return res.status(403).end('<h3 style="font-family:Arial;text-align:center;margin-top:40px;color:#b91c1c;">Invalid or Expired Invoice Link</h3>');
+        return res.status(403).end('<h3 style="font-family:Arial;text-align:center;margin-top:40px;color:#b91c1c;">Invalid or Expired Ticket Link</h3>');
       }
       const agent = DB.agents[bk.AgentEmail] || null;
+      const matchedFare = bk.FareID ? DB.fares.find(f => String(f.ID) === String(bk.FareID)) : null;
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      return res.status(200).end(buildPrintableInvoicePage(bk, agent));
+      return res.status(200).end(buildPrintableInvoicePage(bk, agent, matchedFare));
     }
 
     // Public Signed Payment Receipt PDF Viewer
@@ -543,15 +767,11 @@ module.exports = async function handler(req, res) {
       };
       await saveDB(DB);
 
-      const recipients = uniqueEmails([email, ...(DB.admins || [])]);
-      await sendGasEmail({
-        to: recipients,
-        subject: `New B2B Sub-Agent Registration: ${agencyName}`,
-        htmlBody: `<div style="font-family:Arial,sans-serif;padding:20px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;"><h2 style="color:#0b1f44;margin-top:0;">New Sub-Agent Registration</h2><p><b>Agency:</b> ${escHtml(agencyName)}</p><p><b>Email:</b> ${escHtml(email)}</p><p><b>City:</b> ${escHtml(city)}</p><p><b>Mobile:</b> ${escHtml(mobile)}</p><p><b>Status:</b> PENDING HEAD OFFICE APPROVAL</p><p style="font-size:12px;color:#64748b;">CEO Shan Chairman: 0345-3326318 | Manager Tariq Mehmod: 0341-6929324</p></div>`,
-        bId: 'REG-' + Date.now().toString().slice(-5),
-        agencyName,
-        statusTxt: 'PENDING APPROVAL'
-      });
+      const regBody = `<div style="font-family:Arial,sans-serif;padding:20px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;"><h2 style="color:#0b1f44;margin-top:0;">New Sub-Agent Registration</h2><p><b>Agency:</b> ${escHtml(agencyName)}</p><p><b>Email:</b> ${escHtml(email)}</p><p><b>City:</b> ${escHtml(city)}</p><p><b>Mobile:</b> ${escHtml(mobile)}</p><p><b>Status:</b> PENDING HEAD OFFICE APPROVAL</p><p style="font-size:12px;color:#64748b;">CEO Shan Chairman: 0345-3326318 | Manager Tariq Mehmod: 0341-6929324</p></div>`;
+      await Promise.all([
+        sendGasEmail({ to: email, subject: `Registration Received: ${agencyName}`, htmlBody: regBody, bId: 'REG-' + Date.now().toString().slice(-5), agencyName, statusTxt: 'PENDING APPROVAL' }),
+        sendGasEmail({ to: uniqueEmails(DB.admins || []), subject: `[ADMIN] New B2B Sub-Agent Registration: ${agencyName}`, htmlBody: regBody, bId: 'REG-' + Date.now().toString().slice(-5), agencyName, statusTxt: 'PENDING APPROVAL' })
+      ]);
 
       return res.json({ ok: true, message: 'Please contact the Head Quarters to activate your registered account: CEO Shan Chairman (0345-3326318) | Manager Muhammad Umer (0331-6379110).' });
     }
@@ -602,7 +822,6 @@ module.exports = async function handler(req, res) {
 
     if (action === 'checkSession') return res.json({ ok: true, agencyName: a.AgencyName, isAdmin, expiry: a.SessionExpiry });
 
-    // Manual Gmail Notification Endpoint (called by index.html Gmail buttons)
     if (action === 'sendEmailNotification') {
       const subj = String(p.subject || '');
       const autoPrefixes = ['New Booking Hold [', 'Ticket Issued [', 'Booking Canceled [', 'New Deposit Slip Submitted [', 'Deposit Approved [', 'New B2B Sub-Agent Registration:'];
@@ -764,16 +983,12 @@ module.exports = async function handler(req, res) {
       await saveDB(DB);
 
       const receiptUrl = `${getBaseUrl(req)}/api/backend?action=viewReceipt&depositId=${encodeURIComponent(depId)}&sig=${signReceipt(depId, email)}`;
-      const recipients = uniqueEmails([email, ...(DB.admins || [])]);
-      await sendGasEmail({
-        to: recipients,
-        subject: `Deposit Slip Submitted [${depId}] PKR ${amt.toLocaleString()}`,
-        htmlBody: buildDepositEmailHtml(depObj, receiptUrl),
-        pdfHtml: buildPrintableReceiptPage(depObj),
-        pdfName: `Receipt-${depId}.pdf`,
-        bId: depId,
-        agencyName: a.AgencyName
-      });
+      const emailHtml = buildDepositEmailHtml(depObj, receiptUrl);
+      const receiptPdfHtml = buildPrintableReceiptPage(depObj);
+      await Promise.all([
+        sendGasEmail({ to: email, subject: `Deposit Slip Submitted [${depId}] PKR ${amt.toLocaleString()}`, htmlBody: emailHtml, pdfHtml: receiptPdfHtml, pdfName: `Receipt-${depId}.pdf`, bId: depId, agencyName: a.AgencyName }),
+        sendGasEmail({ to: uniqueEmails(DB.admins || []), subject: `[ADMIN] Deposit Slip Submitted [${depId}] PKR ${amt.toLocaleString()}`, htmlBody: emailHtml, pdfHtml: receiptPdfHtml, pdfName: `Receipt-${depId}.pdf`, bId: depId, agencyName: a.AgencyName })
+      ]);
 
       return res.json({ ok: true, depositId: depId, message: 'Deposit slip submitted! Please contact Head Office.' });
     }
@@ -783,10 +998,10 @@ module.exports = async function handler(req, res) {
       const ppNo = String(p.passportNo || '').trim().toUpperCase();
       if (!paxName || !/^[A-Z0-9]{6,12}$/.test(ppNo)) return res.json({ ok: false, message: 'Invalid Passenger Name or Passport Number.' });
 
-      let fare = Number(p.farePKR || 0), holdMins = 0;
+      let fare = Number(p.farePKR || 0), holdMins = 0, matchedFare = null;
       const fareId = String(p.fareId || '').trim();
       if (fareId) {
-        const matchedFare = DB.fares.find(f => String(f.ID) === fareId);
+        matchedFare = DB.fares.find(f => String(f.ID) === fareId);
         if (!matchedFare) return res.json({ ok: false, message: 'Selected fare/package is no longer available.' });
         if (matchedFare.Category !== 'Visit Visa') {
           const seatsLeft = Number(matchedFare.Seats || 0);
@@ -828,19 +1043,39 @@ module.exports = async function handler(req, res) {
         AgentEmail: email, AgencyName: a.AgencyName, PassengerName: paxName, PassengerEmail: paxMail,
         PassportNo: ppNo, Dob: String(p.dob || ''), PassportExpiry: String(p.passportExpiry || ''),
         Nationality: String(p.nationality || 'Pakistani'), PaxMobile: String(p.paxMobile || ''),
-        Category: String(p.category || ''), ItemTitle: itStr, FarePKR: fare, PNR: autoPnr,
+        Category: String(p.category || ''), ItemTitle: itStr,
+        FlightDate: String(p.flightDate || (matchedFare && matchedFare.TravelDate) || ''),
+        DepTime: String(p.depTime || ''), ArrTime: String(p.arrTime || ''),
+        Timing: String(p.timing || (matchedFare && matchedFare.Timing) || ''),
+        Baggage: String(p.baggage || (matchedFare && matchedFare.Luggage) || ''),
+        Meal: String(p.meal || (matchedFare && matchedFare.Meal) || ''),
+        Stay: String(p.stay || (matchedFare && matchedFare.Stay) || ''),
+        Details: String(p.details || (matchedFare && matchedFare.Details) || ''),
+        FarePKR: fare, PNR: autoPnr,
         TicketNo: '', PassportDoc: passportDoc, PhotoDoc: photoDoc, WasPaid: false, Refunded: false, Status: 'PENDING'
       };
       DB.bookings.unshift(bkObj);
       await saveDB(DB);
 
       const invoiceUrl = `${getBaseUrl(req)}/api/backend?action=viewInvoice&bookingId=${encodeURIComponent(bId)}&sig=${signInvoice(bId, ppNo)}`;
-      const recipients = uniqueEmails([email, paxMail, ...(DB.admins || [])]);
-      const mailNote = await sendVoucherEmail(
-        recipients, bId, pkTime, a.AgencyName, paxName, ppNo, p.category, itStr, fare,
-        'HOLD / PENDING (PNR: ' + autoPnr + ')',
-        { invoiceUrl, isIssued: false, pnr: autoPnr, pdfHtml: buildPrintableInvoicePage(bkObj, a) }
-      );
+      const ticketPdfHtml = buildPrintableInvoicePage(bkObj, a, matchedFare);
+
+      const mailNote = await sendBookingEmailsSeparate({
+        adminEmails: DB.admins || [],
+        subAgentEmail: email,
+        paxEmail: paxMail,
+        bId,
+        dtStr: pkTime,
+        agencyName: a.AgencyName,
+        paxName,
+        passportNo: ppNo,
+        category: p.category,
+        itemTitle: itStr,
+        farePKR: fare,
+        statusTxt: 'HOLD / PENDING (PNR: ' + autoPnr + ')',
+        opts: { invoiceUrl, isIssued: false, pnr: autoPnr, pdfHtml: ticketPdfHtml }
+      });
+
       return res.json({ ok: true, bookingId: bId, pnr: autoPnr, holdUntil, message: 'Booking Held (PENDING)! PNR: ' + autoPnr + mailNote });
     }
 
@@ -866,14 +1101,27 @@ module.exports = async function handler(req, res) {
       bk.Status = 'CONFIRMED';
       await saveDB(DB);
 
+      const matchedFare = bk.FareID ? DB.fares.find(f => String(f.ID) === String(bk.FareID)) : null;
       const invoiceUrl = `${getBaseUrl(req)}/api/backend?action=viewInvoice&bookingId=${encodeURIComponent(bk.BookingID)}&sig=${signInvoice(bk.BookingID, bk.PassportNo)}`;
-      const recipients = uniqueEmails([bk.AgentEmail, bk.PassengerEmail, ...(DB.admins || [])]);
-      await sendVoucherEmail(
-        recipients, bk.BookingID, bk.CreatedAt, bk.AgencyName, bk.PassengerName, bk.PassportNo, bk.Category, bk.ItemTitle, fare,
-        'ISSUED / CONFIRMED (PNR: ' + (bk.PNR || '') + (bk.TicketNo ? ' | TKT: ' + bk.TicketNo : '') + ')',
-        { invoiceUrl, isIssued: true, pnr: bk.PNR || '', ticketNo: bk.TicketNo || '', pdfHtml: buildPrintableInvoicePage(bk, agentAcc) }
-      );
-      return res.json({ ok: true, message: 'Ticket Issued & CONFIRMED! PNR: ' + bk.PNR });
+      const ticketPdfHtml = buildPrintableInvoicePage(bk, agentAcc, matchedFare);
+
+      const mailNote = await sendBookingEmailsSeparate({
+        adminEmails: DB.admins || [],
+        subAgentEmail: bk.AgentEmail,
+        paxEmail: bk.PassengerEmail,
+        bId: bk.BookingID,
+        dtStr: bk.CreatedAt,
+        agencyName: bk.AgencyName,
+        paxName: bk.PassengerName,
+        passportNo: bk.PassportNo,
+        category: bk.Category,
+        itemTitle: bk.ItemTitle,
+        farePKR: fare,
+        statusTxt: 'ISSUED / CONFIRMED (PNR: ' + (bk.PNR || '') + (bk.TicketNo ? ' | TKT: ' + bk.TicketNo : '') + ')',
+        opts: { invoiceUrl, isIssued: true, pnr: bk.PNR || '', ticketNo: bk.TicketNo || '', pdfHtml: ticketPdfHtml }
+      });
+
+      return res.json({ ok: true, message: 'Ticket Issued & CONFIRMED! PNR: ' + bk.PNR + mailNote });
     }
 
     if (action === 'adminDeleteBooking' && isAdmin) {
@@ -902,13 +1150,25 @@ module.exports = async function handler(req, res) {
       bk.Status = 'CANCELED';
       await saveDB(DB);
 
+      const matchedFare = bk.FareID ? DB.fares.find(f => String(f.ID) === String(bk.FareID)) : null;
       const invoiceUrl = `${getBaseUrl(req)}/api/backend?action=viewInvoice&bookingId=${encodeURIComponent(bk.BookingID)}&sig=${signInvoice(bk.BookingID, bk.PassportNo)}`;
-      const recipients = uniqueEmails([bk.AgentEmail, bk.PassengerEmail, ...(DB.admins || [])]);
-      await sendVoucherEmail(
-        recipients, bk.BookingID, bk.CreatedAt, bk.AgencyName, bk.PassengerName, bk.PassportNo, bk.Category, bk.ItemTitle, bk.FarePKR,
-        bk.Refunded ? 'CANCELED & REFUNDED' : 'CANCELED',
-        { invoiceUrl, isCanceled: true, pnr: bk.PNR || '', pdfHtml: buildPrintableInvoicePage(bk, agentAcc) }
-      );
+      const ticketPdfHtml = buildPrintableInvoicePage(bk, agentAcc, matchedFare);
+
+      await sendBookingEmailsSeparate({
+        adminEmails: DB.admins || [],
+        subAgentEmail: bk.AgentEmail,
+        paxEmail: bk.PassengerEmail,
+        bId: bk.BookingID,
+        dtStr: bk.CreatedAt,
+        agencyName: bk.AgencyName,
+        paxName: bk.PassengerName,
+        passportNo: bk.PassportNo,
+        category: bk.Category,
+        itemTitle: bk.ItemTitle,
+        farePKR: bk.FarePKR,
+        statusTxt: bk.Refunded ? 'CANCELED & REFUNDED' : 'CANCELED',
+        opts: { invoiceUrl, isCanceled: true, pnr: bk.PNR || '', pdfHtml: ticketPdfHtml }
+      });
 
       return res.json({ ok: true, message: bk.Refunded ? 'Booking CANCELED & Fare Refunded to Wallet!' : 'Hold Booking CANCELED!' });
     }
@@ -961,12 +1221,11 @@ module.exports = async function handler(req, res) {
       if (p.subAction === 'APPROVE') {
         target.Status = 'APPROVED'; target.FailedAttempts = 0; target.TotpFailedAttempts = 0;
         await saveDB(DB);
-        await sendGasEmail({
-          to: uniqueEmails([targetEmail, ...(DB.admins || [])]),
-          subject: `Account Approved - ${target.AgencyName}`,
-          htmlBody: `<div style="font-family:Arial,sans-serif;padding:20px;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;"><h2 style="color:#15803d;margin-top:0;">✅ B2B Account Approved!</h2><p>Assalam-o-Alaikum <b>${escHtml(target.AgencyName)}</b>, aapka Golan International B2B account approve ho gaya hai. Ab aap portal par login karke Google Authenticator 2FA set kar sakte hain.</p></div>`,
-          agencyName: target.AgencyName
-        });
+        const appBody = `<div style="font-family:Arial,sans-serif;padding:20px;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;"><h2 style="color:#15803d;margin-top:0;">✅ B2B Account Approved!</h2><p>Assalam-o-Alaikum <b>${escHtml(target.AgencyName)}</b>, aapka Golan International B2B account approve ho gaya hai. Ab aap portal par login karke Google Authenticator 2FA set kar sakte hain.</p></div>`;
+        await Promise.all([
+          sendGasEmail({ to: targetEmail, subject: `Account Approved - ${target.AgencyName}`, htmlBody: appBody, agencyName: target.AgencyName }),
+          sendGasEmail({ to: uniqueEmails(DB.admins || []), subject: `[ADMIN] Account Approved - ${target.AgencyName}`, htmlBody: appBody, agencyName: target.AgencyName })
+        ]);
         return res.json({ ok: true, message: 'Agent updated: APPROVE' });
       } else if (p.subAction === 'BLOCK') {
         target.Status = 'BLOCKED'; target.SessionToken = '';
@@ -975,12 +1234,11 @@ module.exports = async function handler(req, res) {
         if (!Number.isFinite(amt) || amt <= 0) return res.json({ ok: false, message: 'Enter valid positive PKR amount.' });
         target.BalancePKR = Number(target.BalancePKR || 0) + Math.round(amt);
         await saveDB(DB);
-        await sendGasEmail({
-          to: uniqueEmails([targetEmail, ...(DB.admins || [])]),
-          subject: `Wallet Limit Added: PKR ${Math.round(amt).toLocaleString()} - ${target.AgencyName}`,
-          htmlBody: `<div style="font-family:Arial,sans-serif;padding:20px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;"><h2 style="color:#0b1f44;margin-top:0;">💰 Wallet Limit Credited</h2><p><b>Agency:</b> ${escHtml(target.AgencyName)}</p><p><b>Added Amount:</b> PKR ${Math.round(amt).toLocaleString()}</p><p><b>New Balance:</b> PKR ${Number(target.BalancePKR || 0).toLocaleString()}</p></div>`,
-          agencyName: target.AgencyName
-        });
+        const limBody = `<div style="font-family:Arial,sans-serif;padding:20px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;"><h2 style="color:#0b1f44;margin-top:0;">💰 Wallet Limit Credited</h2><p><b>Agency:</b> ${escHtml(target.AgencyName)}</p><p><b>Added Amount:</b> PKR ${Math.round(amt).toLocaleString()}</p><p><b>New Balance:</b> PKR ${Number(target.BalancePKR || 0).toLocaleString()}</p></div>`;
+        await Promise.all([
+          sendGasEmail({ to: targetEmail, subject: `Wallet Limit Added: PKR ${Math.round(amt).toLocaleString()} - ${target.AgencyName}`, htmlBody: limBody, agencyName: target.AgencyName }),
+          sendGasEmail({ to: uniqueEmails(DB.admins || []), subject: `[ADMIN] Wallet Limit Added: PKR ${Math.round(amt).toLocaleString()} - ${target.AgencyName}`, htmlBody: limBody, agencyName: target.AgencyName })
+        ]);
         return res.json({ ok: true, message: 'Agent updated: ADD_LIMIT' });
       } else if (p.subAction === 'RESET_PASSWORD') {
         const np = String(p.newPassword || '');
@@ -1003,16 +1261,12 @@ module.exports = async function handler(req, res) {
       await saveDB(DB);
 
       const receiptUrl = `${getBaseUrl(req)}/api/backend?action=viewReceipt&depositId=${encodeURIComponent(dep.DepositID)}&sig=${signReceipt(dep.DepositID, dep.AgentEmail)}`;
-      const recipients = uniqueEmails([dep.AgentEmail, ...(DB.admins || [])]);
-      await sendGasEmail({
-        to: recipients,
-        subject: `Deposit Approved [${dep.DepositID}] PKR ${Number(dep.AmountPKR || 0).toLocaleString()}`,
-        htmlBody: buildDepositEmailHtml(dep, receiptUrl),
-        pdfHtml: buildPrintableReceiptPage(dep),
-        pdfName: `Receipt-${dep.DepositID}.pdf`,
-        bId: dep.DepositID,
-        agencyName: dep.AgencyName
-      });
+      const emailHtml = buildDepositEmailHtml(dep, receiptUrl);
+      const receiptPdfHtml = buildPrintableReceiptPage(dep);
+      await Promise.all([
+        sendGasEmail({ to: dep.AgentEmail, subject: `Deposit Approved [${dep.DepositID}] PKR ${Number(dep.AmountPKR || 0).toLocaleString()}`, htmlBody: emailHtml, pdfHtml: receiptPdfHtml, pdfName: `Receipt-${dep.DepositID}.pdf`, bId: dep.DepositID, agencyName: dep.AgencyName }),
+        sendGasEmail({ to: uniqueEmails(DB.admins || []), subject: `[ADMIN] Deposit Approved [${dep.DepositID}] PKR ${Number(dep.AmountPKR || 0).toLocaleString()}`, htmlBody: emailHtml, pdfHtml: receiptPdfHtml, pdfName: `Receipt-${dep.DepositID}.pdf`, bId: dep.DepositID, agencyName: dep.AgencyName })
+      ]);
 
       return res.json({ ok: true, message: 'Deposit Approved & PKR ' + Number(dep.AmountPKR).toLocaleString() + ' added to agent limit!' });
     }
@@ -1022,43 +1276,3 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({ ok: false, message: 'Backend Error: ' + err.message });
   }
 };
-
-function doPost(e) {
-  try {
-    var d = JSON.parse(e.postData.contents || '{}');
-    if (d.action === 'sendVoucherHtml' && d.to) {
-      var htmlForPdf = d.pdfHtml || (
-        '<html><body style="font-family:Arial;padding:24px;">' +
-        '<h2 style="color:#0b1f44;">GOLAN INTERNATIONAL TRAVEL &amp; TOURS</h2>' +
-        '<hr><p><b>Ref ID:</b> ' + (d.bId || '-') + '</p>' +
-        '<p><b>Agency:</b> ' + (d.agencyName || '-') + '</p>' +
-        '<p><b>Passenger:</b> ' + (d.paxName || '-') + ' (' + (d.passportNo || '-') + ')</p>' +
-        '<p><b>Item:</b> ' + (d.itemTitle || '-') + '</p>' +
-        '<p><b>Fare:</b> PKR ' + (d.farePKR || 0) + '</p>' +
-        '<p><b>Status:</b> ' + (d.statusTxt || '-') + '</p>' +
-        '</body></html>'
-      );
-
-      var pdfName = d.pdfName || ('Golan-Voucher-' + (d.bId || Date.now()) + '.pdf');
-      var pdfBlob = Utilities.newBlob(htmlForPdf, 'text/html', pdfName + '.html')
-        .getAs('application/pdf')
-        .setName(pdfName);
-
-      GmailApp.sendEmail(
-        d.to,
-        d.subject || ('Golan International B2B - ' + (d.bId || 'Notification')),
-        'Please view your attached PDF document.',
-        {
-          name: d.senderName || 'GOLAN INTERNATIONAL TRAVEL & TOURS',
-          htmlBody: d.htmlBody || htmlForPdf,
-          attachments: [pdfBlob]
-        }
-      );
-
-      return ContentService.createTextOutput(JSON.stringify({ ok: true })).setMimeType(ContentService.MimeType.JSON);
-    }
-    return ContentService.createTextOutput('false');
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ ok: false, error: err.message })).setMimeType(ContentService.MimeType.JSON);
-  }
-}

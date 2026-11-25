@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -157,7 +157,6 @@
     #tab-bookings table{width:100%;min-width:0;border-collapse:collapse;font-size:11.5px;table-layout:fixed}
     #tab-bookings th{background:linear-gradient(135deg,#081736,#14346c);color:#f8fafc;padding:11px 6px;font-size:9.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;border-bottom:2px solid #d97706;white-space:normal}
     #tab-bookings td{padding:10px 6px;border-bottom:1px solid #edf2f8;vertical-align:middle;line-height:1.35;word-break:break-word;overflow-wrap:break-word}
-    #tab-bookings tbody tr{transition:background .15s ease}
     #tab-bookings tbody tr:hover td{background:#f4f8ff}
     #tab-bookings .pnr-pill{display:inline-block;background:linear-gradient(135deg,#0b1f44,#163b7a);color:#fbbf24;padding:3px 8px;border-radius:7px;font-family:monospace;font-weight:800;font-size:11px;letter-spacing:.6px;white-space:nowrap;border:1px solid rgba(251,191,36,.35)}
     #tab-bookings .act-wrap{display:flex;flex-wrap:wrap;gap:4px}
@@ -174,23 +173,33 @@
     #tab-ledger td{padding:10px 9px;border-bottom:1px solid #edf2f8;vertical-align:middle}
     #tab-ledger tbody tr:hover td{background:#f4f8ff}
 
-    .gds-pax-modal{width:100%;max-width:980px;margin:auto;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 28px 65px rgba(5,14,36,.48);border:1px solid rgba(251,191,36,.45)}
-    .gds-pax-topbar{background:linear-gradient(135deg,#071530 0%,#0b1f44 55%,#163b7a 100%);color:#fff;padding:15px 22px;display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:3px solid #d97706}
-    .gds-pax-subbar{background:linear-gradient(90deg,#f8fafc,#eff6ff);padding:11px 22px;border-bottom:1px solid #dbe4f0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
-    .gds-adult-box{margin:16px 20px;border:1px solid #dbe4f0;border-radius:14px;background:#fff;box-shadow:0 6px 20px rgba(15,23,42,.04);overflow:hidden}
-    .gds-adult-hdr{background:linear-gradient(90deg,#eef2f9,#f8fafc);padding:10px 16px;border-bottom:1px solid #dbe4f0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
-    .gds-adult-body{padding:15px}
-    .gds-row-6{display:grid;grid-template-columns:.85fr .95fr 1.25fr 1.25fr 1.15fr 1fr;gap:10px;margin-bottom:11px}
-    .gds-row-6-b{display:grid;grid-template-columns:1fr 1.2fr 1.2fr 1.2fr 1.1fr 1.1fr;gap:10px;margin-bottom:11px}
-    .gds-row-2{display:grid;grid-template-columns:1.25fr 1.25fr 1fr;gap:10px;align-items:end}
-    .gds-field{background:#f8fafc;border:1.5px solid #cbd5e1;border-radius:10px;padding:6px 10px 7px;transition:.15s;min-width:0}
+    /* Flying-Zone Style Luxury 5-Section Booking Panel */
+    #bookingModal{position:fixed;inset:0;background:rgba(7,21,48,.82);backdrop-filter:blur(4px);z-index:100005;overflow-y:auto;padding:14px}
+    .fz-shell{max-width:1060px;margin:0 auto;background:#f8fafc;border-radius:16px;overflow:hidden;box-shadow:0 28px 70px rgba(0,0,0,.45);border:1px solid rgba(251,191,36,.45)}
+    .fz-timer-bar{position:sticky;top:0;z-index:10;background:linear-gradient(90deg,#071530,#163b7a);color:#fff;padding:11px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #d97706}
+    .fz-clock{font-size:15px;font-weight:900;color:#fbbf24;letter-spacing:.5px}
+    .fz-sec{margin:14px 18px;background:#fff;border:1px solid #dbe4f0;border-radius:12px;overflow:hidden;box-shadow:0 4px 16px rgba(15,23,42,.04)}
+    .fz-sec-hdr{background:linear-gradient(90deg,#0b1f44,#163b7a);color:#fff;padding:10px 16px;font-size:13.5px;font-weight:800;display:flex;justify-content:space-between;align-items:center}
+    .fz-sec-body{padding:14px 16px}
+    .fz-adult-tag{background:#eef2f7;color:#0b1f44;padding:8px 14px;font-weight:800;font-size:12.5px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center}
+    .gds-row-6{display:grid;grid-template-columns:.8fr .9fr 1.2fr 1.2fr 1.1fr 1fr;gap:9px;margin-bottom:10px}
+    .gds-row-6-b{display:grid;grid-template-columns:1fr 1.2fr 1.15fr 1.15fr 1.05fr 1.05fr;gap:9px;margin-bottom:10px}
+    .gds-row-3{display:grid;grid-template-columns:1fr 1.25fr 1.25fr;gap:9px;align-items:end}
+    .gds-field{background:#f8fafc;border:1.5px solid #cbd5e1;border-radius:9px;padding:5px 9px 6px;transition:.15s;min-width:0}
     .gds-field:focus-within{border-color:#163b7a;background:#fff;box-shadow:0 0 0 3px rgba(22,59,122,.12)}
-    .gds-field label{font-size:10.5px;font-weight:800;color:#475569;margin-bottom:2px;display:flex;align-items:center;gap:3px}
+    .gds-field label{font-size:10px;font-weight:800;color:#475569;margin-bottom:2px;display:flex;align-items:center;gap:3px}
     .gds-field label .req{color:#dc2626;font-weight:900}
-    .gds-field input,.gds-field select{border:none!important;background:transparent!important;padding:3px 0!important;font-size:13px;font-weight:600;color:#0f172a;box-shadow:none!important;border-radius:0!important;width:100%}
-    .gds-seat-wrap,.gds-phone-wrap{display:flex;align-items:center;gap:6px}
+    .gds-field input,.gds-field select{border:none!important;background:transparent!important;padding:3px 0!important;font-size:13px;font-weight:600;color:#0f172a;box-shadow:none!important;border-radius:0!important;width:100%;min-width:0}
+    .gds-phone-wrap{display:flex;align-items:center;gap:6px}
     .gds-phone-code{width:78px!important;flex-shrink:0;font-weight:800!important;color:#0b1f44!important;border-right:1px solid #cbd5e1!important;padding-right:4px!important}
-    .gds-pax-footer{padding:13px 20px 16px;background:#f8fafc;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+    .fz-info-tbl{width:100%;border-collapse:collapse;font-size:12px}
+    .fz-info-tbl th{background:#f8fafc;color:#0f172a;padding:9px 10px;border-bottom:1.5px solid #cbd5e1;font-size:11px;text-transform:none}
+    .fz-info-tbl td{padding:10px;border-bottom:1px solid #eef2f6;color:#1e293b}
+    .fz-pay-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    .fz-pay-box{background:#f1f5f9;border:1px solid #cbd5e1;border-radius:9px;padding:9px 12px}
+    .fz-pay-box small{display:block;font-size:10.5px;font-weight:700;color:#475569;margin-bottom:3px}
+    .fz-pay-box strong{font-size:14.5px;color:#0b1f44;font-weight:900}
+    .fz-bottom-bar{position:sticky;bottom:0;z-index:10;background:#fff;border-top:2px solid #dbe4f0;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;box-shadow:0 -8px 24px rgba(15,23,42,.08)}
 
     .act-wrap{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
     .act-wrap .btn-sm{padding:5px 8px;font-size:10.5px;margin:0!important;white-space:nowrap}
@@ -217,9 +226,9 @@
     @media(max-width:1040px){
       .dash-wrap{grid-template-columns:182px minmax(0,1fr);gap:10px}
       .search-row{grid-template-columns:minmax(0,1fr) 34px minmax(0,1fr) minmax(135px,.95fr) minmax(0,.8fr) auto;gap:6px}
-      .luxury-stats-grid{grid-template-columns:repeat(2,1fr)}
+      .luxury-stats-grid,.fz-pay-grid{grid-template-columns:repeat(2,1fr)}
       .gds-row-6,.gds-row-6-b{grid-template-columns:repeat(3,1fr)}
-      .gds-row-2{grid-template-columns:1fr 1fr}
+      .gds-row-3{grid-template-columns:1fr 1fr}
     }
     @media(max-width:900px){
       #tab-bookings .bookings-scroll,.ag-table-wrap,.table-fit-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -229,13 +238,13 @@
     @media(max-width:740px){
       .dash-wrap,.auth-grid,.admin-grid,.profile-grid,.team-grid{grid-template-columns:1fr}
       .sidebar{position:static}
-      .stats-4,.luxury-stats-grid{grid-template-columns:repeat(2,1fr)}
+      .stats-4,.luxury-stats-grid,.fz-pay-grid{grid-template-columns:repeat(2,1fr)}
       .journey-photo-grid{grid-template-columns:repeat(2,1fr)}
-      .search-row,.gds-row-6,.gds-row-6-b,.gds-row-2{grid-template-columns:1fr}
+      .search-row,.gds-row-6,.gds-row-6-b,.gds-row-3{grid-template-columns:1fr}
       .luxury-search-wrap input{width:170px}
-      .gds-adult-box{margin:12px}
+      .fz-sec{margin:10px}
     }
-    @media(max-width:520px){.feature-cards,.stats-4,.luxury-stats-grid,.journey-photo-grid{grid-template-columns:1fr}}
+    @media(max-width:520px){.feature-cards,.stats-4,.luxury-stats-grid,.journey-photo-grid,.fz-pay-grid{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -430,18 +439,8 @@
 
         <div id="tab-bookings" class="card luxury-card hidden">
           <div class="luxury-hdr">
-            <div class="luxury-title-wrap">
-              <div class="luxury-icon-badge">📋</div>
-              <div>
-                <h3 style="margin:0;font-size:19px;">B2B Bookings &amp; Live PNR Status</h3>
-                <span style="font-size:12px;color:#64748b;font-weight:600;">View PNRs, hold timers, issue tickets &amp; download Electronic Ticket PDFs</span>
-              </div>
-            </div>
-            <div class="luxury-search-wrap">
-              <span style="padding-left:6px;font-size:13px;">🔍</span>
-              <input type="text" id="adminBookingSearchInput" oninput="filterBookingsTable()" placeholder="Search Booking ID, PNR, Name, Passport..." />
-              <button type="button" class="btn btn-sm" style="background:#e2e8f0;color:#0f172a;border-radius:7px;" onclick="document.getElementById('adminBookingSearchInput').value='';filterBookingsTable();">✕</button>
-            </div>
+            <div class="luxury-title-wrap"><div class="luxury-icon-badge">📋</div><div><h3 style="margin:0;font-size:19px;">B2B Bookings &amp; Live PNR Status</h3><span style="font-size:12px;color:#64748b;font-weight:600;">View PNRs, hold timers, issue tickets &amp; download Electronic Ticket PDFs</span></div></div>
+            <div class="luxury-search-wrap"><span style="padding-left:6px;font-size:13px;">🔍</span><input type="text" id="adminBookingSearchInput" oninput="filterBookingsTable()" placeholder="Search Booking ID, PNR, Name, Passport..." /><button type="button" class="btn btn-sm" style="background:#e2e8f0;color:#0f172a;border-radius:7px;" onclick="document.getElementById('adminBookingSearchInput').value='';filterBookingsTable();">✕</button></div>
           </div>
           <div class="bookings-scroll">
             <table>
@@ -471,13 +470,7 @@
 
         <div id="tab-ledger" class="card luxury-card hidden">
           <div class="luxury-hdr">
-            <div class="luxury-title-wrap">
-              <div class="luxury-icon-badge">📒</div>
-              <div>
-                <h3 style="margin:0;font-size:19px;">B2B Account Ledger &amp; Statement</h3>
-                <span style="font-size:12px;color:#64748b;font-weight:600;">Deposits, ticket deductions, PDF receipts &amp; refunds</span>
-              </div>
-            </div>
+            <div class="luxury-title-wrap"><div class="luxury-icon-badge">📒</div><div><h3 style="margin:0;font-size:19px;">B2B Account Ledger &amp; Statement</h3><span style="font-size:12px;color:#64748b;font-weight:600;">Deposits, ticket deductions, PDF receipts &amp; refunds</span></div></div>
             <button type="button" class="btn btn-sm btn-primary" style="padding:9px 16px;font-size:12px;border-radius:10px;" onclick="switchTab('banks')">+ Submit Deposit Slip</button>
           </div>
           <div class="luxury-stats-grid">
@@ -486,12 +479,7 @@
             <div class="lstat-card" style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #93c5fd;border-left:4px solid #1d4ed8;"><div class="lstat-lbl" style="color:#1e40af;">🔄 Canceled / Refund</div><div id="ldgTotalRefund" class="lstat-val" style="color:#1d4ed8;">PKR 0</div></div>
             <div class="lstat-card" style="background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #fcd34d;border-left:4px solid #d97706;"><div class="lstat-lbl" style="color:#92400e;">⚖️ Wallet Balance</div><div id="ldgNetBalance" class="lstat-val" style="color:#b45309;">PKR 0</div><div id="ldgBalanceNote" style="font-size:10.5px;color:#92400e;font-weight:700;margin-top:2px;">Available Balance</div></div>
           </div>
-          <div class="luxury-ledger-wrap">
-            <table>
-              <thead><tr><th>Date</th><th>Ref / ID</th><th>Description</th><th>Type</th><th>Debit</th><th>Credit</th><th>Status</th><th>PDF Receipt</th></tr></thead>
-              <tbody id="ledgerTableBody"></tbody>
-            </table>
-          </div>
+          <div class="luxury-ledger-wrap"><table><thead><tr><th>Date</th><th>Ref / ID</th><th>Description</th><th>Type</th><th>Debit</th><th>Credit</th><th>Status</th><th>PDF Receipt</th></tr></thead><tbody id="ledgerTableBody"></tbody></table></div>
         </div>
 
         <div id="tab-contacts" class="hidden">
@@ -564,10 +552,7 @@
                 </div>
                 <div class="form-group"><label>📝 Additional Rules</label><input type="text" id="admDetails" placeholder="Refundable • Visa + Transport" required /></div>
                 <div class="form-group" id="grpDate"><label>Travel Date</label><input type="text" id="admDate" placeholder="25 Nov 2026" required /></div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                  <div class="form-group" id="grpSeats"><label>Total Seats</label><input type="number" id="admSeats" value="15" min="1" required /></div>
-                  <div class="form-group"><label>⏳ Hold Limit (Mins)</label><input type="number" id="admHoldMins" value="30" min="5" required /></div>
-                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"><div class="form-group" id="grpSeats"><label>Total Seats</label><input type="number" id="admSeats" value="15" min="1" required /></div><div class="form-group"><label>⏳ Hold Limit (Mins)</label><input type="number" id="admHoldMins" value="30" min="5" required /></div></div>
                 <div class="form-group"><label>B2B Fare (PKR)</label><input type="number" id="admFare" min="1" required /></div>
                 <button type="submit" id="addFareBtn" class="btn btn-primary">Publish to All Agents</button>
               </form>
@@ -581,10 +566,7 @@
                 <div class="form-group"><label>IBAN</label><input type="text" id="bankIban" /></div>
                 <button type="submit" id="addBankBtn" class="btn btn-gold">Add Payment Account</button>
               </form>
-              <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px;">
-                <h4 style="font-size:13px;color:var(--navy);margin-bottom:8px;">Active Accounts (Click Remove to Delete)</h4>
-                <div id="adminBanksList" style="display:flex;flex-direction:column;gap:6px;"></div>
-              </div>
+              <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px;"><h4 style="font-size:13px;color:var(--navy);margin-bottom:8px;">Active Accounts (Click Remove to Delete)</h4><div id="adminBanksList" style="display:flex;flex-direction:column;gap:6px;"></div></div>
             </div>
           </div>
           <div class="card"><h3>💰 Deposit Limit Requests</h3><div class="table-fit-wrap"><table><thead><tr><th>ID</th><th>Date</th><th>Agency</th><th>Bank</th><th>Amount</th><th>Slip / TID</th><th>Status</th><th>Action</th></tr></thead><tbody id="adminDepositsBody"></tbody></table></div></div>
@@ -594,7 +576,7 @@
     </div>
   </div>
 
-  <div id="approveConfirmModal" class="hidden" style="position:fixed;inset:0;background:rgba(11,31,68,.76);z-index:100000;display:flex;align-items:center;justify-content:center;padding:16px;">
+  <div id="approveConfirmModal" class="hidden" style="position:fixed;inset:0;background:rgba(11,31,68,.76);z-index:100010;display:flex;align-items:center;justify-content:center;padding:16px;">
     <div style="background:#fff;border-radius:16px;max-width:430px;width:100%;overflow:hidden;box-shadow:0 24px 55px rgba(0,0,0,.38);border:2px solid #16a34a;">
       <div style="background:linear-gradient(135deg,#0b1f44,#163b7a);color:#fff;padding:15px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #d97706;"><strong style="font-size:15.5px;">💰 Confirm Deposit Approval</strong><button type="button" onclick="closeApproveConfirmModal()" style="border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;border-radius:6px;padding:3px 9px;cursor:pointer;">✕</button></div>
       <div style="padding:18px;">
@@ -605,38 +587,41 @@
     </div>
   </div>
 
-  <div id="attachmentModal" class="hidden" style="position:fixed;inset:0;background:rgba(15,23,42,.75);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;">
+  <div id="attachmentModal" class="hidden" style="position:fixed;inset:0;background:rgba(15,23,42,.75);z-index:100009;display:flex;align-items:center;justify-content:center;padding:16px;">
     <div style="background:#fff;border-radius:16px;max-width:650px;width:100%;overflow:hidden;box-shadow:0 20px 45px rgba(0,0,0,.35);">
       <div style="background:#0b1f44;color:#fff;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;"><strong id="attachmentModalTitle" style="font-size:15px;">📎 Uploaded Document</strong><button type="button" onclick="document.getElementById('attachmentModal').classList.add('hidden')" style="border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;border-radius:6px;padding:4px 10px;cursor:pointer;">Close ✕</button></div>
       <div id="attachmentModalBody" style="padding:18px;max-height:78vh;overflow-y:auto;text-align:center;"></div>
     </div>
   </div>
 
-  <div id="gdsDetailsModal" class="hidden" style="position:fixed;inset:0;background:rgba(15,23,42,.68);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;">
+  <div id="gdsDetailsModal" class="hidden" style="position:fixed;inset:0;background:rgba(15,23,42,.68);z-index:100002;display:flex;align-items:center;justify-content:center;padding:16px;">
     <div style="background:#fff;border-radius:16px;max-width:680px;width:100%;overflow:hidden;box-shadow:0 20px 40px rgba(0,0,0,.28);">
       <div style="background:#0b1f44;color:#fff;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;"><strong style="font-size:15px;">✈️ Flight Fare &amp; Baggage Details</strong><button type="button" onclick="document.getElementById('gdsDetailsModal').classList.add('hidden')" style="border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;border-radius:6px;padding:4px 10px;cursor:pointer;">Close ✕</button></div>
       <div id="gdsModalContent" style="padding:18px;max-height:75vh;overflow-y:auto;"></div>
     </div>
   </div>
 
-  <div id="bookingModal" class="hidden" style="position:fixed;inset:0;background:rgba(7,21,48,.78);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:9999;padding:14px;overflow-y:auto;">
-    <div class="gds-pax-modal">
-      <div class="gds-pax-topbar">
-        <div style="display:flex;align-items:center;gap:10px;"><span style="background:rgba(251,191,36,.18);border:1px solid rgba(251,191,36,.5);color:#fbbf24;width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;">✈️</span><div><h3 id="modalHeaderTitle" style="margin:0;font-size:16.5px;font-weight:900;color:#fff;letter-spacing:.3px;">Passenger Information</h3><div style="font-size:11px;color:#cbd5e1;font-weight:600;">Official Golan International B2B Booking Desk</div></div></div>
-        <div style="display:flex;align-items:center;gap:10px;"><div style="background:rgba(220,38,38,.22);border:1px solid rgba(254,202,202,.45);color:#fecaca;padding:5px 11px;border-radius:99px;font-size:11.5px;font-weight:800;">⏳ Session: <span id="modalSessionClock">15:00</span></div><button type="button" onclick="closeBookingModal()" style="border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08);color:#fff;border-radius:8px;padding:5px 11px;cursor:pointer;font-weight:800;">✕</button></div>
+  <!-- Flying-Zone Style 5-Section Luxury Travellers Booking Panel -->
+  <div id="bookingModal" class="hidden">
+    <div class="fz-shell">
+      <div class="fz-timer-bar">
+        <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:18px;">✈️</span><div><div id="modalHeaderTitle" style="font-size:15.5px;font-weight:900;">Passenger &amp; Itinerary Checkout</div><div style="font-size:11px;color:#cbd5e1;">Golan International Official B2B Travellers Desk</div></div></div>
+        <div class="fz-clock">⏳ <span id="modalSessionClock">15 Minutes 00 Seconds</span></div>
       </div>
-      <div class="gds-pax-subbar"><div id="modalItemTitle" style="color:#0b1f44;font-weight:800;font-size:13.5px;"></div><span style="background:#dcfce7;color:#166534;border:1px solid #bbf7d0;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:800;">🔒 Mandatory Verification Required</span></div>
-      <form id="bookingForm" onsubmit="submitBooking(event)" novalidate>
-        <div id="flightFieldsWrap" class="gds-adult-box">
-          <div class="gds-adult-hdr"><div style="display:flex;align-items:center;gap:8px;"><span style="background:#0b1f44;color:#fbbf24;padding:3px 10px;border-radius:7px;font-size:12px;font-weight:800;">👤 Adult 1</span><span style="font-size:12px;font-weight:700;color:#334155;">Passenger &amp; Travel Document Details</span></div><span style="font-size:11px;font-weight:700;color:#dc2626;">* All required fields must be filled</span></div>
-          <div class="gds-adult-body">
+
+      <form id="bookingForm" onsubmit="submitBooking(event,false)" novalidate>
+        <!-- Section 1: Passenger Information -->
+        <div id="flightFieldsWrap" class="fz-sec">
+          <div class="fz-sec-hdr"><span>Passenger Information</span><span style="font-size:11px;color:#fde68a;">* All required fields must be filled</span></div>
+          <div class="fz-adult-tag"><span>👤 Adult 1</span><span style="font-size:11px;color:#475569;">Passport / National ID Mandatory</span></div>
+          <div class="fz-sec-body">
             <div class="gds-row-6">
               <div class="gds-field"><label>Title <span class="req">*</span></label><select id="paxTitle" onchange="syncGenderFromTitle(this.value)"><option value="">Title</option><option value="Mr">Mr</option><option value="Mrs">Mrs</option><option value="Ms">Ms</option><option value="Mstr">Mstr</option><option value="Miss">Miss</option></select></div>
               <div class="gds-field"><label>Gender <span class="req">*</span></label><select id="paxGender"><option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option></select></div>
               <div class="gds-field"><label>First Name <span class="req">*</span></label><input type="text" id="paxFirstName" placeholder="Given Name" autocomplete="off" /></div>
               <div class="gds-field"><label>Last Name <span class="req">*</span></label><input type="text" id="paxLastName" placeholder="Surname" autocomplete="off" /></div>
               <div class="gds-field"><label>Date Of Birth <span class="req">*</span></label><input type="date" id="paxDob" /></div>
-              <div class="gds-field"><label>Seat</label><div class="gds-seat-wrap"><select id="paxSeat"><option value="Any">Select</option><option value="Window">Window</option><option value="Aisle">Aisle</option><option value="Middle">Middle</option></select><span title="Seat Preference" style="font-size:14px;color:#0b1f44;">💺</span></div></div>
+              <div class="gds-field"><label>Seat</label><select id="paxSeat"><option value="Any">Select</option><option value="Window">Window 💺</option><option value="Aisle">Aisle 💺</option><option value="Middle">Middle 💺</option></select></div>
             </div>
             <div class="gds-row-6-b">
               <div class="gds-field"><label>Doc. Type <span class="req">*</span></label><select id="paxDocType"><option value="Passport">Passport</option><option value="National ID">National ID / CNIC</option></select></div>
@@ -646,27 +631,69 @@
               <div class="gds-field"><label>Issue Date <span class="req">*</span></label><input type="date" id="paxIssueDate" /></div>
               <div class="gds-field"><label>Expire Date <span class="req">*</span></label><input type="date" id="paxExp" /></div>
             </div>
-            <div class="gds-row-2">
-              <div class="gds-field"><label>Email (For Electronic Ticket PDF) <span class="req">*</span></label><input type="email" id="paxEmail" placeholder="passenger@gmail.com" /></div>
-              <div class="gds-field"><label>Mobile / WhatsApp Number <span class="req">*</span></label><div class="gds-phone-wrap"><select id="paxPhoneCode" class="gds-phone-code"><option value="+92">🇵🇰 +92</option><option value="+966">🇸🇦 +966</option><option value="+971">🇦🇪 +971</option><option value="+44">🇬🇧 +44</option><option value="+1">🇺🇸 +1</option></select><input type="tel" id="paxMobile" placeholder="301 2345678" autocomplete="off" /></div></div>
-              <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:9px 12px;font-size:11px;color:#1e3a8a;font-weight:700;line-height:1.4;">📧 Auto E-Ticket PDF will be emailed after confirmation.</div>
+            <div class="gds-row-3">
+              <div class="gds-field"><label>🍽️ Meal Preference</label><select id="paxMealPref"><option value="Included / Standard">Standard / Included</option><option value="Muslim Halal Meal">Muslim Halal Meal</option><option value="Vegetarian Meal">Vegetarian Meal</option><option value="Child / Baby Meal">Child / Baby Meal</option><option value="No Meal">No Meal</option></select></div>
+              <div class="gds-field"><label>Email <span class="req">*</span></label><input type="email" id="paxEmail" placeholder="passenger@gmail.com" autocomplete="off" /></div>
+              <div class="gds-field"><label>Mobile / Phone <span class="req">*</span></label><div class="gds-phone-wrap"><select id="paxPhoneCode" class="gds-phone-code"><option value="+92">🇵🇰 +92</option><option value="+966">🇸🇦 +966</option><option value="+971">🇦🇪 +971</option><option value="+44">🇬🇧 +44</option><option value="+1">🇺🇸 +1</option></select><input type="text" id="paxMobile" inputmode="tel" placeholder="301 2345678" autocomplete="off" /></div></div>
             </div>
           </div>
         </div>
-        <div id="visaFieldsWrap" class="gds-adult-box hidden">
-          <div class="gds-adult-hdr"><span style="background:#0f4c5c;color:#fff;padding:3px 10px;border-radius:7px;font-size:12px;font-weight:800;">🛂 Visit Visa Applicant Details</span><span style="font-size:11px;font-weight:700;color:#dc2626;">* Documents &amp; fields required</span></div>
-          <div class="gds-adult-body">
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px;margin-bottom:12px;"><div class="gds-field"><label>Applicant Full Name <span class="req">*</span></label><input type="text" id="visaFullName" placeholder="As per Passport" /></div><div class="gds-field"><label>Passport Number <span class="req">*</span></label><input type="text" id="visaPassport" placeholder="AB1234567" style="text-transform:uppercase;font-family:monospace;" /></div><div class="gds-field"><label>Applicant Mobile <span class="req">*</span></label><input type="text" id="visaMobile" placeholder="03XX-XXXXXXX" /></div></div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;"><div class="form-group" style="margin:0;"><label>📎 Passport Front Scan <span style="color:#dc2626;">*</span></label><input type="file" id="visaDocPassport" accept="image/*,.pdf" style="background:#fff;border:1.5px dashed #94a3b8;" /></div><div class="form-group" style="margin:0;"><label>📎 White BG Photo <span style="color:#dc2626;">*</span></label><input type="file" id="visaDocPhoto" accept="image/*" style="background:#fff;border:1.5px dashed #94a3b8;" /></div></div>
+
+        <div id="visaFieldsWrap" class="fz-sec hidden">
+          <div class="fz-sec-hdr"><span>🛂 Visit Visa Applicant Details</span><span style="font-size:11px;color:#fde68a;">* Documents Mandatory</span></div>
+          <div class="fz-sec-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:11px;"><div class="gds-field"><label>Applicant Full Name <span class="req">*</span></label><input type="text" id="visaFullName" placeholder="As per Passport" /></div><div class="gds-field"><label>Passport Number <span class="req">*</span></label><input type="text" id="visaPassport" placeholder="AB1234567" style="text-transform:uppercase;font-family:monospace;" /></div><div class="gds-field"><label>Applicant Mobile <span class="req">*</span></label><input type="text" id="visaMobile" placeholder="03XX-XXXXXXX" /></div></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"><div class="form-group" style="margin:0;"><label>📎 Passport Front Scan <span style="color:#dc2626;">*</span></label><input type="file" id="visaDocPassport" accept="image/*,.pdf" style="background:#fff;border:1.5px dashed #94a3b8;" /></div><div class="form-group" style="margin:0;"><label>📎 White BG Photo <span style="color:#dc2626;">*</span></label><input type="file" id="visaDocPhoto" accept="image/*" style="background:#fff;border:1.5px dashed #94a3b8;" /></div></div>
           </div>
         </div>
-        <div class="gds-pax-footer"><span style="font-size:11.5px;color:#475569;font-weight:600;">🛡️ Protected by Golan B2B Hold &amp; PNR Verification System</span><div style="display:flex;gap:10px;align-items:center;"><button type="button" class="btn" style="width:auto;padding:10px 20px;background:#e2e8f0;color:#334155;" onclick="closeBookingModal()">Cancel</button><button type="submit" id="modalSubmitBtn" class="btn btn-green" style="width:auto;padding:10px 24px;">✅ Confirm &amp; Hold Booking (PENDING)</button></div></div>
+
+        <!-- Section 2: Flight Information -->
+        <div class="fz-sec">
+          <div class="fz-sec-hdr"><span>Flight Information</span><span id="fzRouteBadge" style="font-size:11.5px;color:#fbbf24;"></span></div>
+          <div class="fz-sec-body" style="padding:0;overflow-x:auto;">
+            <table class="fz-info-tbl"><thead><tr><th>Departure</th><th>Arrival</th><th>Airlines</th><th>Flight / Ref</th><th>Cabin &amp; Meal</th><th>Baggage Allowance</th></tr></thead><tbody id="fzFlightInfoBody"></tbody></table>
+          </div>
+        </div>
+
+        <!-- Section 3: Farefamily Description -->
+        <div class="fz-sec">
+          <div class="fz-sec-hdr"><span>Farefamily description</span><span style="font-size:11px;color:#cbd5e1;">Baggage, Meal &amp; Rules</span></div>
+          <div class="fz-sec-body" id="fzFareDescBody"></div>
+        </div>
+
+        <!-- Section 4: Fare Details (In PKR) -->
+        <div class="fz-sec">
+          <div class="fz-sec-hdr"><span>Fare Details (In PKR)</span><span>1 Adult</span></div>
+          <div class="fz-sec-body" style="padding:0;overflow-x:auto;">
+            <table class="fz-info-tbl"><thead><tr><th>Type</th><th>Fare</th><th>Tax / Fee</th><th>Service Fee</th><th>Discount</th><th>Count</th><th style="text-align:right;">Total</th></tr></thead><tbody id="fzFareDetailsBody"></tbody></table>
+          </div>
+        </div>
+
+        <!-- Section 5: Payment Information -->
+        <div class="fz-sec">
+          <div class="fz-sec-hdr"><span>Payment Information</span><span>B2B Wallet &amp; Hold</span></div>
+          <div class="fz-sec-body">
+            <div class="fz-pay-grid" id="fzPaymentBoxes"></div>
+            <label style="display:flex;align-items:center;gap:8px;margin-top:12px;cursor:pointer;font-size:12.5px;font-weight:700;color:#0f172a;">
+              <input type="checkbox" id="fzTermsCheck" checked style="width:16px;height:16px;accent-color:#163b7a;" />
+              <span>I Have Read &amp; Accept <span style="color:#b91c1c;">Terms and Conditions</span> (Non-Refundable / Airline Rules Apply)</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="fz-bottom-bar">
+          <button type="button" class="btn" style="width:auto;background:#0b1f44;color:#fff;padding:10px 18px;" onclick="closeBookingModal()">← Back To Selection</button>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <button type="submit" id="modalSubmitBtn" class="btn btn-green" style="width:auto;padding:10px 22px;">Book Only (Hold)</button>
+            <button type="button" id="modalIssueDirectBtn" class="btn btn-primary hidden" style="width:auto;padding:10px 22px;" onclick="submitBooking(event,true)">✓ Book &amp; Issue</button>
+          </div>
+        </div>
       </form>
     </div>
   </div>
 
   <script>
-    var API_URL='/api/backend',ADMIN_NOTIFY_EMAIL='golaninternational322@gmail.com',currentEmail='',currentToken='',currentIsAdmin=false,currentCanIssue=false,selectedItem=null;
+    var API_URL='/api/backend',ADMIN_NOTIFY_EMAIL='golaninternational322@gmail.com',currentEmail='',currentToken='',currentIsAdmin=false,currentCanIssue=false,currentWalletBal=0,selectedItem=null;
     var CURRENT_TRIP_TYPE='oneway',ACTIVE_GDS_IDX=0,modalTimerInterval=null,expiryInterval=null,isBookingSubmitting=false,pendingSubAgentLogoDataUrl='',ACTIVE_FARE_CATEGORY='ALL',pendingApproveDepId='';
 
     var GOLAN_SVG_LOGO='data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180"><defs><linearGradient id="gNavy" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#071530"/><stop offset="100%" stop-color="#163b7a"/></linearGradient><linearGradient id="gGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fcd34d"/><stop offset="50%" stop-color="#d97706"/><stop offset="100%" stop-color="#b45309"/></linearGradient><linearGradient id="gSilver" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f8fafc"/><stop offset="100%" stop-color="#94a3b8"/></linearGradient></defs><circle cx="90" cy="90" r="84" fill="#fff" stroke="url(#gGold)" stroke-width="5"/><circle cx="90" cy="90" r="76" fill="none" stroke="url(#gNavy)" stroke-width="2" stroke-dasharray="6 4"/><path d="M90 54 C74 34,48 26,34 32 C48 44,62 52,78 58 L90 70 L102 58 C118 52,132 44,146 32 C132 26,106 34,90 54 Z" fill="url(#gGold)"/><path d="M90 38 C85 38,82 43,84 48 L90 62 L96 48 C98 43,95 38,90 38 Z" fill="#b45309"/><circle cx="90" cy="40" r="5" fill="#d97706"/><polygon points="34,114 66,68 92,114" fill="url(#gNavy)"/><polygon points="66,68 78,88 68,84 58,92" fill="url(#gSilver)"/><polygon points="74,114 108,58 146,114" fill="#1e3a8a"/><polygon points="108,58 122,82 110,77 98,86" fill="#fff"/><path d="M28 114 Q90 104 152 114" fill="none" stroke="url(#gGold)" stroke-width="3.5" stroke-linecap="round"/><text x="90" y="136" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-weight="900" font-size="25" letter-spacing="2" fill="#0b1f44">GOLAN</text><text x="90" y="150" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="7.5" letter-spacing="1.2" fill="#b45309">INTERNATIONAL TRAVEL &amp; TOURS</text></svg>');
@@ -893,7 +920,7 @@
         if(!res||!res.ok){if(res&&res.message&&/session|expired|unauthorized/i.test(res.message)){alert(res.message);logout();}return;}
         window.__LAST_DASH_RES__=res;window.__ALL_FARES__=res.fares||[];window.__ALL_BOOKINGS__=res.bookings||[];window.__ALL_DEPOSITS__=res.deposits||[];currentIsAdmin=!!res.isAdmin;
         if(typeof res.canIssue!=='undefined')currentCanIssue=!!res.canIssue;
-        var bal=Number(res.balancePKR||0);document.getElementById('walletBadge').textContent='💰 Wallet: PKR '+bal.toLocaleString();
+        currentWalletBal=Number(res.balancePKR||0);document.getElementById('walletBadge').textContent='💰 Wallet: PKR '+currentWalletBal.toLocaleString();
         if(res.profile){localStorage.setItem(getProfileStorageKey(),JSON.stringify(Object.assign({},getLocalProfile(),res.profile)));populateProfileForm(res.profile.agencyName||document.getElementById('dashAgencyName').textContent);}
         document.getElementById('statAvailGroups').textContent=window.__ALL_FARES__.length;applyFaresFilter();
 
@@ -902,7 +929,7 @@
         var bankSel=document.getElementById('depBank');if(bankSel){var pv=bankSel.value;bankSel.innerHTML=banks.map(function(bk){var val=(bk.BankName||'Bank')+(bk.AccountNumber?' ('+bk.AccountNumber+')':'');return '<option value="'+esc(val)+'">'+esc(bk.BankName||'Bank')+(bk.AccountNumber?' — '+esc(bk.AccountNumber):'')+'</option>';}).join('');if(Array.prototype.some.call(bankSel.options,function(o){return o.value===pv;}))bankSel.value=pv;}
         var adminBanksEl=document.getElementById('adminBanksList');if(adminBanksEl&&res.isAdmin){adminBanksEl.innerHTML=(res.banks&&res.banks.length)?res.banks.map(function(bk,idx){return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;background:#f8fafc;border:1px solid #e2e8f0;padding:8px 10px;border-radius:8px;font-size:12px;"><div><b>'+esc(bk.BankName)+'</b> — <span style="font-family:monospace;">'+esc(bk.AccountNumber)+'</span></div><button type="button" class="btn btn-sm btn-red" data-bid="'+esc(bk.BankID||'')+'" data-acc="'+esc(bk.AccountNumber||'')+'" data-idx="'+idx+'" onclick="adminDeleteBankReq(this)">🗑️ Remove</button></div>';}).join(''):'<div style="font-size:12px;color:#64748b;">No custom accounts added yet.</div>';}
 
-        renderBookingsTable(res.isAdmin);refreshLedgerAuto(bal);
+        renderBookingsTable(res.isAdmin);refreshLedgerAuto(currentWalletBal);
 
         if(res.isAdmin){
           var deps=res.deposits||[];
@@ -977,20 +1004,35 @@
     function openBookingModal(cat,title,fare,fareId,holdMins,offerId){
       selectedItem={Category:cat,Title:title,FarePKR:fare,FareID:fareId||'',HoldMins:holdMins||0,OfferID:offerId||''};
       var form=document.getElementById('bookingForm');if(form)form.reset();
-      document.getElementById('paxDocType').value='Passport';document.getElementById('paxIssueCountry').value='Pakistan';document.getElementById('paxNat').value='Pakistani';document.getElementById('paxPhoneCode').value='+92';document.getElementById('paxSeat').value='Any';
+      document.getElementById('paxDocType').value='Passport';document.getElementById('paxIssueCountry').value='Pakistan';document.getElementById('paxNat').value='Pakistani';document.getElementById('paxPhoneCode').value='+92';document.getElementById('paxSeat').value='Any';document.getElementById('fzTermsCheck').checked=true;
       var isVisa=(cat==='Visit Visa');document.getElementById('flightFieldsWrap').classList.toggle('hidden',isVisa);document.getElementById('visaFieldsWrap').classList.toggle('hidden',!isVisa);
-      document.getElementById('modalHeaderTitle').textContent=isVisa?'Visit Visa Application':'Passenger Information';
-      document.getElementById('modalItemTitle').textContent=title+' — Net Fare: PKR '+Number(fare).toLocaleString();
-      var sb=document.getElementById('modalSubmitBtn');sb.disabled=false;sb.textContent='✅ Confirm & Hold Booking (PENDING)';document.getElementById('bookingModal').classList.remove('hidden');
-      if(modalTimerInterval)clearInterval(modalTimerInterval);var sec=900,clk=document.getElementById('modalSessionClock');if(clk)clk.textContent='15:00';
-      modalTimerInterval=setInterval(function(){sec--;if(sec<=0){clearInterval(modalTimerInterval);closeBookingModal();alert('⌛ Booking Session Expired! Please try again.');}else if(clk)clk.textContent=String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');},1000);
+      document.getElementById('modalHeaderTitle').textContent=isVisa?'Visit Visa Application & Checkout':'Passenger & Itinerary Checkout';
+
+      var fAir='Golan Group',fNo='GL-GRP',fDep='--',fArr='--',fBag='30 KG + 7 KG',fMeal='Included',fRules='Non-Refundable • Report 4 Hours Before Departure',fStay='Direct';
+      if(cat==='Live Airline'){var o=(window.__GDS_OFFERS__||[])[ACTIVE_GDS_IDX]||{};fAir=o.Airline||'Airline';fNo=o.FlightNo||'GDS';fDep=(o.Origin||'')+' '+(o.DepTime||'');fArr=(o.Dest||'')+' '+(o.ArrTime||'');fBag=o.Baggage||o.Luggage||'30 KG + 7 KG';fStay=o.Stops||'Direct';}
+      else if(fareId){var fo=(window.__ALL_FARES__||[]).find(function(x){return String(x.ID)===String(fareId);})||{};fAir=parseFareMeta(fo).airline;fNo=fo.Title||cat;fDep=fo.TravelDate||'Flexible';fArr=fo.Timing||'-';fBag=fo.Luggage||'30 KG + 7 KG';fMeal=fo.Meal||'Included';fStay=fo.Stay||'Direct';fRules=fo.Details||fRules;}
+      document.getElementById('paxMealPref').value=(fMeal&&/no\s*meal|none/i.test(fMeal))?'No Meal':'Included / Standard';
+      document.getElementById('fzRouteBadge').textContent=title;
+      document.getElementById('fzFlightInfoBody').innerHTML='<tr><td><b>'+esc(fDep)+'</b></td><td><b>'+esc(fArr)+'</b></td><td>'+esc(fAir)+'</td><td style="font-family:monospace;font-weight:700;">'+esc(fNo)+'</td><td>'+esc(cat)+' • '+esc(fMeal)+'</td><td>🧳 '+esc(fBag)+'</td></tr>';
+      document.getElementById('fzFareDescBody').innerHTML='<div style="font-weight:800;color:#0b1f44;font-size:14px;margin-bottom:6px;">'+esc(title)+'</div><ul style="padding-left:18px;font-size:12px;color:#334155;line-height:1.7;"><li>Checked &amp; Carry-on Baggage: <strong>'+esc(fBag)+'</strong></li><li>Meal: <strong>'+esc(fMeal)+'</strong> (Changeable above)</li><li>Transit / Stay: <strong>'+esc(fStay)+'</strong></li><li>Rules: '+esc(fRules)+'</li></ul>';
+      var fAmt=Number(fare||0);
+      document.getElementById('fzFareDetailsBody').innerHTML='<tr><td><b>Adult</b></td><td>PKR '+fAmt.toLocaleString()+'</td><td>PKR 0</td><td>PKR 0</td><td>PKR 0</td><td>x 1 =</td><td style="text-align:right;font-weight:900;color:#15803d;">PKR '+fAmt.toLocaleString()+'</td></tr><tr><td colspan="6" style="text-align:right;font-weight:800;">Grand Total :</td><td style="text-align:right;font-size:15px;font-weight:900;color:#0b1f44;">PKR '+fAmt.toLocaleString()+'</td></tr>';
+      var rem=Math.max(0,currentWalletBal-fAmt);
+      document.getElementById('fzPaymentBoxes').innerHTML='<div class="fz-pay-box"><small>Payable (Amt.)</small><strong>PKR '+fAmt.toLocaleString()+'</strong></div><div class="fz-pay-box"><small>Invoice (Amt.)</small><strong>PKR '+fAmt.toLocaleString()+'</strong></div><div class="fz-pay-box"><small>Wallet Balance</small><strong style="color:#15803d;">PKR '+currentWalletBal.toLocaleString()+'</strong></div><div class="fz-pay-box"><small>After Issue Balance</small><strong>PKR '+rem.toLocaleString()+'</strong></div>';
+
+      var sb=document.getElementById('modalSubmitBtn');sb.disabled=false;sb.textContent='Book Only (Hold)';
+      var issBtn=document.getElementById('modalIssueDirectBtn');if(issBtn)issBtn.classList.toggle('hidden',!userHasIssueAccess()||isVisa);
+      document.getElementById('bookingModal').classList.remove('hidden');
+      if(modalTimerInterval)clearInterval(modalTimerInterval);var sec=900,clk=document.getElementById('modalSessionClock');if(clk)clk.textContent='15 Minutes 00 Seconds';
+      modalTimerInterval=setInterval(function(){sec--;if(sec<=0){clearInterval(modalTimerInterval);closeBookingModal();alert('⌛ Booking Session Expired! Please try again.');}else if(clk)clk.textContent=String(Math.floor(sec/60)).padStart(2,'0')+' Minutes '+String(sec%60).padStart(2,'0')+' Seconds';},1000);
     }
     function closeBookingModal(){if(modalTimerInterval)clearInterval(modalTimerInterval);document.getElementById('bookingModal').classList.add('hidden');}
 
-    async function submitBooking(e){
-      e.preventDefault();if(!selectedItem||isBookingSubmitting)return;
+    async function submitBooking(e,directIssue){
+      if(e)e.preventDefault();if(!selectedItem||isBookingSubmitting)return;
+      if(!document.getElementById('fzTermsCheck').checked){alert('❌ Please accept Terms and Conditions first.');return;}
       var passportDoc='',photoDoc='',isVisa=(selectedItem.Category==='Visit Visa'&&!document.getElementById('visaFieldsWrap').classList.contains('hidden'));
-      var titleVal='',genderVal='',seatVal='Any',docTypeVal='Passport',issueCountryVal='',issueDateVal='',dobVal='',expVal='',natVal='Pakistani',mobFull='',paxEm='';
+      var titleVal='',genderVal='',seatVal='Any',mealPrefVal='Included',docTypeVal='Passport',issueCountryVal='',issueDateVal='',dobVal='',expVal='',natVal='Pakistani',mobFull='',paxEm='';
       if(isVisa){
         var vN=document.getElementById('visaFullName').value.trim(),vP=document.getElementById('visaPassport').value.trim().toUpperCase(),vM=document.getElementById('visaMobile').value.trim(),f1=document.getElementById('visaDocPassport'),f2=document.getElementById('visaDocPhoto');
         if(!vN||!vP||!vM||!f1.files.length||!f2.files.length){alert('❌ Please fill Applicant Name, Passport Number, Mobile and attach Passport Scan + White BG Photo.');return;}
@@ -999,7 +1041,7 @@
       }else{
         titleVal=document.getElementById('paxTitle').value;genderVal=document.getElementById('paxGender').value;
         var fn=document.getElementById('paxFirstName').value.trim(),ln=document.getElementById('paxLastName').value.trim();
-        dobVal=document.getElementById('paxDob').value;seatVal=document.getElementById('paxSeat').value||'Any';docTypeVal=document.getElementById('paxDocType').value||'Passport';
+        dobVal=document.getElementById('paxDob').value;seatVal=document.getElementById('paxSeat').value||'Any';mealPrefVal=document.getElementById('paxMealPref').value||'Included';docTypeVal=document.getElementById('paxDocType').value||'Passport';
         var pp=document.getElementById('paxPassport').value.trim().toUpperCase().replace(/\s+/g,'');
         issueCountryVal=document.getElementById('paxIssueCountry').value;natVal=document.getElementById('paxNat').value;
         issueDateVal=document.getElementById('paxIssueDate').value;expVal=document.getElementById('paxExp').value;paxEm=document.getElementById('paxEmail').value.trim();
@@ -1020,25 +1062,28 @@
         mobFull=(mobRaw.charAt(0)==='+')?mobRaw:(pCode+' '+mobRaw.replace(/^0+/,''));
       }
       var fnFinal=document.getElementById('paxFirstName').value.trim(),lnFinal=document.getElementById('paxLastName').value.trim(),ppFinal=document.getElementById('paxPassport').value.trim().toUpperCase().replace(/\s+/g,'');
-      var subBtn=document.getElementById('modalSubmitBtn');isBookingSubmitting=true;subBtn.disabled=true;subBtn.textContent='⏳ Confirming Hold...';
+      var subBtn=document.getElementById('modalSubmitBtn');isBookingSubmitting=true;subBtn.disabled=true;subBtn.textContent='⏳ Processing...';
       try{
         if(isVisa){passportDoc=await compressFileToDataUrl(document.getElementById('visaDocPassport').files[0],900,.65);photoDoc=await compressFileToDataUrl(document.getElementById('visaDocPhoto').files[0],700,.65);}
-        var fullName=fnFinal+' '+lnFinal,fullTitle=String(selectedItem.Title||''),fDate='',fDep='',fArr='',fTiming='',fBag='',fMeal='',fStay='',fDetails='';
+        var fullName=fnFinal+' '+lnFinal,fullTitle=String(selectedItem.Title||''),fDate='',fDep='',fArr='',fTiming='',fBag='',fMeal=mealPrefVal,fStay='',fDetails='';
         if(selectedItem.Category==='Live Airline'){var o=(window.__GDS_OFFERS__||[])[ACTIVE_GDS_IDX]||{};fDate=String(o.DepTime||'').split(' ')[0]||'';fDep=o.DepTime||'';fArr=o.ArrTime||'';fTiming=(fDep?('Dep: '+fDep):'')+(fArr?(' → Arr: '+fArr):'');fBag=o.Baggage||o.Luggage||'30 KG + 7 KG';fStay=o.Stops||'Direct';if(fullTitle.indexOf('{DATE:')===-1&&o.DepTime)fullTitle+=' {DATE:'+fDate+'|DEP:'+fDep+'|ARR:'+fArr+'|DTERM:1|ATERM:1|BAG:'+fBag+'|STAY:'+fStay+'}';}
-        else if(selectedItem.FareID){var fo=(window.__ALL_FARES__||[]).find(function(x){return String(x.ID)===String(selectedItem.FareID);})||{};fDate=fo.TravelDate||fo.Date||'';fTiming=fo.Timing||'';fBag=fo.Luggage||'';fMeal=fo.Meal||'';fStay=fo.Stay||'';fDetails=fo.Details||'';}
+        else if(selectedItem.FareID){var fo=(window.__ALL_FARES__||[]).find(function(x){return String(x.ID)===String(selectedItem.FareID);})||{};fDate=fo.TravelDate||fo.Date||'';fTiming=fo.Timing||'';fBag=fo.Luggage||'';fStay=fo.Stay||'';fDetails=fo.Details||'';}
         var agencyDisp=getLocalProfile().agencyName||document.getElementById('dashAgencyName').textContent||'Partner';
         var previewBooking={BookingID:'PENDING',PNR:'PENDING',AgencyName:agencyDisp,AgentEmail:currentEmail,Title:titleVal,PassengerName:fullName,PassportNo:ppFinal,PaxMobile:mobFull,Category:selectedItem.Category,ItemTitle:fullTitle,FlightDate:fDate,DepTime:fDep,ArrTime:fArr,Timing:fTiming,Baggage:fBag,Meal:fMeal,Stay:fStay,Details:fDetails,FarePKR:selectedItem.FarePKR,FareID:selectedItem.FareID||'',Status:'PENDING',CreatedAt:new Date().toLocaleString('en-GB',{timeZone:'Asia/Karachi'})};
         var voucherHtml=buildBookingVoucherHtml(previewBooking,false);
         var res=await callBackend({action:'addBooking',email:currentEmail,token:currentToken,agentEmail:currentEmail,adminEmail:ADMIN_NOTIFY_EMAIL,notifyAdmin:true,notifySubAgent:true,title:titleVal,gender:genderVal,seatPref:seatVal,docType:docTypeVal,issueCountry:issueCountryVal,issueDate:issueDateVal,passengerName:fullName,passengerEmail:paxEm,passportNo:ppFinal,dob:dobVal,passportExpiry:expVal,nationality:natVal,paxMobile:mobFull,category:selectedItem.Category,itemTitle:fullTitle,farePKR:selectedItem.FarePKR,fareId:selectedItem.FareID||'',offerId:selectedItem.OfferID||'',holdMins:selectedItem.HoldMins||0,flightDate:fDate,depTime:fDep,arrTime:fArr,timing:fTiming,baggage:fBag,meal:fMeal,stay:fStay,details:fDetails,passportDoc:passportDoc,photoDoc:photoDoc,voucherHtml:voucherHtml});
         if(!res||!res.ok){alert((res&&res.message)||'Booking failed.');return;}
+        if(directIssue&&userHasIssueAccess()){
+          var pnrInp=prompt('Enter Airline / GDS PNR to Issue:',res.pnr||'');if(pnrInp!==null){var tktInp=prompt('Enter 13-Digit Ticket Number (Optional):','')||'';await callBackend({action:'adminIssueBooking',email:currentEmail,token:currentToken,bookingId:res.bookingId,pnr:pnrInp.trim()||res.pnr,ticketNo:tktInp.trim(),agentEmail:currentEmail,passengerEmail:paxEm,adminEmail:ADMIN_NOTIFY_EMAIL,notifyAdmin:true,notifySubAgent:true});}
+        }
         closeBookingModal();document.getElementById('gdsDetailsModal').classList.add('hidden');
         showProBookingCard(res.bookingId,res.pnr,(titleVal?(titleVal+'. '):'')+fullName,ppFinal,selectedItem.Title,selectedItem.FarePKR);
         loadDashboardData();switchTab('bookings');
       }catch(err){alert('Booking error: '+err.message);}
-      finally{isBookingSubmitting=false;subBtn.disabled=false;subBtn.textContent='✅ Confirm & Hold Booking (PENDING)';}
+      finally{isBookingSubmitting=false;subBtn.disabled=false;subBtn.textContent='Book Only (Hold)';}
     }
 
-    function showProBookingCard(id,pnr,pax,pp,itin,fare){var old=document.getElementById('golanProBookingCard');if(old)old.remove();var pop=document.createElement('div');pop.id='golanProBookingCard';pop.style.cssText='position:fixed;inset:0;background:rgba(11,31,68,.75);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;';pop.innerHTML='<div style="background:#fff;max-width:450px;width:100%;border-radius:16px;overflow:hidden;border:2px solid #0b1f44;box-shadow:0 20px 50px rgba(0,0,0,.35);"><div style="background:linear-gradient(135deg,#0b1f44,#163570);color:#fff;padding:18px;text-align:center;border-bottom:4px solid #d97706;"><div style="font-size:28px;">✅</div><div style="font-size:17px;font-weight:800;">BOOKING RESERVED (HOLD)</div><div style="font-size:11px;color:#fde68a;margin-top:3px;">📧 Auto-Gmail Voucher Sent to Sub-Agent &amp; Admins</div></div><div style="padding:18px;font-size:13px;"><div style="display:flex;gap:10px;margin-bottom:12px;"><div style="flex:1;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:10px;text-align:center;"><small style="color:#64748b;font-weight:700;">PNR</small><div style="font-size:19px;font-weight:900;color:#0b1f44;font-family:monospace;">'+esc(pnr)+'</div></div><div style="flex:1;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:10px;text-align:center;"><small style="color:#64748b;font-weight:700;">REF ID</small><div style="font-size:16px;font-weight:800;color:#b45309;font-family:monospace;">'+esc(id)+'</div></div></div><p><b>Passenger:</b> '+esc(pax)+' (Doc: '+esc(pp)+')</p><p style="margin:6px 0;"><b>Item:</b> '+esc(itin)+'</p><p><b>Net Fare:</b> <b style="color:#15803d;">PKR '+Number(fare||0).toLocaleString()+'</b></p><div style="display:flex;gap:8px;margin-top:14px;"><button type="button" class="btn btn-primary" data-bid="'+esc(id)+'" onclick="document.getElementById(\'golanProBookingCard\').remove();printSingleGolanTicket(this.getAttribute(\'data-bid\'))">🖨 Print Electronic Ticket</button><button type="button" class="btn btn-gold" onclick="document.getElementById(\'golanProBookingCard\').remove()">Done</button></div></div></div>';document.body.appendChild(pop);}
+    function showProBookingCard(id,pnr,pax,pp,itin,fare){var old=document.getElementById('golanProBookingCard');if(old)old.remove();var pop=document.createElement('div');pop.id='golanProBookingCard';pop.style.cssText='position:fixed;inset:0;background:rgba(11,31,68,.75);z-index:100020;display:flex;align-items:center;justify-content:center;padding:16px;';pop.innerHTML='<div style="background:#fff;max-width:450px;width:100%;border-radius:16px;overflow:hidden;border:2px solid #0b1f44;box-shadow:0 20px 50px rgba(0,0,0,.35);"><div style="background:linear-gradient(135deg,#0b1f44,#163570);color:#fff;padding:18px;text-align:center;border-bottom:4px solid #d97706;"><div style="font-size:28px;">✅</div><div style="font-size:17px;font-weight:800;">BOOKING CONFIRMED</div><div style="font-size:11px;color:#fde68a;margin-top:3px;">📧 Auto-Gmail Voucher Sent to Sub-Agent &amp; Admins</div></div><div style="padding:18px;font-size:13px;"><div style="display:flex;gap:10px;margin-bottom:12px;"><div style="flex:1;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:10px;text-align:center;"><small style="color:#64748b;font-weight:700;">PNR</small><div style="font-size:19px;font-weight:900;color:#0b1f44;font-family:monospace;">'+esc(pnr)+'</div></div><div style="flex:1;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:10px;text-align:center;"><small style="color:#64748b;font-weight:700;">REF ID</small><div style="font-size:16px;font-weight:800;color:#b45309;font-family:monospace;">'+esc(id)+'</div></div></div><p><b>Passenger:</b> '+esc(pax)+' (Doc: '+esc(pp)+')</p><p style="margin:6px 0;"><b>Item:</b> '+esc(itin)+'</p><p><b>Net Fare:</b> <b style="color:#15803d;">PKR '+Number(fare||0).toLocaleString()+'</b></p><div style="display:flex;gap:8px;margin-top:14px;"><button type="button" class="btn btn-primary" data-bid="'+esc(id)+'" onclick="document.getElementById(\'golanProBookingCard\').remove();printSingleGolanTicket(this.getAttribute(\'data-bid\'))">🖨 Print Electronic Ticket</button><button type="button" class="btn btn-gold" onclick="document.getElementById(\'golanProBookingCard\').remove()">Done</button></div></div></div>';document.body.appendChild(pop);}
 
     function setTripType(t){CURRENT_TRIP_TYPE=t;['oneway','roundtrip','multicity'].forEach(function(id){document.getElementById('pill-'+id).className=(id===t)?'tab-btn active':'tab-btn';});document.getElementById('boxReturnDate').style.display=(t==='roundtrip')?'block':'none';document.getElementById('srchReturnDate').required=(t==='roundtrip');document.getElementById('boxMultiCity').style.display=(t==='multicity')?'grid':'none';document.getElementById('srchOrigin2Text').required=(t==='multicity');document.getElementById('srchDest2Text').required=(t==='multicity');document.getElementById('srchDate2').required=(t==='multicity');}
     function filterAirports(which){var cap=which.charAt(0).toUpperCase()+which.slice(1),q=(document.getElementById('srch'+cap+'Text').value||'').toLowerCase(),matches=AIRPORTS_LIST.filter(function(a){return a.label.toLowerCase().indexOf(q)!==-1||a.code.toLowerCase().indexOf(q)!==-1;});if(!matches.length)matches=AIRPORTS_LIST;var d=document.getElementById('drop-'+which);d.innerHTML=matches.map(function(a){return '<div data-which="'+esc(which)+'" data-code="'+esc(a.code)+'" data-label="'+esc(a.label)+'" onmousedown="selectAirport(this.getAttribute(\'data-which\'),this.getAttribute(\'data-code\'),this.getAttribute(\'data-label\'))" style="padding:9px 12px;cursor:pointer;border-bottom:1px solid #f1f5f9;font-size:12.5px;">'+esc(a.label)+'</div>';}).join('');d.style.display='block';}
@@ -1081,7 +1126,7 @@
     function adminAgentCtrl(targetEmail,subAction){var amt=0;if(subAction==='ADD_LIMIT'){var v=prompt('Enter PKR Amount to Add:','50000');if(v===null)return;amt=Number(v||0);if(amt<=0){alert('Enter valid amount.');return;}}else if(!confirm('Confirm '+subAction+' for '+targetEmail+'?'))return;callBackend({action:'adminManageAgent',email:currentEmail,token:currentToken,targetEmail:targetEmail,subAction:subAction,amountPKR:amt}).then(function(r){alert((r&&r.message)||'Updated');loadDashboardData();}).catch(function(err){alert('Error: '+err.message);});}
     function resetAgentPass(targetEmail){var np=prompt('Enter NEW temporary password for '+targetEmail+':');if(!np||np.length<6){if(np!==null)alert('Password must be at least 6 characters.');return;}callBackend({action:'adminManageAgent',email:currentEmail,token:currentToken,targetEmail:targetEmail,subAction:'RESET_PASSWORD',newPassword:np}).then(function(r){alert((r&&r.message)||'Reset done');loadDashboardData();}).catch(function(err){alert('Error: '+err.message);});}
 
-    function autoScanBankSlip(inp){var file=inp&&inp.files&&inp.files[0],st=document.getElementById('slipScanStatus'),amtInp=document.getElementById('depAmount'),refInp=document.getElementById('depRef');if(!file)return;st.style.color='#1d4ed8';st.textContent='⏳ Scanning deposit slip...';var runOcr=function(){window.Tesseract.recognize(file,'eng').then(function(res){var txt=(res&&res.data&&res.data.text)||'',amt=0,m1=txt.match(/(?:PKR|Rs\.?|Amount|Total)\s*[:\-]?\s*([1-9]\d{0,2}(?:,\d{3})*(?:\.\d{1,2})?|[1-9]\d{2,7}(?:\.\d{1,2})?)/i);if(m1&&m1[1])amt=Math.round(parseFloat(m1[1].replace(/,/g,'')));else(txt.match(/\b\d{1,3}(?:,\d{3})+(?:\.\d{2})?\b/g)||[]).forEach(function(n){var v=Math.round(parseFloat(n.replace(/,/g,'')));if(v>=100&&v<=50000000&&v>amt)amt=v;});var mTid=txt.match(/(?:TID|Ref(?:erence)?|Trans(?:action)?\s*(?:ID|No)|Auth\s*Code)\s*[:#\-]?\s*([A-Z0-9\-]{6,22})/i);if(refInp)refInp.value=(mTid&&mTid[1])?mTid[1].trim():('SLIP-'+Date.now().toString().slice(-6));if(amt>=100&&amtInp){amtInp.value=amt;st.style.color='#15803d';st.textContent='✅ Auto-Detected: PKR '+amt.toLocaleString();}else{st.style.color='#b45309';st.textContent='⚠️ Slip unclear — please enter amount manually.';}}).catch(function(){st.style.color='#b45309';st.textContent='⚠️ Enter amount manually.';});};if(window.Tesseract)runOcr();else{var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';s.onload=runOcr;document.head.appendChild(s);}}
+function autoScanBankSlip(inp){var file=inp&&inp.files&&inp.files[0],st=document.getElementById('slipScanStatus'),amtInp=document.getElementById('depAmount'),refInp=document.getElementById('depRef');if(!file)return;st.style.color='#1d4ed8';st.textContent='⏳ Scanning deposit slip...';var runOcr=function(){window.Tesseract.recognize(file,'eng').then(function(res){var txt=(res&&res.data&&res.data.text)||'',amt=0,m1=txt.match(/(?:PKR|Rs\.?|Amount|Total)\s*[:\-]?\s*([1-9]\d{0,2}(?:,\d{3})*(?:\.\d{1,2})?|[1-9]\d{2,7}(?:\.\d{1,2})?)/i);if(m1&&m1[1])amt=Math.round(parseFloat(m1[1].replace(/,/g,'')));else(txt.match(/\b\d{1,3}(?:,\d{3})+(?:\.\d{2})?\b/g)||[]).forEach(function(n){var v=Math.round(parseFloat(n.replace(/,/g,'')));if(v>=100&&v<=50000000&&v>amt)amt=v;});var mTid=txt.match(/(?:TID|Ref(?:erence)?|Trans(?:action)?\s*(?:ID|No)|Auth\s*Code)\s*[:#\-]?\s*([A-Z0-9\-]{6,22})/i);if(refInp)refInp.value=(mTid&&mTid[1])?mTid[1].trim():('SLIP-'+Date.now().toString().slice(-6));if(amt>=100&&amtInp){amtInp.value=amt;st.style.color='#15803d';st.textContent='✅ Auto-Detected: PKR '+amt.toLocaleString();}else{st.style.color='#b45309';st.textContent='⚠️ Slip unclear — please enter amount manually.';}}).catch(function(){st.style.color='#b45309';st.textContent='⚠️ Enter amount manually.';});};if(window.Tesseract)runOcr();else{var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';s.onload=runOcr;document.head.appendChild(s);}}
     async function handleInstantSlipUpload(e){e.preventDefault();var amt=Number(document.getElementById('depAmount').value||0),ref=(document.getElementById('depRef').value||('SLIP-'+Date.now().toString().slice(-6))).trim(),bankSel=document.getElementById('depBank'),bank=(bankSel&&bankSel.value)?bankSel.value.trim():'UBL (384263615)',fileInp=document.getElementById('depSlipFile');if(amt<100){alert('Minimum deposit PKR 100.');return;}if(!fileInp||!fileInp.files||!fileInp.files.length){alert('Please attach deposit slip image.');return;}var btn=document.getElementById('slipUploadBtn');btn.disabled=true;btn.textContent='⏳ Uploading Slip...';try{var slipImage=await compressFileToDataUrl(fileInp.files[0],900,.65);var r=await callBackend({action:'requestDeposit',email:currentEmail,token:currentToken,amountPKR:amt,bankName:bank,txRef:ref,slipImage:slipImage});if(r&&r.ok){document.getElementById('headOfficeContactBanner').classList.remove('hidden');alert('📞 Deposit slip uploaded & auto-Gmail sent! Please contact Head Office for approval.');e.target.reset();document.getElementById('depRef').value='SLIP-AUTO';if(bankSel&&bankSel.options.length)bankSel.selectedIndex=0;document.getElementById('slipScanStatus').textContent='';loadDashboardData();}else alert('❌ '+((r&&r.message)||'Submission failed.'));}catch(err){alert('❌ Error: '+err.message);}finally{btn.disabled=false;btn.textContent='✅ Submit Deposit Slip';}}
 
     setInterval(function(){var now=Date.now();document.querySelectorAll('.live-timer').forEach(function(el){var diff=Number(el.getAttribute('data-until')||0)-now;if(diff<=0){el.textContent='⌛ EXPIRED';var td=el.parentElement?el.parentElement.parentElement:null,b=td?td.querySelector('.status-badge'):null;if(b&&b.textContent==='PENDING'){b.textContent='EXPIRED';b.className='status-badge st-EXPIRED';}}else{var h=Math.floor(diff/3600000),m=Math.floor((diff%3600000)/60000),s=Math.floor((diff%60000)/1000);el.textContent='⏳ '+(h>0?String(h).padStart(2,'0')+':':'')+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');}});},1000);

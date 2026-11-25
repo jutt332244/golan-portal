@@ -146,6 +146,7 @@ function defaultState() {
         TotpSecret: generateSecret(),
         TotpVerified: 'NO',
         Status: 'APPROVED',
+        CanIssue: true,
         BalancePKR: 0,
         SessionToken: '',
         SessionExpiry: 0,
@@ -847,7 +848,6 @@ module.exports = async function handler(req, res) {
       return res.status(405).json({ ok: false, message: 'Method Not Allowed. Use POST for this action.' });
     }
 
-    // For POST requests, read payload strictly from JSON body (only allow action from query if needed)
     const p = req.method === 'POST' ? Object.assign({}, bodyObj, { action }) : Object.assign({}, q, bodyObj);
     const email = String(p.email || '').trim().toLowerCase();
 
@@ -860,7 +860,6 @@ module.exports = async function handler(req, res) {
     DB.deposits = DB.deposits || [];
     DB.offerCache = DB.offerCache || {};
 
-    // Public Signed Electronic Ticket PDF Viewer
     if (action === 'viewInvoice') {
       const bookingId = String(p.bookingId || '').trim();
       const sig = String(p.sig || '').trim();
@@ -875,7 +874,6 @@ module.exports = async function handler(req, res) {
       return res.status(200).end(buildPrintableInvoicePage(bk, agent, matchedFare));
     }
 
-    // Public Signed Payment Receipt PDF Viewer
     if (action === 'viewReceipt') {
       const depositId = String(p.depositId || '').trim();
       const sig = String(p.sig || '').trim();
@@ -901,7 +899,7 @@ module.exports = async function handler(req, res) {
         Email: email, AgencyName: agencyName, City: city, Mobile: mobile,
         ContactPerson: '', Address: '', VoucherBranding: 'custom', LogoDataUrl: '',
         PasswordHash: hashPwd(pwd), TotpSecret: generateSecret(), TotpVerified: 'NO',
-        Status: 'PENDING', BalancePKR: 0, SessionToken: '', SessionExpiry: 0, FailedAttempts: 0, TotpFailedAttempts: 0
+        Status: 'PENDING', CanIssue: false, BalancePKR: 0, SessionToken: '', SessionExpiry: 0, FailedAttempts: 0, TotpFailedAttempts: 0
       };
       await saveDB(DB);
 
@@ -932,7 +930,6 @@ module.exports = async function handler(req, res) {
         return res.json({ ok: false, message: 'Invalid password.' });
       }
 
-      // Transparent upgrade from legacy SHA-256 to scrypt
       if (!String(a.PasswordHash || '').startsWith('scrypt$')) {
         a.PasswordHash = hashPwd(pwd);
       }
@@ -960,10 +957,9 @@ module.exports = async function handler(req, res) {
       a.SessionToken = token;
       a.SessionExpiry = expiry;
       await saveDB(DB);
-      return res.json({ ok: true, token, expiry, agencyName: a.AgencyName, isAdmin: isSuper });
+      return res.json({ ok: true, token, expiry, agencyName: a.AgencyName, isAdmin: isSuper, canIssue: isSuper || !!a.CanIssue });
     }
 
-    // Authenticated Endpoints
     const a = DB.agents[email];
     const validSess =
       a &&
@@ -973,9 +969,10 @@ module.exports = async function handler(req, res) {
       Date.now() < Number(a.SessionExpiry || 0);
     if (!validSess) return res.json({ ok: false, message: 'Session expired at 12:00 AM. Please verify 2FA again.' });
     const isAdmin = DB.admins.includes(email);
+    const canIssue = isAdmin || !!a.CanIssue;
 
     if (action === 'checkSession') {
-      return res.json({ ok: true, agencyName: a.AgencyName, isAdmin, expiry: a.SessionExpiry });
+      return res.json({ ok: true, agencyName: a.AgencyName, isAdmin, canIssue, expiry: a.SessionExpiry });
     }
 
     if (action === 'sendEmailNotification') {
@@ -1066,7 +1063,8 @@ module.exports = async function handler(req, res) {
       const agents = isAdmin
         ? Object.values(DB.agents).map(x => ({
             Email: x.Email, AgencyName: x.AgencyName, City: x.City, Mobile: x.Mobile,
-            Status: x.Status, TotpVerified: x.TotpVerified, BalancePKR: Number(x.BalancePKR || 0)
+            Status: x.Status, TotpVerified: x.TotpVerified, CanIssue: !!x.CanIssue,
+            BalancePKR: Number(x.BalancePKR || 0)
           }))
         : [];
       const safeFares = isAdmin
@@ -1077,7 +1075,7 @@ module.exports = async function handler(req, res) {
         contactPerson: a.ContactPerson || '', address: a.Address || '',
         voucherBranding: a.VoucherBranding || 'custom', logoDataUrl: a.LogoDataUrl || ''
       };
-      return res.json({ ok: true, isAdmin, balancePKR: Number(a.BalancePKR || 0), profile, fares: safeFares, banks: DB.banks, bookings, deposits, agents });
+      return res.json({ ok: true, isAdmin, canIssue, balancePKR: Number(a.BalancePKR || 0), profile, fares: safeFares, banks: DB.banks, bookings, deposits, agents });
     }
 
     if (action === 'adminGetAttachment' && isAdmin) {
@@ -1348,16 +1346,22 @@ module.exports = async function handler(req, res) {
       return res.json({ ok: true, bookingId: bId, pnr: autoPnr, holdUntil, message: 'Booking Held (PENDING)! PNR: ' + autoPnr + mailNote });
     }
 
-    if (action === 'adminIssueBooking' && isAdmin) {
+    if (action === 'adminIssueBooking') {
+      if (!canIssue) {
+        return res.json({ ok: false, message: '⛔ Access Denied: Ticket Issue Authority is required.' });
+      }
       const bk = DB.bookings.find(b => b.BookingID === p.bookingId);
       if (!bk) return res.json({ ok: false, message: 'Booking not found.' });
+      if (!isAdmin && String(bk.AgentEmail || '').toLowerCase() !== email) {
+        return res.json({ ok: false, message: '⛔ Unauthorized: You can only issue your own agency bookings.' });
+      }
       const curSt = String(bk.Status || '').toUpperCase();
-      if (curSt === 'CONFIRMED' || curSt === 'ISSUED') return res.json({ ok: false, message: 'Booking is already ISSUED / CONFIRMED.' });
+      if (curSt === 'ISSUED') return res.json({ ok: false, message: 'Booking is already ISSUED.' });
       if (curSt === 'CANCELED') return res.json({ ok: false, message: 'Cannot issue a CANCELED booking.' });
 
       const agentAcc = DB.agents[bk.AgentEmail];
       const fare = Number(bk.FarePKR || 0);
-      if (agentAcc && !DB.admins.includes(bk.AgentEmail)) {
+      if (!bk.WasPaid && agentAcc && !DB.admins.includes(bk.AgentEmail)) {
         const bal = Number(agentAcc.BalancePKR || 0);
         if (bal < fare) {
           return res.json({
@@ -1372,8 +1376,9 @@ module.exports = async function handler(req, res) {
       }
 
       if (p.pnr && String(p.pnr).trim()) bk.PNR = String(p.pnr).trim().toUpperCase().slice(0, 12);
-      bk.TicketNo = String(p.ticketNo || '').trim().slice(0, 30);
-      bk.Status = 'CONFIRMED';
+      if (p.ticketNo && String(p.ticketNo).trim()) bk.TicketNo = String(p.ticketNo).trim().slice(0, 30);
+      bk.Status = 'ISSUED';
+      bk.IssuedBy = email;
       bk.HoldUntil = 0;
       await saveDB(DB);
 
@@ -1397,7 +1402,7 @@ module.exports = async function handler(req, res) {
         opts: { invoiceUrl, isIssued: true, pnr: bk.PNR || '', ticketNo: bk.TicketNo || '', pdfHtml: ticketPdfHtml }
       });
 
-      return res.json({ ok: true, message: 'Ticket Issued & CONFIRMED! PNR: ' + bk.PNR + mailNote });
+      return res.json({ ok: true, message: 'Ticket ISSUED & Confirmed! PNR: ' + bk.PNR + mailNote });
     }
 
     if (action === 'adminDeleteBooking' && isAdmin) {
@@ -1516,6 +1521,24 @@ module.exports = async function handler(req, res) {
           sendGasEmail({ to: uniqueEmails(DB.admins || []), subject: `[ADMIN] Account Approved - ${target.AgencyName}`, htmlBody: appBody, agencyName: target.AgencyName })
         ]);
         return res.json({ ok: true, message: 'Agent updated: APPROVE' });
+      } else if (p.subAction === 'GRANT_ISSUE') {
+        target.CanIssue = true;
+        await saveDB(DB);
+        const authBody = `<div style="font-family:Arial,sans-serif;padding:20px;background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;"><h2 style="color:#b45309;margin-top:0;">🎫 Ticket Issue Authority Granted</h2><p>Assalam-o-Alaikum <b>${escHtml(target.AgencyName)}</b>, Head Office ne aapko Ticket Issue karne ki authority de di hai.</p></div>`;
+        await Promise.all([
+          sendGasEmail({ to: targetEmail, subject: `Ticket Issue Authority Granted - ${target.AgencyName}`, htmlBody: authBody, agencyName: target.AgencyName }),
+          sendGasEmail({ to: uniqueEmails(DB.admins || []), subject: `[ADMIN] Issue Authority Granted - ${target.AgencyName}`, htmlBody: authBody, agencyName: target.AgencyName })
+        ]);
+        return res.json({ ok: true, message: '✅ Ticket Issue Authority Granted to ' + target.AgencyName });
+      } else if (p.subAction === 'REVOKE_ISSUE') {
+        target.CanIssue = false;
+        await saveDB(DB);
+        const revBody = `<div style="font-family:Arial,sans-serif;padding:20px;background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;"><h2 style="color:#b91c1c;margin-top:0;">🚫 Ticket Issue Authority Revoked</h2><p>Assalam-o-Alaikum <b>${escHtml(target.AgencyName)}</b>, Head Office ne aapki Ticket Issue authority cancel/wapas le li hai.</p></div>`;
+        await Promise.all([
+          sendGasEmail({ to: targetEmail, subject: `Ticket Issue Authority Canceled - ${target.AgencyName}`, htmlBody: revBody, agencyName: target.AgencyName }),
+          sendGasEmail({ to: uniqueEmails(DB.admins || []), subject: `[ADMIN] Issue Authority Canceled - ${target.AgencyName}`, htmlBody: revBody, agencyName: target.AgencyName })
+        ]);
+        return res.json({ ok: true, message: '✅ Ticket Issue Authority Canceled for ' + target.AgencyName });
       } else if (p.subAction === 'BLOCK') {
         target.Status = 'BLOCKED';
         target.SessionToken = '';
@@ -1549,11 +1572,18 @@ module.exports = async function handler(req, res) {
     }
 
     if (action === 'adminApproveDeposit' && isAdmin) {
-      const dep = DB.deposits.find(d => d.DepositID === p.depositId);
-      if (!dep || dep.Status !== 'PENDING') return res.json({ ok: false, message: 'Deposit not found or already processed.' });
+      const dep = DB.deposits.find(d => String(d.DepositID) === String(p.depositId));
+      if (!dep || String(dep.Status || '').toUpperCase() !== 'PENDING') {
+        return res.json({ ok: false, message: 'Deposit not found or already processed.' });
+      }
       dep.Status = 'APPROVED';
-      const target = DB.agents[dep.AgentEmail];
-      if (target) target.BalancePKR = Number(target.BalancePKR || 0) + Number(dep.AmountPKR || 0);
+      dep.ApprovedAt = getPKTimeStr();
+      dep.ApprovedBy = email;
+      const targetEmail = String(dep.AgentEmail || '').trim().toLowerCase();
+      const target = DB.agents[targetEmail];
+      if (target) {
+        target.BalancePKR = Number(target.BalancePKR || 0) + Number(dep.AmountPKR || 0);
+      }
       await saveDB(DB);
 
       const receiptUrl = `${getBaseUrl(req)}/api/backend?action=viewReceipt&depositId=${encodeURIComponent(dep.DepositID)}&sig=${signReceipt(dep.DepositID, dep.AgentEmail)}`;
@@ -1564,7 +1594,11 @@ module.exports = async function handler(req, res) {
         sendGasEmail({ to: uniqueEmails(DB.admins || []), subject: `[ADMIN] Deposit Approved [${dep.DepositID}] PKR ${Number(dep.AmountPKR || 0).toLocaleString()}`, htmlBody: emailHtml, pdfHtml: receiptPdfHtml, pdfName: `Receipt-${dep.DepositID}.pdf`, bId: dep.DepositID, agencyName: dep.AgencyName })
       ]);
 
-      return res.json({ ok: true, message: 'Deposit Approved & PKR ' + Number(dep.AmountPKR).toLocaleString() + ' added to agent limit!' });
+      return res.json({
+        ok: true,
+        newBalancePKR: target ? Number(target.BalancePKR || 0) : 0,
+        message: 'Deposit Approved & PKR ' + Number(dep.AmountPKR).toLocaleString() + ' added to agent wallet!'
+      });
     }
 
     return res.json({ ok: false, message: 'Invalid request' });

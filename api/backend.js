@@ -859,10 +859,43 @@ module.exports = async function handler(req, res) {
 
     const DB = await loadDB();
     DB.admins = (DB.admins || []).map(x => String(x || '').trim().toLowerCase()).filter(Boolean);
-    DEFAULT_ADMINS.forEach(adm => {
-      if (!DB.admins.includes(adm)) DB.admins.push(adm);
-    });
     DB.agents = DB.agents || {};
+    const adminDefaultPass = process.env.ADMIN_DEFAULT_PASS || 'Golan@786';
+    let adminSynced = false;
+    DEFAULT_ADMINS.forEach(adm => {
+      if (!DB.admins.includes(adm)) { DB.admins.push(adm); adminSynced = true; }
+      if (!DB.agents[adm]) {
+        DB.agents[adm] = {
+          Email: adm,
+          AgencyName: 'Golan International Head Office',
+          City: 'Toba Tek Singh',
+          Mobile: '0345-3326318',
+          ContactPerson: 'Head Office Admin',
+          Address: 'Head Office, Toba Tek Singh',
+          VoucherBranding: 'golan',
+          LogoDataUrl: '',
+          PasswordHash: hashPwd(adminDefaultPass),
+          TotpSecret: generateSecret(),
+          TotpVerified: 'NO',
+          Status: 'APPROVED',
+          CanIssue: true,
+          BalancePKR: 0,
+          SessionToken: '',
+          SessionExpiry: 0,
+          FailedAttempts: 0,
+          TotpFailedAttempts: 0
+        };
+        adminSynced = true;
+      } else {
+        if (DB.agents[adm].Status !== 'APPROVED' || !DB.agents[adm].CanIssue) {
+          DB.agents[adm].Status = 'APPROVED';
+          DB.agents[adm].CanIssue = true;
+          adminSynced = true;
+        }
+      }
+    });
+    if (adminSynced) await saveDB(DB);
+
     DB.fares = DB.fares || [];
     DB.bookings = DB.bookings || [];
     DB.banks = DB.banks || [];

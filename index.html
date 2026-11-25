@@ -157,6 +157,7 @@
     #tab-bookings table{width:100%;min-width:0;border-collapse:collapse;font-size:11.5px;table-layout:fixed}
     #tab-bookings th{background:linear-gradient(135deg,#081736,#14346c);color:#f8fafc;padding:11px 6px;font-size:9.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;border-bottom:2px solid #d97706;white-space:normal}
     #tab-bookings td{padding:10px 6px;border-bottom:1px solid #edf2f8;vertical-align:middle;line-height:1.35;word-break:break-word;overflow-wrap:break-word}
+    #tab-bookings tbody tr{transition:background .15s ease}
     #tab-bookings tbody tr:hover td{background:#f4f8ff}
     #tab-bookings .pnr-pill{display:inline-block;background:linear-gradient(135deg,#0b1f44,#163b7a);color:#fbbf24;padding:3px 8px;border-radius:7px;font-family:monospace;font-weight:800;font-size:11px;letter-spacing:.6px;white-space:nowrap;border:1px solid rgba(251,191,36,.35)}
     #tab-bookings .act-wrap{display:flex;flex-wrap:wrap;gap:4px}
@@ -173,7 +174,6 @@
     #tab-ledger td{padding:10px 9px;border-bottom:1px solid #edf2f8;vertical-align:middle}
     #tab-ledger tbody tr:hover td{background:#f4f8ff}
 
-    /* Flying-Zone Style Luxury 5-Section Booking Panel */
     #bookingModal{position:fixed;inset:0;background:rgba(7,21,48,.82);backdrop-filter:blur(4px);z-index:100005;overflow-y:auto;padding:14px}
     .fz-shell{max-width:1060px;margin:0 auto;background:#f8fafc;border-radius:16px;overflow:hidden;box-shadow:0 28px 70px rgba(0,0,0,.45);border:1px solid rgba(251,191,36,.45)}
     .fz-timer-bar{position:sticky;top:0;z-index:10;background:linear-gradient(90deg,#071530,#163b7a);color:#fff;padding:11px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #d97706}
@@ -223,43 +223,19 @@
     .golan-loader-title{font-size:15.5px;font-weight:900;color:#0b1f44;letter-spacing:.3px}
     .golan-loader-sub{font-size:12px;color:#475569;margin-top:4px;font-weight:600}
 
-    @media(max-width:1040px){
-      .dash-wrap{grid-template-columns:182px minmax(0,1fr);gap:10px}
-      .search-row{grid-template-columns:minmax(0,1fr) 34px minmax(0,1fr) minmax(135px,.95fr) minmax(0,.8fr) auto;gap:6px}
-      .luxury-stats-grid,.fz-pay-grid{grid-template-columns:repeat(2,1fr)}
-      .gds-row-6,.gds-row-6-b{grid-template-columns:repeat(3,1fr)}
-      .gds-row-3{grid-template-columns:1fr 1fr}
-    }
-    @media(max-width:900px){
-      #tab-bookings .bookings-scroll,.ag-table-wrap,.table-fit-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-      #tab-bookings table{min-width:780px;table-layout:auto}
-      .ag-table{min-width:680px}
-    }
-    @media(max-width:740px){
-      .dash-wrap,.auth-grid,.admin-grid,.profile-grid,.team-grid{grid-template-columns:1fr}
-      .sidebar{position:static}
-      .stats-4,.luxury-stats-grid,.fz-pay-grid{grid-template-columns:repeat(2,1fr)}
-      .journey-photo-grid{grid-template-columns:repeat(2,1fr)}
-      .search-row,.gds-row-6,.gds-row-6-b,.gds-row-3{grid-template-columns:1fr}
-      .luxury-search-wrap input{width:170px}
-      .fz-sec{margin:10px}
-    }
+    @media(max-width:1040px){.dash-wrap{grid-template-columns:182px minmax(0,1fr);gap:10px}.search-row{grid-template-columns:minmax(0,1fr) 34px minmax(0,1fr) minmax(135px,.95fr) minmax(0,.8fr) auto;gap:6px}.luxury-stats-grid,.fz-pay-grid{grid-template-columns:repeat(2,1fr)}.gds-row-6,.gds-row-6-b{grid-template-columns:repeat(3,1fr)}.gds-row-3{grid-template-columns:1fr 1fr}}
+    @media(max-width:900px){#tab-bookings .bookings-scroll,.ag-table-wrap,.table-fit-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}#tab-bookings table{min-width:780px;table-layout:auto}.ag-table{min-width:680px}}
+    @media(max-width:740px){.dash-wrap,.auth-grid,.admin-grid,.profile-grid,.team-grid{grid-template-columns:1fr}.sidebar{position:static}.stats-4,.luxury-stats-grid,.fz-pay-grid{grid-template-columns:repeat(2,1fr)}.journey-photo-grid{grid-template-columns:repeat(2,1fr)}.search-row,.gds-row-6,.gds-row-6-b,.gds-row-3{grid-template-columns:1fr}.luxury-search-wrap input{width:170px}.fz-sec{margin:10px}}
     @media(max-width:520px){.feature-cards,.stats-4,.luxury-stats-grid,.journey-photo-grid,.fz-pay-grid{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
   <div class="topbar">
     <div>OFFICIAL B2B TRAVEL, TICKETING &amp; UMRAH PARTNER PORTAL</div>
-    <div style="display:flex;gap:10px;align-items:center;">
-      <span class="badge">🔐 OTP 2FA + MIDNIGHT LOCK</span>
-      <a class="wa-btn" href="https://whatsapp.com/channel/0029VacqwWx90x2u89AOGs2L" target="_blank" rel="noopener noreferrer">📢 Official WhatsApp Channel</a>
-    </div>
+    <div style="display:flex;gap:10px;align-items:center;"><span class="badge">🔐 OTP 2FA + MIDNIGHT LOCK</span><a class="wa-btn" href="https://whatsapp.com/channel/0029VacqwWx90x2u89AOGs2L" target="_blank" rel="noopener noreferrer">📢 Official WhatsApp Channel</a></div>
   </div>
   <header>
-    <div class="brand">
-      <div class="logo-box" id="headerLogoContainer"><img id="mainHeaderLogo" alt="Golan International Logo" /></div>
-      <div><h1>GOLAN INTERNATIONAL</h1><p>TRAVEL &amp; TOURISM • AIRLINE TICKETING &amp; UMRAH SERVICES</p></div>
-    </div>
+    <div class="brand"><div class="logo-box" id="headerLogoContainer"><img id="mainHeaderLogo" alt="Golan International Logo" /></div><div><h1>GOLAN INTERNATIONAL</h1><p>TRAVEL &amp; TOURISM • AIRLINE TICKETING &amp; UMRAH SERVICES</p></div></div>
     <div class="ceo-box" onclick="openCeoWhatsApp()"><span>Chief Executive</span><strong>Shan Chairman</strong><span style="color:#86efac;font-weight:700;">📞 0345-3326318 (WhatsApp) | Toba Tek Singh</span></div>
   </header>
 
@@ -269,11 +245,7 @@
         <span style="background:#dbeafe;color:#1e40af;padding:5px 12px;border-radius:99px;font-size:12px;font-weight:700;">B2B AGENT &amp; SUB-AGENT PORTAL</span>
         <h2>Pakistan’s Trusted B2B Portal for <span>Group Flights, Umrah &amp; Visit Visas</span></h2>
         <p>Protected with Enterprise Google Authenticator (2FA) &amp; Auto Midnight 12:00 AM Session Lock. Authorized travel agencies only.</p>
-        <div class="feature-cards">
-          <div class="f-card"><h4>✈️ Group Fares</h4><p>Instant seat hold &amp; live KSA, UAE &amp; UK fares.</p></div>
-          <div class="f-card"><h4>🕋 Umrah B2B</h4><p>Makkah/Madinah hotels, transport &amp; instant visas.</p></div>
-          <div class="f-card"><h4>🛂 Visit Visas</h4><p>Fast processing for Dubai, Saudi, Schengen &amp; UK.</p></div>
-        </div>
+        <div class="feature-cards"><div class="f-card"><h4>✈️ Group Fares</h4><p>Instant seat hold &amp; live KSA, UAE &amp; UK fares.</p></div><div class="f-card"><h4>🕋 Umrah B2B</h4><p>Makkah/Madinah hotels, transport &amp; instant visas.</p></div><div class="f-card"><h4>🛂 Visit Visas</h4><p>Fast processing for Dubai, Saudi, Schengen &amp; UK.</p></div></div>
       </div>
       <div>
         <div id="loginBox" class="card">
@@ -285,39 +257,21 @@
             <div class="form-group"><label>Password</label><input type="password" id="loginPassword" placeholder="••••••••" required /></div>
             <button type="submit" id="loginBtn" class="btn btn-primary">Verify Credentials →</button>
           </form>
-          <div style="text-align:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
-            <p style="font-size:12px;color:var(--muted);margin-bottom:8px;">Want to become an authorized sub-agent?</p>
-            <button type="button" class="btn btn-gold" onclick="showRegister()">Register New Travel Agency (Free)</button>
-          </div>
+          <div style="text-align:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);"><p style="font-size:12px;color:var(--muted);margin-bottom:8px;">Want to become an authorized sub-agent?</p><button type="button" class="btn btn-gold" onclick="showRegister()">Register New Travel Agency (Free)</button></div>
         </div>
         <div id="totpBox" class="card hidden">
           <h3>🔐 Google Authenticator 2FA</h3>
           <p class="sub-text">Session remains active until <strong>12:00 AM Midnight</strong>.</p>
           <div id="totpAlert" class="alert alert-info">Enter the 6-digit code from your Google Authenticator app.</div>
-          <div id="qrSetupArea" class="qr-box hidden">
-            <p style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:8px;">📲 First-Time Setup: Scan QR in Google Authenticator App</p>
-            <img id="qrImage" src="" alt="2FA QR Code" />
-            <div style="font-size:11px;color:var(--muted);margin-top:6px;">Or enter manual setup key:</div>
-            <div id="manualSecret" class="secret-pill"></div>
-          </div>
-          <form onsubmit="handleVerifyTotp(event)">
-            <div class="form-group"><label>6-Digit Authenticator Code</label><input type="text" id="totpCode" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" placeholder="123456" style="font-size:20px;text-align:center;letter-spacing:6px;font-weight:800;" required /></div>
-            <button type="submit" id="totpBtn" class="btn btn-primary">Unlock Portal Until 12:00 AM →</button>
-          </form>
+          <div id="qrSetupArea" class="qr-box hidden"><p style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:8px;">📲 First-Time Setup: Scan QR in Google Authenticator App</p><img id="qrImage" src="" alt="2FA QR Code" /><div style="font-size:11px;color:var(--muted);margin-top:6px;">Or enter manual setup key:</div><div id="manualSecret" class="secret-pill"></div></div>
+          <form onsubmit="handleVerifyTotp(event)"><div class="form-group"><label>6-Digit Authenticator Code</label><input type="text" id="totpCode" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" placeholder="123456" style="font-size:20px;text-align:center;letter-spacing:6px;font-weight:800;" required /></div><button type="submit" id="totpBtn" class="btn btn-primary">Unlock Portal Until 12:00 AM →</button></form>
           <button type="button" class="btn" style="margin-top:8px;background:#e2e8f0;color:#334155;" onclick="backToLogin()">← Back to Login</button>
         </div>
         <div id="registerBox" class="card hidden">
           <h3>Register B2B Sub-Agent</h3>
           <p class="sub-text">Account requires Chief Executive approval before login.</p>
           <div id="regAlert" class="alert hidden"></div>
-          <form onsubmit="handleRegister(event)">
-            <div class="form-group"><label>Travel Agency Name</label><input type="text" id="regAgency" required /></div>
-            <div class="form-group"><label>City</label><input type="text" id="regCity" required /></div>
-            <div class="form-group"><label>Mobile / WhatsApp</label><input type="text" id="regMobile" placeholder="03XX-XXXXXXX" required /></div>
-            <div class="form-group"><label>Official Email</label><input type="email" id="regEmail" required /></div>
-            <div class="form-group"><label>Create Password (min 6 chars)</label><input type="password" id="regPass" minlength="6" required /></div>
-            <button type="submit" id="regBtn" class="btn btn-gold">Submit Registration for Approval</button>
-          </form>
+          <form onsubmit="handleRegister(event)"><div class="form-group"><label>Travel Agency Name</label><input type="text" id="regAgency" required /></div><div class="form-group"><label>City</label><input type="text" id="regCity" required /></div><div class="form-group"><label>Mobile / WhatsApp</label><input type="text" id="regMobile" placeholder="03XX-XXXXXXX" required /></div><div class="form-group"><label>Official Email</label><input type="email" id="regEmail" required /></div><div class="form-group"><label>Create Password (min 6 chars)</label><input type="password" id="regPass" minlength="6" required /></div><button type="submit" id="regBtn" class="btn btn-gold">Submit Registration for Approval</button></form>
           <button type="button" class="btn" style="margin-top:8px;background:#e2e8f0;color:#334155;" onclick="backToLogin()">← Back to Login</button>
         </div>
       </div>
@@ -325,11 +279,7 @@
 
     <div id="dashboardSection" class="dash-wrap hidden">
       <aside class="sidebar">
-        <div class="side-brand-card">
-          <div class="side-logo-wrap"><img id="sidebarBrandLogo" alt="Agency Logo" /></div>
-          <div style="font-size:12.5px;font-weight:900;color:#0b1f44;">GOLAN INTERNATIONAL</div>
-          <div id="sideSubAgentName" style="font-size:10.5px;font-weight:800;color:#d97706;margin-top:3px;text-transform:uppercase;">SUB-AGENT PORTAL</div>
-        </div>
+        <div class="side-brand-card"><div class="side-logo-wrap"><img id="sidebarBrandLogo" alt="Agency Logo" /></div><div style="font-size:12.5px;font-weight:900;color:#0b1f44;">GOLAN INTERNATIONAL</div><div id="sideSubAgentName" style="font-size:10.5px;font-weight:800;color:#d97706;margin-top:3px;text-transform:uppercase;">SUB-AGENT PORTAL</div></div>
         <button type="button" class="side-btn active" data-tab="liveair" onclick="switchTab('liveair',this)"><span>🏠 Dashboard</span></button>
         <button type="button" class="side-btn" data-tab="fares" onclick="openFareCategoryTab('ALL',this)"><span>🛫 Group Fares &amp; Visas</span></button>
         <button type="button" class="side-btn" data-tab="bookings" onclick="switchTab('bookings',this)"><span>📋 Bookings &amp; Receipts</span></button>
@@ -340,13 +290,8 @@
         <button type="button" class="side-btn" onclick="openCeoWhatsApp()"><span>💬 Give Feedback!</span></button>
         <div class="support-divider">SUPPORT</div>
         <button type="button" class="settings-toggle" onclick="toggleSettingsMenu()"><span>⚙️ Settings</span><span id="settingsChevron">⌃</span></button>
-        <div id="settingsSubmenu" class="settings-submenu">
-          <button type="button" class="sub-side-btn" data-tab="profile" onclick="switchTab('profile',this)">My Profile</button>
-          <button type="button" class="sub-side-btn" data-tab="password" onclick="switchTab('password',this)">Change Password</button>
-        </div>
-        <div style="margin-top:12px;padding-top:10px;border-top:1px solid #e2e8f0;">
-          <button type="button" class="side-btn" style="color:#b91c1c;background:#fef2f2;border-color:#fecaca;justify-content:center;" onclick="logout()">⏻ Logout</button>
-        </div>
+        <div id="settingsSubmenu" class="settings-submenu"><button type="button" class="sub-side-btn" data-tab="profile" onclick="switchTab('profile',this)">My Profile</button><button type="button" class="sub-side-btn" data-tab="password" onclick="switchTab('password',this)">Change Password</button></div>
+        <div style="margin-top:12px;padding-top:10px;border-top:1px solid #e2e8f0;"><button type="button" class="side-btn" style="color:#b91c1c;background:#fef2f2;border-color:#fecaca;justify-content:center;" onclick="logout()">⏻ Logout</button></div>
       </aside>
 
       <div style="min-width:0;">
@@ -360,16 +305,9 @@
             <div id="liveDateClock" style="font-size:11px;font-weight:700;letter-spacing:.8px;color:#bae6fd;text-transform:uppercase;margin-bottom:5px;">📅 GOLAN B2B PORTAL</div>
             <h2 style="font-size:22px;font-weight:800;margin:0 0 6px;color:#fff;"><span id="liveGreetingText">Assalam-o-Alaikum</span>, <span id="dashAgencyName">Partner</span></h2>
             <p style="font-size:12.5px;color:#e0f2fe;margin:0 0 12px;line-height:1.5;">Search live flights, book group fares, manage PNRs and track your account ledger from one place.</p>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-              <button type="button" onclick="openFareCategoryTab('ALL')" style="background:#fff;color:#0f4c5c;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;">✈️ View Group Fares</button>
-              <button type="button" onclick="switchTab('bookings')" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">📋 View Bookings</button>
-              <span id="walletBadge" style="background:rgba(16,185,129,.25);color:#ecfdf5;border:1px solid rgba(167,243,208,.45);padding:7px 12px;border-radius:8px;font-size:12px;font-weight:800;">💰 Wallet: PKR 0</span>
-            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;"><button type="button" onclick="openFareCategoryTab('ALL')" style="background:#fff;color:#0f4c5c;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;">✈️ View Group Fares</button><button type="button" onclick="switchTab('bookings')" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">📋 View Bookings</button><span id="walletBadge" style="background:rgba(16,185,129,.25);color:#ecfdf5;border:1px solid rgba(167,243,208,.45);padding:7px 12px;border-radius:8px;font-size:12px;font-weight:800;">💰 Wallet: PKR 0</span></div>
           </div>
-          <div style="display:flex;gap:10px;">
-            <div style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);padding:12px 14px;border-radius:12px;min-width:105px;"><div id="statTodayBookings" style="font-size:22px;font-weight:900;">0</div><div style="font-size:10px;font-weight:700;color:#bae6fd;">BOOKINGS TODAY</div></div>
-            <div style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);padding:12px 14px;border-radius:12px;min-width:105px;"><div id="statAvailGroups" style="font-size:22px;font-weight:900;">0</div><div style="font-size:10px;font-weight:700;color:#bae6fd;">AVAILABLE GROUPS</div></div>
-          </div>
+          <div style="display:flex;gap:10px;"><div style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);padding:12px 14px;border-radius:12px;min-width:105px;"><div id="statTodayBookings" style="font-size:22px;font-weight:900;">0</div><div style="font-size:10px;font-weight:700;color:#bae6fd;">BOOKINGS TODAY</div></div><div style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);padding:12px 14px;border-radius:12px;min-width:105px;"><div id="statAvailGroups" style="font-size:22px;font-weight:900;">0</div><div style="font-size:10px;font-weight:700;color:#bae6fd;">AVAILABLE GROUPS</div></div></div>
         </div>
 
         <div id="dashHomeBlocks">
@@ -380,10 +318,7 @@
             <div class="stat-box" style="border-left:4px solid #dc2626;"><div style="font-size:20px;">❌</div><div><div style="font-size:10px;font-weight:800;color:#64748b;">CANCELED / EXP</div><div id="statCanceledTickets" style="font-size:20px;font-weight:900;">0</div></div></div>
           </div>
           <div style="background:#fff;padding:16px;border-radius:16px;border:1px solid #e2e8f0;margin-bottom:16px;box-shadow:0 6px 20px rgba(15,23,42,.04);">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-              <div><h4 style="color:#0f172a;font-size:15px;font-weight:800;">Browse Groups, Packages &amp; Sectors</h4><span style="font-size:11.5px;color:#64748b;">Select any category box below to view live B2B inventory</span></div>
-              <a href="javascript:void(0)" onclick="openFareCategoryTab('ALL')" style="font-size:12px;font-weight:800;color:#0f4c5c;text-decoration:none;">View All →</a>
-            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><div><h4 style="color:#0f172a;font-size:15px;font-weight:800;">Browse Groups, Packages &amp; Sectors</h4><span style="font-size:11.5px;color:#64748b;">Select any category box below to view live B2B inventory</span></div><a href="javascript:void(0)" onclick="openFareCategoryTab('ALL')" style="font-size:12px;font-weight:800;color:#0f4c5c;text-decoration:none;">View All →</a></div>
             <div class="journey-photo-grid">
               <div class="jp-card" onclick="openFareCategoryTab('ALL')" style="background:linear-gradient(135deg,#0ea5e9,#1e3a8a);"><img src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=700&q=80" alt="All Groups" onerror="this.style.display='none'" /><div class="jp-bar"><span class="jp-title">All Groups</span><span class="jp-arrow">→</span></div></div>
               <div class="jp-card" onclick="openFareCategoryTab('Umrah Package')" style="background:linear-gradient(135deg,#92400e,#0f172a);"><img src="https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?auto=format&fit=crop&w=700&q=80" alt="Umrah Packages" onerror="this.style.display='none'" /><div class="jp-bar"><span class="jp-title">Umrah Packages</span><span class="jp-arrow">→</span></div></div>
@@ -399,11 +334,7 @@
         </div>
 
         <div id="tab-liveair" class="card">
-          <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
-            <button type="button" id="pill-oneway" class="tab-btn active" onclick="setTripType('oneway')">One Way</button>
-            <button type="button" id="pill-roundtrip" class="tab-btn" onclick="setTripType('roundtrip')">Round Trip</button>
-            <button type="button" id="pill-multicity" class="tab-btn" onclick="setTripType('multicity')">Multi City</button>
-          </div>
+          <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;"><button type="button" id="pill-oneway" class="tab-btn active" onclick="setTripType('oneway')">One Way</button><button type="button" id="pill-roundtrip" class="tab-btn" onclick="setTripType('roundtrip')">Round Trip</button><button type="button" id="pill-multicity" class="tab-btn" onclick="setTripType('multicity')">Multi City</button></div>
           <form onsubmit="handleLiveFlightSearch(event)" style="background:#f8fafc;padding:14px;border-radius:12px;border:1px solid #cbd5e1;">
             <div class="search-row">
               <div class="form-group" style="margin:0;position:relative;"><label>From</label><input type="text" id="srchOriginText" placeholder="From (City or Airport)" autocomplete="off" required onfocus="filterAirports('origin')" oninput="document.getElementById('srchOrigin').value='';filterAirports('origin')" /><input type="hidden" id="srchOrigin" /><div id="drop-origin" style="display:none;position:absolute;top:100%;left:0;min-width:270px;background:#fff;border:1px solid #cbd5e1;border-radius:10px;box-shadow:0 10px 25px rgba(15,23,42,.15);max-height:220px;overflow-y:auto;z-index:999;"></div></div>
@@ -425,13 +356,7 @@
 
         <div id="tab-fares" class="hidden">
           <div class="card" style="padding:16px 20px;margin-bottom:14px;">
-            <div class="fares-topbar" style="margin-bottom:8px;">
-              <h3 id="faresTabHeading" style="margin:0;">🛫 Live Group Flights &amp; Packages</h3>
-              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-                <input type="text" id="faresQuickSearch" oninput="applyFaresFilter()" placeholder="Filter airline, route (ISB-RUH, JED)..." style="width:230px;padding:7px 12px;font-size:12.5px;" />
-                <button type="button" class="btn btn-sm btn-primary" onclick="openFareCategoryTab('ALL')">Show All</button>
-              </div>
-            </div>
+            <div class="fares-topbar" style="margin-bottom:8px;"><h3 id="faresTabHeading" style="margin:0;">🛫 Live Group Flights &amp; Packages</h3><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;"><input type="text" id="faresQuickSearch" oninput="applyFaresFilter()" placeholder="Filter airline, route (ISB-RUH, JED)..." style="width:230px;padding:7px 12px;font-size:12.5px;" /><button type="button" class="btn btn-sm btn-primary" onclick="openFareCategoryTab('ALL')">Show All</button></div></div>
             <div class="fares-meta-bar" style="margin-bottom:0;"><span id="faresShowingCount">Showing 0 bookable options</span><span class="live-avail-pill"><span class="live-dot"></span> Live Availability</span></div>
           </div>
           <div id="faresGroupedContainer"></div>
@@ -442,13 +367,7 @@
             <div class="luxury-title-wrap"><div class="luxury-icon-badge">📋</div><div><h3 style="margin:0;font-size:19px;">B2B Bookings &amp; Live PNR Status</h3><span style="font-size:12px;color:#64748b;font-weight:600;">View PNRs, hold timers, issue tickets &amp; download Electronic Ticket PDFs</span></div></div>
             <div class="luxury-search-wrap"><span style="padding-left:6px;font-size:13px;">🔍</span><input type="text" id="adminBookingSearchInput" oninput="filterBookingsTable()" placeholder="Search Booking ID, PNR, Name, Passport..." /><button type="button" class="btn btn-sm" style="background:#e2e8f0;color:#0f172a;border-radius:7px;" onclick="document.getElementById('adminBookingSearchInput').value='';filterBookingsTable();">✕</button></div>
           </div>
-          <div class="bookings-scroll">
-            <table>
-              <colgroup><col style="width:10%;"/><col style="width:10%;"/><col style="width:15%;"/><col style="width:21%;"/><col style="width:10%;"/><col style="width:10%;"/><col style="width:10%;"/><col style="width:14%;"/></colgroup>
-              <thead><tr><th>Booking ID</th><th>Date &amp; Time</th><th>Passenger &amp; Doc</th><th>Package / Flight &amp; Timing</th><th>PNR / Ticket</th><th>Fare (PKR)</th><th>Status &amp; Timer</th><th>Action</th></tr></thead>
-              <tbody id="bookingsTableBody"></tbody>
-            </table>
-          </div>
+          <div class="bookings-scroll"><table><colgroup><col style="width:10%;"/><col style="width:10%;"/><col style="width:15%;"/><col style="width:21%;"/><col style="width:10%;"/><col style="width:10%;"/><col style="width:10%;"/><col style="width:14%;"/></colgroup><thead><tr><th>Booking ID</th><th>Date &amp; Time</th><th>Passenger &amp; Doc</th><th>Package / Flight &amp; Timing</th><th>PNR / Ticket</th><th>Fare (PKR)</th><th>Status &amp; Timer</th><th>Action</th></tr></thead><tbody id="bookingsTableBody"></tbody></table></div>
         </div>
 
         <div id="tab-banks" class="card hidden" style="border-top:4px solid #d97706;">
@@ -469,10 +388,7 @@
         </div>
 
         <div id="tab-ledger" class="card luxury-card hidden">
-          <div class="luxury-hdr">
-            <div class="luxury-title-wrap"><div class="luxury-icon-badge">📒</div><div><h3 style="margin:0;font-size:19px;">B2B Account Ledger &amp; Statement</h3><span style="font-size:12px;color:#64748b;font-weight:600;">Deposits, ticket deductions, PDF receipts &amp; refunds</span></div></div>
-            <button type="button" class="btn btn-sm btn-primary" style="padding:9px 16px;font-size:12px;border-radius:10px;" onclick="switchTab('banks')">+ Submit Deposit Slip</button>
-          </div>
+          <div class="luxury-hdr"><div class="luxury-title-wrap"><div class="luxury-icon-badge">📒</div><div><h3 style="margin:0;font-size:19px;">B2B Account Ledger &amp; Statement</h3><span style="font-size:12px;color:#64748b;font-weight:600;">Deposits, ticket deductions, PDF receipts &amp; refunds</span></div></div><button type="button" class="btn btn-sm btn-primary" style="padding:9px 16px;font-size:12px;border-radius:10px;" onclick="switchTab('banks')">+ Submit Deposit Slip</button></div>
           <div class="luxury-stats-grid">
             <div class="lstat-card" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1px solid #86efac;border-left:4px solid #15803d;"><div class="lstat-lbl" style="color:#166534;">➕ Approved Deposits</div><div id="ldgTotalCredit" class="lstat-val" style="color:#15803d;">PKR 0</div></div>
             <div class="lstat-card" style="background:linear-gradient(135deg,#fef2f2,#fee2e2);border:1px solid #fca5a5;border-left:4px solid #b91c1c;"><div class="lstat-lbl" style="color:#991b1b;">➖ Bookings Spent</div><div id="ldgTotalDebit" class="lstat-val" style="color:#b91c1c;">PKR 0</div></div>
@@ -484,57 +400,29 @@
 
         <div id="tab-contacts" class="hidden">
           <div class="contacts-banner"><h2>Team Contacts</h2><p>Contact our team for any assistance, seat holds, ticket issuance, or queries.</p></div>
-          <div class="card">
-            <h3 style="display:flex;align-items:center;gap:8px;margin-bottom:16px;color:#1d4ed8;">👥 Meet Our Team</h3>
-            <div class="team-grid">
-              <div class="team-card"><div class="team-avatar" style="background:linear-gradient(135deg,#0b1f44,#1d4ed8);">S</div><div class="team-info"><h4>CEO SHAN CHAIRMAN</h4><span class="team-role">CHIEF EXECUTIVE OFFICER</span><div class="team-line"><strong>Phone:</strong> 0345-3326318</div><div class="team-line"><strong>Support:</strong> Approvals, Limits &amp; VIP Desk</div><div class="team-actions"><a class="contact-pill pill-call" href="tel:03453326318">📞 Call Now</a><a class="contact-pill pill-wa" href="https://api.whatsapp.com/send?phone=923453326318" target="_blank" rel="noopener noreferrer">💬 WhatsApp</a></div></div></div>
-              <div class="team-card"><div class="team-avatar">T</div><div class="team-info"><h4>TARIQ MEHMOD — MANAGER</h4><span class="team-role">MANAGER • SALES &amp; TICKETING DESK</span><div class="team-line"><strong>Phone:</strong> 0341-6929324</div><div class="team-line"><strong>Support:</strong> Group Fares &amp; Ticketing</div><div class="team-actions"><a class="contact-pill pill-call" href="tel:03416929324">📞 Call Now</a><a class="contact-pill pill-wa" href="https://api.whatsapp.com/send?phone=923416929324" target="_blank" rel="noopener noreferrer">💬 WhatsApp</a></div></div></div>
-              <div class="team-card"><div class="team-avatar">M</div><div class="team-info"><h4>MUHAMMAD UMER</h4><span class="team-role">OPERATIONS &amp; VISA SUPPORT</span><div class="team-line"><strong>Phone:</strong> 0331-6379110</div><div class="team-line"><strong>Support:</strong> Umrah, Visit Visas &amp; PNRs</div><div class="team-actions"><a class="contact-pill pill-call" href="tel:03316379110">📞 Call Now</a><a class="contact-pill pill-wa" href="https://api.whatsapp.com/send?phone=923316379110" target="_blank" rel="noopener noreferrer">💬 WhatsApp</a></div></div></div>
-              <div class="team-card"><div class="team-avatar" style="background:linear-gradient(135deg,#0f4c5c,#0284c7);">P</div><div class="team-info"><h4>HEAD OFFICE PTCL</h4><span class="team-role">OFFICIAL LANDLINE DESK</span><div class="team-line"><strong>PTCL:</strong> 046-2512722</div><div class="team-line"><strong>Office:</strong> Toba Tek Singh Head Office</div><div class="team-actions"><a class="contact-pill pill-call" href="tel:0462512722">☎️ Call Landline</a></div></div></div>
-            </div>
-          </div>
+          <div class="card"><h3 style="display:flex;align-items:center;gap:8px;margin-bottom:16px;color:#1d4ed8;">👥 Meet Our Team</h3><div class="team-grid">
+            <div class="team-card"><div class="team-avatar" style="background:linear-gradient(135deg,#0b1f44,#1d4ed8);">S</div><div class="team-info"><h4>CEO SHAN CHAIRMAN</h4><span class="team-role">CHIEF EXECUTIVE OFFICER</span><div class="team-line"><strong>Phone:</strong> 0345-3326318</div><div class="team-line"><strong>Support:</strong> Approvals, Limits &amp; VIP Desk</div><div class="team-actions"><a class="contact-pill pill-call" href="tel:03453326318">📞 Call Now</a><a class="contact-pill pill-wa" href="https://api.whatsapp.com/send?phone=923453326318" target="_blank" rel="noopener noreferrer">💬 WhatsApp</a></div></div></div>
+            <div class="team-card"><div class="team-avatar">T</div><div class="team-info"><h4>TARIQ MEHMOD — MANAGER</h4><span class="team-role">MANAGER • SALES &amp; TICKETING DESK</span><div class="team-line"><strong>Phone:</strong> 0341-6929324</div><div class="team-line"><strong>Support:</strong> Group Fares &amp; Ticketing</div><div class="team-actions"><a class="contact-pill pill-call" href="tel:03416929324">📞 Call Now</a><a class="contact-pill pill-wa" href="https://api.whatsapp.com/send?phone=923416929324" target="_blank" rel="noopener noreferrer">💬 WhatsApp</a></div></div></div>
+            <div class="team-card"><div class="team-avatar">M</div><div class="team-info"><h4>MUHAMMAD UMER</h4><span class="team-role">OPERATIONS &amp; VISA SUPPORT</span><div class="team-line"><strong>Phone:</strong> 0331-6379110</div><div class="team-line"><strong>Support:</strong> Umrah, Visit Visas &amp; PNRs</div><div class="team-actions"><a class="contact-pill pill-call" href="tel:03316379110">📞 Call Now</a><a class="contact-pill pill-wa" href="https://api.whatsapp.com/send?phone=923316379110" target="_blank" rel="noopener noreferrer">💬 WhatsApp</a></div></div></div>
+            <div class="team-card"><div class="team-avatar" style="background:linear-gradient(135deg,#0f4c5c,#0284c7);">P</div><div class="team-info"><h4>HEAD OFFICE PTCL</h4><span class="team-role">OFFICIAL LANDLINE DESK</span><div class="team-line"><strong>PTCL:</strong> 046-2512722</div><div class="team-line"><strong>Office:</strong> Toba Tek Singh Head Office</div><div class="team-actions"><a class="contact-pill pill-call" href="tel:0462512722">☎️ Call Landline</a></div></div></div>
+          </div></div>
         </div>
 
         <div id="tab-profile" class="card hidden">
-          <h3>🏢 My Agency Profile &amp; Branding</h3>
-          <p class="sub-text">Upload your travel agency logo and manage your sub-agent details for B2B vouchers &amp; receipts.</p>
-          <div id="profileAlert" class="alert hidden"></div>
+          <h3>🏢 My Agency Profile &amp; Branding</h3><p class="sub-text">Upload your travel agency logo and manage your sub-agent details for B2B vouchers &amp; receipts.</p><div id="profileAlert" class="alert hidden"></div>
           <div class="profile-grid">
-            <div class="logo-upload-box">
-              <div class="logo-preview-circle"><img id="profileLogoPreview" alt="Agency Logo Preview" /></div>
-              <h4 style="font-size:13.5px;color:#0b1f44;margin-bottom:4px;">Sub-Agent Agency Logo</h4>
-              <p style="font-size:11px;color:#64748b;margin-bottom:12px;">PNG or JPG recommended (Auto-optimized for vouchers)</p>
-              <input type="file" id="subAgentLogoInput" accept="image/*" onchange="handleLogoFileSelect(this)" style="background:#fff;border:1.5px dashed #163b7a;margin-bottom:10px;font-size:12px;" />
-              <div style="display:flex;gap:8px;"><button type="button" class="btn btn-primary btn-sm" style="flex:1;" onclick="saveSubAgentProfile()">💾 Save Logo</button><button type="button" class="btn btn-sm" style="background:#fee2e2;color:#991b1b;" onclick="resetSubAgentLogo()">Reset</button></div>
-            </div>
+            <div class="logo-upload-box"><div class="logo-preview-circle"><img id="profileLogoPreview" alt="Agency Logo Preview" /></div><h4 style="font-size:13.5px;color:#0b1f44;margin-bottom:4px;">Sub-Agent Agency Logo</h4><p style="font-size:11px;color:#64748b;margin-bottom:12px;">PNG or JPG recommended (Auto-optimized for vouchers)</p><input type="file" id="subAgentLogoInput" accept="image/*" onchange="handleLogoFileSelect(this)" style="background:#fff;border:1.5px dashed #163b7a;margin-bottom:10px;font-size:12px;" /><div style="display:flex;gap:8px;"><button type="button" class="btn btn-primary btn-sm" style="flex:1;" onclick="saveSubAgentProfile()">💾 Save Logo</button><button type="button" class="btn btn-sm" style="background:#fee2e2;color:#991b1b;" onclick="resetSubAgentLogo()">Reset</button></div></div>
             <form onsubmit="saveSubAgentProfile(event)">
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                <div class="form-group"><label>Travel Agency Name *</label><input type="text" id="profAgencyName" required /></div>
-                <div class="form-group"><label>Registered Email (Login ID)</label><input type="email" id="profEmail" readonly style="background:#e2e8f0;color:#475569;cursor:not-allowed;" /></div>
-                <div class="form-group"><label>City *</label><input type="text" id="profCity" placeholder="e.g. Lahore / Faisalabad" required /></div>
-                <div class="form-group"><label>Mobile / WhatsApp *</label><input type="text" id="profMobile" placeholder="03XX-XXXXXXX" required /></div>
-                <div class="form-group"><label>Contact Person / Owner Name</label><input type="text" id="profContactPerson" placeholder="Owner / Manager Name" /></div>
-                <div class="form-group"><label>Voucher Header Branding</label><select id="profUseCustomVoucher"><option value="custom">Use My Uploaded Logo &amp; Agency Name on PDF Vouchers</option><option value="golan">Use Golan International Official Logo on PDF Vouchers</option></select></div>
-              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div class="form-group"><label>Travel Agency Name *</label><input type="text" id="profAgencyName" required /></div><div class="form-group"><label>Registered Email (Login ID)</label><input type="email" id="profEmail" readonly style="background:#e2e8f0;color:#475569;cursor:not-allowed;" /></div><div class="form-group"><label>City *</label><input type="text" id="profCity" placeholder="e.g. Lahore / Faisalabad" required /></div><div class="form-group"><label>Mobile / WhatsApp *</label><input type="text" id="profMobile" placeholder="03XX-XXXXXXX" required /></div><div class="form-group"><label>Contact Person / Owner Name</label><input type="text" id="profContactPerson" placeholder="Owner / Manager Name" /></div><div class="form-group"><label>Voucher Header Branding</label><select id="profUseCustomVoucher"><option value="custom">Use My Uploaded Logo &amp; Agency Name on PDF Vouchers</option><option value="golan">Use Golan International Official Logo on PDF Vouchers</option></select></div></div>
               <div class="form-group"><label>Office Address / Tagline (Printed on Receipts)</label><input type="text" id="profAddress" placeholder="Office # / Plaza / City" /></div>
-              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-top:8px;">
-                <span style="font-size:11.5px;color:#15803d;font-weight:700;">🔐 Protected by Google 2FA &amp; Midnight Lock</span>
-                <button type="submit" id="saveProfileBtn" class="btn btn-primary" style="width:auto;padding:10px 22px;">✅ Save Profile &amp; Branding</button>
-              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-top:8px;"><span style="font-size:11.5px;color:#15803d;font-weight:700;">🔐 Protected by Google 2FA &amp; Midnight Lock</span><button type="submit" id="saveProfileBtn" class="btn btn-primary" style="width:auto;padding:10px 22px;">✅ Save Profile &amp; Branding</button></div>
             </form>
           </div>
         </div>
 
         <div id="tab-password" class="card hidden" style="max-width:620px;">
-          <h3>🔑 Change Account Password</h3>
-          <p class="sub-text">Update your sub-agent portal password anytime. Minimum 6 characters required.</p>
-          <div id="passwordAlert" class="alert hidden"></div>
-          <form onsubmit="handleChangePassword(event)">
-            <div class="form-group"><label>Current Password *</label><div class="pass-wrap"><input type="password" id="cpCurrent" placeholder="Enter your current password" required /><button type="button" class="pass-toggle" onclick="togglePassVis('cpCurrent',this)">Show</button></div></div>
-            <div class="form-group"><label>New Password (min 6 characters) *</label><div class="pass-wrap"><input type="password" id="cpNew" minlength="6" placeholder="Enter new strong password" required /><button type="button" class="pass-toggle" onclick="togglePassVis('cpNew',this)">Show</button></div></div>
-            <div class="form-group"><label>Confirm New Password *</label><div class="pass-wrap"><input type="password" id="cpConfirm" minlength="6" placeholder="Re-enter new password" required /><button type="button" class="pass-toggle" onclick="togglePassVis('cpConfirm',this)">Show</button></div></div>
-            <button type="submit" id="changePassBtn" class="btn btn-primary">🔐 Update Password</button>
-          </form>
+          <h3>🔑 Change Account Password</h3><p class="sub-text">Update your sub-agent portal password anytime. Minimum 6 characters required.</p><div id="passwordAlert" class="alert hidden"></div>
+          <form onsubmit="handleChangePassword(event)"><div class="form-group"><label>Current Password *</label><div class="pass-wrap"><input type="password" id="cpCurrent" placeholder="Enter your current password" required /><button type="button" class="pass-toggle" onclick="togglePassVis('cpCurrent',this)">Show</button></div></div><div class="form-group"><label>New Password (min 6 characters) *</label><div class="pass-wrap"><input type="password" id="cpNew" minlength="6" placeholder="Enter new strong password" required /><button type="button" class="pass-toggle" onclick="togglePassVis('cpNew',this)">Show</button></div></div><div class="form-group"><label>Confirm New Password *</label><div class="pass-wrap"><input type="password" id="cpConfirm" minlength="6" placeholder="Re-enter new password" required /><button type="button" class="pass-toggle" onclick="togglePassVis('cpConfirm',this)">Show</button></div></div><button type="submit" id="changePassBtn" class="btn btn-primary">🔐 Update Password</button></form>
         </div>
 
         <div id="tab-admin" class="hidden">
@@ -544,12 +432,7 @@
               <form onsubmit="handleAdminAddFare(event)">
                 <div class="form-group"><label>Category</label><select id="admCat" onchange="toggleVisaFields()"><option>Group Flight</option><option>Umrah Package</option><option>Visit Visa</option></select></div>
                 <div class="form-group"><label id="lblTitle">Route &amp; Airline / Package Title</label><input type="text" id="admTitle" placeholder="e.g. LHE - JED (SV-737)" required /></div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                  <div class="form-group" id="grpTiming"><label id="lblTiming">✈️ Flight Timing</label><input type="text" id="admTiming" placeholder="Dep 04:15 AM - Arr 07:45 AM" /></div>
-                  <div class="form-group" id="grpLuggage"><label id="lblLuggage">🧳 Luggage</label><input type="text" id="admLuggage" placeholder="30 KG + 7 KG" /></div>
-                  <div class="form-group" id="grpMeal"><label id="lblMeal">🍽️ Meal</label><input type="text" id="admMeal" placeholder="Hot Meal Included" /></div>
-                  <div class="form-group" id="grpStay"><label id="lblStay">🏨 Stay / Transit</label><input type="text" id="admStay" placeholder="Direct / Hotels" /></div>
-                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"><div class="form-group" id="grpTiming"><label id="lblTiming">✈️ Flight Timing</label><input type="text" id="admTiming" placeholder="Dep 04:15 AM - Arr 07:45 AM" /></div><div class="form-group" id="grpLuggage"><label id="lblLuggage">🧳 Luggage</label><input type="text" id="admLuggage" placeholder="30 KG + 7 KG" /></div><div class="form-group" id="grpMeal"><label id="lblMeal">🍽️ Meal</label><input type="text" id="admMeal" placeholder="Hot Meal Included" /></div><div class="form-group" id="grpStay"><label id="lblStay">🏨 Stay / Transit</label><input type="text" id="admStay" placeholder="Direct / Hotels" /></div></div>
                 <div class="form-group"><label>📝 Additional Rules</label><input type="text" id="admDetails" placeholder="Refundable • Visa + Transport" required /></div>
                 <div class="form-group" id="grpDate"><label>Travel Date</label><input type="text" id="admDate" placeholder="25 Nov 2026" required /></div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"><div class="form-group" id="grpSeats"><label>Total Seats</label><input type="number" id="admSeats" value="15" min="1" required /></div><div class="form-group"><label>⏳ Hold Limit (Mins)</label><input type="number" id="admHoldMins" value="30" min="5" required /></div></div>
@@ -559,13 +442,7 @@
             </div>
             <div class="card">
               <h3>🏦 Manage Official Payment Accounts</h3>
-              <form onsubmit="handleAdminAddBank(event)">
-                <div class="form-group"><label>Bank / Wallet Name</label><input type="text" id="bankName" required /></div>
-                <div class="form-group"><label>Account Title</label><input type="text" id="bankTitle" value="Golan International Travel & Tourism" required /></div>
-                <div class="form-group"><label>Account Number</label><input type="text" id="bankAcc" required /></div>
-                <div class="form-group"><label>IBAN</label><input type="text" id="bankIban" /></div>
-                <button type="submit" id="addBankBtn" class="btn btn-gold">Add Payment Account</button>
-              </form>
+              <form onsubmit="handleAdminAddBank(event)"><div class="form-group"><label>Bank / Wallet Name</label><input type="text" id="bankName" required /></div><div class="form-group"><label>Account Title</label><input type="text" id="bankTitle" value="Golan International Travel & Tourism" required /></div><div class="form-group"><label>Account Number</label><input type="text" id="bankAcc" required /></div><div class="form-group"><label>IBAN</label><input type="text" id="bankIban" /></div><button type="submit" id="addBankBtn" class="btn btn-gold">Add Payment Account</button></form>
               <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px;"><h4 style="font-size:13px;color:var(--navy);margin-bottom:8px;">Active Accounts (Click Remove to Delete)</h4><div id="adminBanksList" style="display:flex;flex-direction:column;gap:6px;"></div></div>
             </div>
           </div>
@@ -576,41 +453,17 @@
     </div>
   </div>
 
-  <div id="approveConfirmModal" class="hidden" style="position:fixed;inset:0;background:rgba(11,31,68,.76);z-index:100010;display:flex;align-items:center;justify-content:center;padding:16px;">
-    <div style="background:#fff;border-radius:16px;max-width:430px;width:100%;overflow:hidden;box-shadow:0 24px 55px rgba(0,0,0,.38);border:2px solid #16a34a;">
-      <div style="background:linear-gradient(135deg,#0b1f44,#163b7a);color:#fff;padding:15px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #d97706;"><strong style="font-size:15.5px;">💰 Confirm Deposit Approval</strong><button type="button" onclick="closeApproveConfirmModal()" style="border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;border-radius:6px;padding:3px 9px;cursor:pointer;">✕</button></div>
-      <div style="padding:18px;">
-        <p style="font-size:13px;color:#334155;margin-bottom:12px;">Click <strong>OK</strong> to approve this deposit slip and automatically credit the Agent's Wallet:</p>
-        <div id="approveConfirmDetails" style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:12px;font-size:12.5px;line-height:1.7;margin-bottom:16px;"></div>
-        <div style="display:flex;gap:10px;"><button type="button" id="approveConfirmOkBtn" class="btn btn-green" onclick="confirmApproveDepositOk()">✓ OK (Approve &amp; Update Wallet)</button><button type="button" class="btn" style="background:#e2e8f0;color:#334155;width:auto;padding:11px 18px;" onclick="closeApproveConfirmModal()">Cancel</button></div>
-      </div>
-    </div>
-  </div>
+  <div id="approveConfirmModal" class="hidden" style="position:fixed;inset:0;background:rgba(11,31,68,.76);z-index:100010;display:flex;align-items:center;justify-content:center;padding:16px;"><div style="background:#fff;border-radius:16px;max-width:430px;width:100%;overflow:hidden;box-shadow:0 24px 55px rgba(0,0,0,.38);border:2px solid #16a34a;"><div style="background:linear-gradient(135deg,#0b1f44,#163b7a);color:#fff;padding:15px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #d97706;"><strong style="font-size:15.5px;">💰 Confirm Deposit Approval</strong><button type="button" onclick="closeApproveConfirmModal()" style="border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;border-radius:6px;padding:3px 9px;cursor:pointer;">✕</button></div><div style="padding:18px;"><p style="font-size:13px;color:#334155;margin-bottom:12px;">Click <strong>OK</strong> to approve this deposit slip and automatically credit the Agent's Wallet:</p><div id="approveConfirmDetails" style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:12px;font-size:12.5px;line-height:1.7;margin-bottom:16px;"></div><div style="display:flex;gap:10px;"><button type="button" id="approveConfirmOkBtn" class="btn btn-green" onclick="confirmApproveDepositOk()">✓ OK (Approve &amp; Update Wallet)</button><button type="button" class="btn" style="background:#e2e8f0;color:#334155;width:auto;padding:11px 18px;" onclick="closeApproveConfirmModal()">Cancel</button></div></div></div></div>
+  <div id="attachmentModal" class="hidden" style="position:fixed;inset:0;background:rgba(15,23,42,.75);z-index:100009;display:flex;align-items:center;justify-content:center;padding:16px;"><div style="background:#fff;border-radius:16px;max-width:650px;width:100%;overflow:hidden;box-shadow:0 20px 45px rgba(0,0,0,.35);"><div style="background:#0b1f44;color:#fff;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;"><strong id="attachmentModalTitle" style="font-size:15px;">📎 Uploaded Document</strong><button type="button" onclick="document.getElementById('attachmentModal').classList.add('hidden')" style="border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;border-radius:6px;padding:4px 10px;cursor:pointer;">Close ✕</button></div><div id="attachmentModalBody" style="padding:18px;max-height:78vh;overflow-y:auto;text-align:center;"></div></div></div>
+  <div id="gdsDetailsModal" class="hidden" style="position:fixed;inset:0;background:rgba(15,23,42,.68);z-index:100002;display:flex;align-items:center;justify-content:center;padding:16px;"><div style="background:#fff;border-radius:16px;max-width:680px;width:100%;overflow:hidden;box-shadow:0 20px 40px rgba(0,0,0,.28);"><div style="background:#0b1f44;color:#fff;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;"><strong style="font-size:15px;">✈️ Flight Fare &amp; Baggage Details</strong><button type="button" onclick="document.getElementById('gdsDetailsModal').classList.add('hidden')" style="border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;border-radius:6px;padding:4px 10px;cursor:pointer;">Close ✕</button></div><div id="gdsModalContent" style="padding:18px;max-height:75vh;overflow-y:auto;"></div></div></div>
 
-  <div id="attachmentModal" class="hidden" style="position:fixed;inset:0;background:rgba(15,23,42,.75);z-index:100009;display:flex;align-items:center;justify-content:center;padding:16px;">
-    <div style="background:#fff;border-radius:16px;max-width:650px;width:100%;overflow:hidden;box-shadow:0 20px 45px rgba(0,0,0,.35);">
-      <div style="background:#0b1f44;color:#fff;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;"><strong id="attachmentModalTitle" style="font-size:15px;">📎 Uploaded Document</strong><button type="button" onclick="document.getElementById('attachmentModal').classList.add('hidden')" style="border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;border-radius:6px;padding:4px 10px;cursor:pointer;">Close ✕</button></div>
-      <div id="attachmentModalBody" style="padding:18px;max-height:78vh;overflow-y:auto;text-align:center;"></div>
-    </div>
-  </div>
-
-  <div id="gdsDetailsModal" class="hidden" style="position:fixed;inset:0;background:rgba(15,23,42,.68);z-index:100002;display:flex;align-items:center;justify-content:center;padding:16px;">
-    <div style="background:#fff;border-radius:16px;max-width:680px;width:100%;overflow:hidden;box-shadow:0 20px 40px rgba(0,0,0,.28);">
-      <div style="background:#0b1f44;color:#fff;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;"><strong style="font-size:15px;">✈️ Flight Fare &amp; Baggage Details</strong><button type="button" onclick="document.getElementById('gdsDetailsModal').classList.add('hidden')" style="border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;border-radius:6px;padding:4px 10px;cursor:pointer;">Close ✕</button></div>
-      <div id="gdsModalContent" style="padding:18px;max-height:75vh;overflow-y:auto;"></div>
-    </div>
-  </div>
-
-  <!-- Flying-Zone Style 5-Section Luxury Travellers Booking Panel -->
   <div id="bookingModal" class="hidden">
     <div class="fz-shell">
       <div class="fz-timer-bar">
         <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:18px;">✈️</span><div><div id="modalHeaderTitle" style="font-size:15.5px;font-weight:900;">Passenger &amp; Itinerary Checkout</div><div style="font-size:11px;color:#cbd5e1;">Golan International Official B2B Travellers Desk</div></div></div>
         <div class="fz-clock">⏳ <span id="modalSessionClock">15 Minutes 00 Seconds</span></div>
       </div>
-
       <form id="bookingForm" onsubmit="submitBooking(event,false)" novalidate>
-        <!-- Section 1: Passenger Information -->
         <div id="flightFieldsWrap" class="fz-sec">
           <div class="fz-sec-hdr"><span>Passenger Information</span><span style="font-size:11px;color:#fde68a;">* All required fields must be filled</span></div>
           <div class="fz-adult-tag"><span>👤 Adult 1</span><span style="font-size:11px;color:#475569;">Passport / National ID Mandatory</span></div>
@@ -638,7 +491,6 @@
             </div>
           </div>
         </div>
-
         <div id="visaFieldsWrap" class="fz-sec hidden">
           <div class="fz-sec-hdr"><span>🛂 Visit Visa Applicant Details</span><span style="font-size:11px;color:#fde68a;">* Documents Mandatory</span></div>
           <div class="fz-sec-body">
@@ -646,48 +498,11 @@
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"><div class="form-group" style="margin:0;"><label>📎 Passport Front Scan <span style="color:#dc2626;">*</span></label><input type="file" id="visaDocPassport" accept="image/*,.pdf" style="background:#fff;border:1.5px dashed #94a3b8;" /></div><div class="form-group" style="margin:0;"><label>📎 White BG Photo <span style="color:#dc2626;">*</span></label><input type="file" id="visaDocPhoto" accept="image/*" style="background:#fff;border:1.5px dashed #94a3b8;" /></div></div>
           </div>
         </div>
-
-        <!-- Section 2: Flight Information -->
-        <div class="fz-sec">
-          <div class="fz-sec-hdr"><span>Flight Information</span><span id="fzRouteBadge" style="font-size:11.5px;color:#fbbf24;"></span></div>
-          <div class="fz-sec-body" style="padding:0;overflow-x:auto;">
-            <table class="fz-info-tbl"><thead><tr><th>Departure</th><th>Arrival</th><th>Airlines</th><th>Flight / Ref</th><th>Cabin &amp; Meal</th><th>Baggage Allowance</th></tr></thead><tbody id="fzFlightInfoBody"></tbody></table>
-          </div>
-        </div>
-
-        <!-- Section 3: Farefamily Description -->
-        <div class="fz-sec">
-          <div class="fz-sec-hdr"><span>Farefamily description</span><span style="font-size:11px;color:#cbd5e1;">Baggage, Meal &amp; Rules</span></div>
-          <div class="fz-sec-body" id="fzFareDescBody"></div>
-        </div>
-
-        <!-- Section 4: Fare Details (In PKR) -->
-        <div class="fz-sec">
-          <div class="fz-sec-hdr"><span>Fare Details (In PKR)</span><span>1 Adult</span></div>
-          <div class="fz-sec-body" style="padding:0;overflow-x:auto;">
-            <table class="fz-info-tbl"><thead><tr><th>Type</th><th>Fare</th><th>Tax / Fee</th><th>Service Fee</th><th>Discount</th><th>Count</th><th style="text-align:right;">Total</th></tr></thead><tbody id="fzFareDetailsBody"></tbody></table>
-          </div>
-        </div>
-
-        <!-- Section 5: Payment Information -->
-        <div class="fz-sec">
-          <div class="fz-sec-hdr"><span>Payment Information</span><span>B2B Wallet &amp; Hold</span></div>
-          <div class="fz-sec-body">
-            <div class="fz-pay-grid" id="fzPaymentBoxes"></div>
-            <label style="display:flex;align-items:center;gap:8px;margin-top:12px;cursor:pointer;font-size:12.5px;font-weight:700;color:#0f172a;">
-              <input type="checkbox" id="fzTermsCheck" checked style="width:16px;height:16px;accent-color:#163b7a;" />
-              <span>I Have Read &amp; Accept <span style="color:#b91c1c;">Terms and Conditions</span> (Non-Refundable / Airline Rules Apply)</span>
-            </label>
-          </div>
-        </div>
-
-        <div class="fz-bottom-bar">
-          <button type="button" class="btn" style="width:auto;background:#0b1f44;color:#fff;padding:10px 18px;" onclick="closeBookingModal()">← Back To Selection</button>
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-            <button type="submit" id="modalSubmitBtn" class="btn btn-green" style="width:auto;padding:10px 22px;">Book Only (Hold)</button>
-            <button type="button" id="modalIssueDirectBtn" class="btn btn-primary hidden" style="width:auto;padding:10px 22px;" onclick="submitBooking(event,true)">✓ Book &amp; Issue</button>
-          </div>
-        </div>
+        <div class="fz-sec"><div class="fz-sec-hdr"><span>Flight Information</span><span id="fzRouteBadge" style="font-size:11.5px;color:#fbbf24;"></span></div><div class="fz-sec-body" style="padding:0;overflow-x:auto;"><table class="fz-info-tbl"><thead><tr><th>Departure</th><th>Arrival</th><th>Airlines</th><th>Flight / Ref</th><th>Cabin &amp; Meal</th><th>Baggage Allowance</th></tr></thead><tbody id="fzFlightInfoBody"></tbody></table></div></div>
+        <div class="fz-sec"><div class="fz-sec-hdr"><span>Farefamily description</span><span style="font-size:11px;color:#cbd5e1;">Baggage, Meal &amp; Rules</span></div><div class="fz-sec-body" id="fzFareDescBody"></div></div>
+        <div class="fz-sec"><div class="fz-sec-hdr"><span>Fare Details (In PKR)</span><span>1 Adult</span></div><div class="fz-sec-body" style="padding:0;overflow-x:auto;"><table class="fz-info-tbl"><thead><tr><th>Type</th><th>Fare</th><th>Tax / Fee</th><th>Service Fee</th><th>Discount</th><th>Count</th><th style="text-align:right;">Total</th></tr></thead><tbody id="fzFareDetailsBody"></tbody></table></div></div>
+        <div class="fz-sec"><div class="fz-sec-hdr"><span>Payment Information</span><span>B2B Wallet &amp; Hold</span></div><div class="fz-sec-body"><div class="fz-pay-grid" id="fzPaymentBoxes"></div><label style="display:flex;align-items:center;gap:8px;margin-top:12px;cursor:pointer;font-size:12.5px;font-weight:700;color:#0f172a;"><input type="checkbox" id="fzTermsCheck" checked style="width:16px;height:16px;accent-color:#163b7a;" /><span>I Have Read &amp; Accept <span style="color:#b91c1c;">Terms and Conditions</span></span></label></div></div>
+        <div class="fz-bottom-bar"><button type="button" class="btn" style="width:auto;background:#0b1f44;color:#fff;padding:10px 18px;" onclick="closeBookingModal()">← Back To Selection</button><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;"><button type="submit" id="modalSubmitBtn" class="btn btn-green" style="width:auto;padding:10px 22px;">Book Only (Hold)</button><button type="button" id="modalIssueDirectBtn" class="btn btn-primary hidden" style="width:auto;padding:10px 22px;" onclick="submitBooking(event,true)">✓ Book &amp; Issue</button></div></div>
       </form>
     </div>
   </div>
@@ -713,8 +528,7 @@
       if(m&&m[1])m[1].split('|').forEach(function(p){var i=p.indexOf(':');if(i>0)meta[p.slice(0,i).trim().toUpperCase()]=p.slice(i+1).trim();});
       var fo=(window.__ALL_FARES__||[]).find(function(f){return b.FareID&&String(f.ID)===String(b.FareID);})||{};
       var bagBr=raw.match(/\[([^\]]+)\]/),cleanTitle=raw.replace(/\s*\{[^}]+\}/g,'').trim();
-      var dateVal=b.FlightDate||meta.DATE||fo.TravelDate||fo.Date||'',depVal=b.DepTime||meta.DEP||'',arrVal=b.ArrTime||meta.ARR||'';
-      var timingVal=b.Timing||meta.TIMING||fo.Timing||'';
+      var dateVal=b.FlightDate||meta.DATE||fo.TravelDate||fo.Date||'',depVal=b.DepTime||meta.DEP||'',arrVal=b.ArrTime||meta.ARR||'',timingVal=b.Timing||meta.TIMING||fo.Timing||'';
       if(!timingVal&&(depVal||arrVal))timingVal=(depVal?('Dep: '+depVal):'')+(meta.DTERM?(' (T'+meta.DTERM+')'):'')+(arrVal?(' → Arr: '+arrVal):'')+(meta.ATERM?(' (T'+meta.ATERM+')'):'');
       return{cleanTitle:cleanTitle,date:dateVal,dep:depVal,arr:arrVal,timing:timingVal,baggage:b.Baggage||meta.BAG||fo.Luggage||(bagBr?bagBr[1]:'')||'20+5 KG',meal:b.Meal||meta.MEAL||fo.Meal||'No',stay:b.Stay||meta.STAY||fo.Stay||'',rules:b.Details||meta.DETAILS||fo.Details||''};
     }
@@ -748,16 +562,17 @@
       var segments=[],routeMatches=clean.match(/\b([A-Z]{3})\s*[-–to]+\s*([A-Z]{3})\b/gi)||[];
       var hasIsoDate=function(v){return /\d{4}-\d{2}-\d{2}/.test(String(v||''));};
       if(rawSegs.length>1&&rawSegs.every(function(x){return /[A-Z]{3}\s*[-–]\s*[A-Z]{3}/i.test(x);})){
-        rawSegs.forEach(function(segTxt,i){var rm=segTxt.match(/\b([A-Z]{3})\s*[-–]\s*([A-Z]{3})\b/i),flm=segTxt.match(/\b([A-Z]{2}[-\s]?\d{2,4})\b/i),tLeg=timingLegs[i]||fi.timing||'',times=tLeg.match(/\d{1,2}:\d{2}(?:\s*(?:AM|PM))?/gi)||[],dTxt=fmtTicketDate(dateLegs[i]||fi.date);segments.push({origin:rm?codeToCity(rm[1]):'ORIGIN',dest:rm?codeToCity(rm[2]):'DESTINATION',airline:getTicketAirlineMeta(segTxt+' '+clean).name,flightNo:flm?flm[1].replace('-',' ').toUpperCase():(airlineInfo.code+'-GRP'),depTime:times[0]?fmtTicketTime(times[0]):fmtTicketTime(fi.dep),arrTime:times[1]?fmtTicketTime(times[1]):fmtTicketTime(fi.arr),depDate:dTxt,arrDate:dTxt,baggage:bag});});
+        rawSegs.forEach(function(segTxt,i){var rm=segTxt.match(/\b([A-Z]{3})\s*[-–]\s*([A-Z]{3})\b/i),flm=segTxt.match(/\b([A-Z]{2}[-\s]?\d{2,4})\b/i),tLeg=timingLegs[i]||fi.timing||'',times=tLeg.match(/\d{1,2}:\d{2}(?:\s*(?:AM|PM))?/gi)||[],dTxt=fmtTicketDate(dateLegs[i]||fi.date);segments.push({oCode:rm?rm[1].toUpperCase():'ORG',dCode:rm?rm[2].toUpperCase():'DST',origin:rm?codeToCity(rm[1]):'ORIGIN',dest:rm?codeToCity(rm[2]):'DESTINATION',airline:getTicketAirlineMeta(segTxt+' '+clean).name,flightNo:flm?flm[1].replace('-',' ').toUpperCase():(airlineInfo.code+'-GRP'),depTime:times[0]?fmtTicketTime(times[0]):fmtTicketTime(fi.dep),arrTime:times[1]?fmtTicketTime(times[1]):fmtTicketTime(fi.arr),depDate:dTxt,arrDate:dTxt,baggage:bag});});
       }else if(routeMatches.length>1){
-        routeMatches.forEach(function(rmStr,i){var rm=rmStr.match(/\b([A-Z]{3})\s*[-–to]+\s*([A-Z]{3})\b/i),fls=clean.match(/\b([A-Z]{2}[-\s]?\d{2,4})\b/gi)||[],tLeg=timingLegs[i]||fi.timing||'',times=tLeg.match(/\d{1,2}:\d{2}(?:\s*(?:AM|PM))?/gi)||[],dTxt=fmtTicketDate(dateLegs[i]||fi.date);segments.push({origin:rm?codeToCity(rm[1]):'ORIGIN',dest:rm?codeToCity(rm[2]):'DESTINATION',airline:airlineInfo.name,flightNo:fls[i]?fls[i].replace('-',' ').toUpperCase():(fls[0]?fls[0].replace('-',' ').toUpperCase():(airlineInfo.code+'-GRP')),depTime:times[0]?fmtTicketTime(times[0]):fmtTicketTime(fi.dep),arrTime:times[1]?fmtTicketTime(times[1]):fmtTicketTime(fi.arr),depDate:dTxt,arrDate:dTxt,baggage:bag});});
+        routeMatches.forEach(function(rmStr,i){var rm=rmStr.match(/\b([A-Z]{3})\s*[-–to]+\s*([A-Z]{3})\b/i),fls=clean.match(/\b([A-Z]{2}[-\s]?\d{2,4})\b/gi)||[],tLeg=timingLegs[i]||fi.timing||'',times=tLeg.match(/\d{1,2}:\d{2}(?:\s*(?:AM|PM))?/gi)||[],dTxt=fmtTicketDate(dateLegs[i]||fi.date);segments.push({oCode:rm?rm[1].toUpperCase():'ORG',dCode:rm?rm[2].toUpperCase():'DST',origin:rm?codeToCity(rm[1]):'ORIGIN',dest:rm?codeToCity(rm[2]):'DESTINATION',airline:airlineInfo.name,flightNo:fls[i]?fls[i].replace('-',' ').toUpperCase():(fls[0]?fls[0].replace('-',' ').toUpperCase():(airlineInfo.code+'-GRP')),depTime:times[0]?fmtTicketTime(times[0]):fmtTicketTime(fi.dep),arrTime:times[1]?fmtTicketTime(times[1]):fmtTicketTime(fi.arr),depDate:dTxt,arrDate:dTxt,baggage:bag});});
       }else{
         var rm=clean.match(/\b([A-Z]{3})\s*[-–]\s*([A-Z]{3})\b/i),flm=clean.match(/\b([A-Z]{2}[-\s]?\d{2,4})\b/i),times=String(fi.timing||'').match(/\d{1,2}:\d{2}(?:\s*(?:AM|PM))?/gi)||[];
-        segments.push({origin:rm?codeToCity(rm[1]):clean.replace(/^(Group Flight|Umrah Package|Visit Visa|Live Airline)\s*[-–]\s*/i,'').slice(0,22).toUpperCase(),dest:rm?codeToCity(rm[2]):(b.Category==='Visit Visa'?'E-VISA':'DESTINATION'),airline:airlineInfo.name,flightNo:flm?flm[1].replace('-',' ').toUpperCase():(airlineInfo.code+'-GRP'),depTime:fi.dep?fmtTicketTime(fi.dep):(times[0]?fmtTicketTime(times[0]):'--:--'),arrTime:fi.arr?fmtTicketTime(fi.arr):(times[1]?fmtTicketTime(times[1]):'--:--'),depDate:fmtTicketDate(hasIsoDate(fi.dep)?fi.dep:fi.date),arrDate:fmtTicketDate(hasIsoDate(fi.arr)?fi.arr:fi.date),baggage:bag});
+        segments.push({oCode:rm?rm[1].toUpperCase():'GL',dCode:rm?rm[2].toUpperCase():(b.Category==='Visit Visa'?'VISA':'DST'),origin:rm?codeToCity(rm[1]):clean.replace(/^(Group Flight|Umrah Package|Visit Visa|Live Airline)\s*[-–]\s*/i,'').slice(0,22).toUpperCase(),dest:rm?codeToCity(rm[2]):(b.Category==='Visit Visa'?'E-VISA':'DESTINATION'),airline:airlineInfo.name,flightNo:flm?flm[1].replace('-',' ').toUpperCase():(airlineInfo.code+'-GRP'),depTime:fi.dep?fmtTicketTime(fi.dep):(times[0]?fmtTicketTime(times[0]):'--:--'),arrTime:fi.arr?fmtTicketTime(fi.arr):(times[1]?fmtTicketTime(times[1]):'--:--'),depDate:fmtTicketDate(hasIsoDate(fi.dep)?fi.dep:fi.date),arrDate:fmtTicketDate(hasIsoDate(fi.arr)?fi.arr:fi.date),baggage:bag});
       }
       return{airlineInfo:airlineInfo,segments:segments};
     }
 
+    /* A4 Luxury Flying-Zone Style Service(s) Voucher / Electronic Ticket (NO Barcode/QR, NO PTCL) */
     function buildBookingVoucherHtml(b,forPrint){
       var prof=getLocalProfile(),isGolanBranding=(prof.voucherBranding==='golan'),useCustomLogo=(!isGolanBranding&&!!prof.logoDataUrl);
       var agencyName=isGolanBranding?'Golan International Travel & Tours':(b.AgencyName||prof.agencyName||'Partner Travel Agency');
@@ -765,51 +580,61 @@
       var agencyContact=isGolanBranding?'0345-3326318':(b.PaxMobile||prof.mobile||'0345-3326318');
       var fi=extractFlightInfo(b),parsed=parseTicketSegments(b,fi),air=parsed.airlineInfo;
       var st=String(b.Status||'PENDING').toUpperCase(),pnrText=esc(b.PNR||'PENDING'),bookingCodeText=esc(b.TicketNo||b.BookingID||'-'),ticketedAt=esc(b.CreatedAt||'-');
-      var paxTitleDisp=(b.Title?(String(b.Title).toUpperCase()+'. '):'')+String(b.PassengerName||'').toUpperCase();
-      var stBg=(st==='CONFIRMED'||st==='ISSUED')?'#dcfce7':(st==='CANCELED'||st==='EXPIRED'?'#fee2e2':'#fef3c7');
+      var paxTitleDisp=(b.Title?(String(b.Title).toUpperCase()+' '):'')+String(b.PassengerName||'').toUpperCase();
+      var stLabel=(st==='PENDING')?'On Hold ⏳':((st==='ISSUED'||st==='CONFIRMED')?'Confirmed / Issued ✓':st);
       var stCol=(st==='CONFIRMED'||st==='ISSUED')?'#15803d':(st==='CANCELED'||st==='EXPIRED'?'#b91c1c':'#b45309');
-      var qrData=makeQrDataUrlSync('GOLAN-ETICKET|'+(b.BookingID||'')+'|'+(b.PNR||'PENDING')+'|'+(b.PassportNo||''));
-      var qrHtml=qrData?'<img src="'+qrData+'" style="width:66px;height:66px;border:1px solid #cbd5e1;border-radius:6px;padding:2px;background:#fff;"/>':'';
-      var rightLogoHtml='';
-      if(useCustomLogo)rightLogoHtml='<img src="'+esc(prof.logoDataUrl)+'" style="height:46px;max-width:160px;object-fit:contain;"/>';
-      else if(air.isSalam)rightLogoHtml='<div style="display:flex;align-items:center;gap:6px;"><svg width="26" height="26" viewBox="0 0 32 32"><polygon points="6,16 18,6 14,16 18,26" fill="#00a651"/><polygon points="12,16 20,10 17,16 20,22" fill="#00a99d"/></svg><div style="line-height:1;"><div style="font-size:10px;color:#84cc16;text-align:right;font-weight:700;">السلام</div><div style="font-size:22px;font-weight:800;"><span style="color:#00a99d;">Salam</span><span style="color:#0284c7;">Air</span></div></div></div>';
-      else rightLogoHtml='<div style="display:flex;align-items:center;gap:10px;"><div style="text-align:right;"><div style="font-size:16px;font-weight:900;color:'+esc(air.color)+';">'+esc(air.name)+'</div><div style="font-size:10px;font-weight:700;color:#64748b;">OFFICIAL B2B E-TICKET</div></div><img src="'+esc(GOLAN_SVG_LOGO)+'" style="height:44px;width:44px;object-fit:contain;border-radius:8px;"/></div>';
-      var routeGraphic='<div style="display:flex;align-items:center;justify-content:center;gap:4px;"><span style="width:6px;height:6px;border-radius:50%;background:#134b91;display:inline-block;"></span><span style="flex:1;height:1.5px;border-top:1.5px dashed #94a3b8;min-width:18px;"></span><svg width="28" height="22" viewBox="0 0 64 48" xmlns="http://www.w3.org/2000/svg"><path d="M56 24c0 2-3.5 3.6-8 3.6H35l-9 13h-4.8l4.5-13H15l-4.5 5.5H7.2l2.4-7.5-2.4-7.5h3.3l4.5 5.5h10.7l-4.5-13H26l9 13h13c4.5 0 8 1.6 8 3.6z" fill="#134b91"/></svg><span style="flex:1;height:1.5px;border-top:1.5px dashed #94a3b8;min-width:18px;"></span><span style="width:6px;height:6px;border-radius:50%;background:#0b95db;display:inline-block;"></span></div>';
-      var segsHtml=parsed.segments.map(function(sg,idx){return '<div class="seg-block"><div class="seg-bar"><span>Flight - '+(idx+1)+' &nbsp;'+esc(sg.origin)+' to '+esc(sg.dest)+'</span><span style="font-size:11px;font-weight:700;opacity:.9;">'+esc(sg.airline)+'</span></div><table class="seg-table"><thead><tr><th style="width:20%;">AIRLINE NAME</th><th style="width:18%;">FLIGHT #</th><th style="width:24%;">DEPARTURE</th><th style="width:14%;text-align:center;">ROUTE</th><th style="width:24%;">ARRIVAL</th></tr></thead><tbody><tr><td><div style="font-weight:700;color:#0f172a;">'+esc(sg.airline)+'</div></td><td><div style="font-weight:800;color:#134b91;">'+esc(sg.flightNo)+'</div><div style="font-weight:800;color:#0f172a;font-size:11px;margin-top:4px;">Baggage</div><div style="color:#334155;font-size:11.5px;">'+esc(sg.baggage)+'</div></td><td><div style="font-size:14.5px;font-weight:800;color:#0f172a;">'+esc(sg.depTime)+'</div><div style="font-weight:700;color:#1e293b;margin-top:2px;">'+esc(sg.origin)+'</div><div style="color:#475569;font-size:11.5px;margin-top:2px;">'+esc(sg.depDate)+'</div></td><td style="vertical-align:middle;">'+routeGraphic+'</td><td><div style="font-size:14.5px;font-weight:800;color:#0f172a;">'+esc(sg.arrTime)+'</div><div style="font-weight:700;color:#1e293b;margin-top:2px;">'+esc(sg.dest)+'</div><div style="color:#475569;font-size:11.5px;margin-top:2px;">'+esc(sg.arrDate)+'</div></td></tr></tbody></table></div>';}).join('');
+      var stBg=(st==='CONFIRMED'||st==='ISSUED')?'#dcfce7':(st==='CANCELED'||st==='EXPIRED'?'#fee2e2':'#fef3c7');
+      var rightLogoHtml=useCustomLogo?'<img src="'+esc(prof.logoDataUrl)+'" style="height:42px;max-width:150px;object-fit:contain;"/>':'<div style="display:flex;align-items:center;gap:8px;"><div style="text-align:right;"><div style="font-size:15px;font-weight:900;color:'+esc(air.color)+';">'+esc(air.name)+'</div><div style="font-size:9.5px;font-weight:700;color:#64748b;">GOLAN B2B SERVICE VOUCHER</div></div><img src="'+esc(GOLAN_SVG_LOGO)+'" style="height:40px;width:40px;object-fit:contain;border-radius:8px;"/></div>';
+
+      var segsHtml=parsed.segments.map(function(sg){
+        return '<div class="it-card"><table width="100%" cellpadding="0" cellspacing="0"><tr>'
+          +'<td style="width:28%;vertical-align:top;"><div class="code-big">'+esc(sg.oCode)+'</div><div class="city-sub">'+esc(sg.origin)+'</div><div class="time-big">'+esc(sg.depTime)+'</div><div class="date-sm">'+esc(sg.depDate)+'</div></td>'
+          +'<td style="width:44%;text-align:center;vertical-align:middle;"><div style="font-size:10.5px;color:#475569;font-weight:700;">Agent Ref: '+esc(b.BookingID)+'</div><div style="font-size:11px;color:#b45309;font-weight:800;margin:2px 0;">Airline PNR: '+pnrText+'</div><div style="margin:5px 0;"><span style="background:'+stBg+';color:'+stCol+';padding:3px 10px;border-radius:99px;font-size:10.5px;font-weight:800;border:1px solid '+stCol+'33;">'+esc(stLabel)+'</span></div><div style="font-size:12px;font-weight:800;color:#0b1f44;">✈ '+esc(sg.airline)+' • <span style="color:#d97706;">'+esc(sg.flightNo)+'</span></div></td>'
+          +'<td style="width:28%;text-align:right;vertical-align:top;"><div class="code-big">'+esc(sg.dCode)+'</div><div class="city-sub">'+esc(sg.dest)+'</div><div class="time-big">'+esc(sg.arrTime)+'</div><div class="date-sm">'+esc(sg.arrDate)+'</div></td>'
+          +'</tr></table></div>';
+      }).join('');
+
+      var segNames=parsed.segments.map(function(sg){return esc(sg.oCode)+' - '+esc(sg.dCode);}).join(' / ');
       var extraRuleHtml=fi.rules?'<div>3- '+esc(String(fi.rules).toUpperCase())+'</div>':'<div>3- PLEASE VERIFY PASSPORT VALIDITY (MIN 6 MONTHS) &amp; VISA REQUIREMENTS PRIOR TO TRAVEL.</div>';
-      return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Electronic Ticket - '+esc(b.BookingID)+'</title><style>@page{size:A4;margin:12mm;}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;box-sizing:border-box;}body{font-family:"Segoe UI",Arial,Helvetica,sans-serif;background:#eef2f7;color:#0f172a;margin:0;padding:24px;}.ticket-page{max-width:790px;margin:0 auto;background:#fff;padding:32px 36px 38px;box-shadow:0 16px 44px rgba(15,23,42,.14);border-radius:8px;border:1px solid #dbe3ee;}.top-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #f1f5f9;}.et-title{font-size:21px;font-weight:900;color:#0f172a;letter-spacing:.5px;margin:0;}.et-pnr{font-size:13.5px;font-weight:800;color:#134b91;margin-top:4px;letter-spacing:.4px;}.info-card{background:linear-gradient(135deg,#0f3f7a,#134b91);color:#fff;border-radius:8px;padding:12px 18px;margin-bottom:16px;}.info-row{display:flex;padding:3px 0;font-size:12.5px;line-height:1.4;border-bottom:1px solid rgba(255,255,255,.08);}.info-row:last-child{border-bottom:none;}.info-lbl{width:44%;color:#cbd5e1;font-weight:600;}.info-val{width:56%;color:#fff;font-weight:700;}.pax-table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:12.5px;}.pax-table thead tr{background:#c84b17;color:#fff;}.pax-table th{padding:8px 10px;text-align:left;font-weight:700;}.pax-table td{padding:9px 10px;border-bottom:1.5px solid #cbd5e1;color:#0f172a;font-weight:600;}.seg-block{margin-bottom:12px;border:1px solid #cbd5e1;border-radius:7px;overflow:hidden;}.seg-bar{background:#0b95db;color:#fff;font-size:14.5px;font-weight:800;padding:7px 14px;display:flex;justify-content:space-between;align-items:center;}.seg-table{width:100%;border-collapse:collapse;font-size:12.5px;}.seg-table th{padding:8px 12px 6px;text-align:left;font-size:11px;font-weight:800;color:#475569;text-transform:uppercase;background:#f8fafc;border-bottom:1px solid #e2e8f0;}.seg-table td{padding:11px 12px;vertical-align:top;line-height:1.45;}.terms-box{margin-top:16px;background:#f8fafc;border:1px solid #e2e8f0;border-left:4px solid #134b91;border-radius:6px;padding:12px 16px;}.terms-title{font-size:14px;font-weight:800;color:#134b91;margin-bottom:8px;}.terms-list{font-size:11.5px;color:#1e293b;line-height:1.75;}.ft-bar{margin-top:16px;padding-top:12px;border-top:1px dashed #cbd5e1;display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:11px;color:#64748b;}.no-print{text-align:center;margin-bottom:14px;}@media print{body{background:#fff;padding:0;}.ticket-page{box-shadow:none;border:none;padding:10px 12px;max-width:100%;}.no-print{display:none!important;}}</style></head><body>'
-        +(forPrint?'<div class="no-print"><button onclick="window.print()" style="background:#134b91;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-weight:800;cursor:pointer;font-size:13px;">🖨️ Print / Save Electronic Ticket PDF</button></div>':'')
-        +'<div class="ticket-page"><div class="top-hdr"><div><h1 class="et-title">ELECTRONIC TICKET</h1><div class="et-pnr">PNR: <span style="font-family:monospace;font-size:15px;background:#eff6ff;padding:2px 8px;border-radius:5px;border:1px solid #bfdbfe;">'+pnrText+'</span> &nbsp;<span style="background:'+stBg+';color:'+stCol+';padding:2px 9px;border-radius:99px;font-size:10.5px;">'+esc(st)+'</span></div></div><div>'+rightLogoHtml+'</div></div>'
-        +'<div class="info-card"><div class="info-row"><div class="info-lbl">Booking code</div><div class="info-val" style="font-family:monospace;">'+bookingCodeText+'</div></div><div class="info-row"><div class="info-lbl">Agency</div><div class="info-val">'+esc(agencyName)+'</div></div><div class="info-row"><div class="info-lbl">Email</div><div class="info-val">'+esc(agencyEmail)+'</div></div><div class="info-row"><div class="info-lbl">Contact</div><div class="info-val">'+esc(agencyContact)+'</div></div><div class="info-row"><div class="info-lbl">Ticketed at</div><div class="info-val">'+ticketedAt+'</div></div></div>'
-        +'<table class="pax-table"><thead><tr><th>Sr #</th><th>Passenger Name</th><th>Doc / Passport</th><th>Meal</th><th>Baggage</th><th>Status</th></tr></thead><tbody><tr><td>1</td><td>'+esc(paxTitleDisp)+'</td><td style="font-family:monospace;">'+esc(String(b.PassportNo||'').toUpperCase())+'</td><td>'+esc(fi.meal||'No')+'</td><td>'+esc(fi.baggage||'20+5 KG')+'</td><td><span style="background:'+stBg+';color:'+stCol+';padding:2px 8px;border-radius:99px;font-size:11px;font-weight:800;">'+esc(st)+'</span></td></tr></tbody></table>'
-        +segsHtml+'<div class="terms-box"><div class="terms-title">TERM &amp; CONDITION:</div><div class="terms-list"><div>1- PASSENGER SHOULD REPORT AT CHECK IN COUNTER AT LEAST 0400 HOURS PRIOR TO FLIGHT.</div><div>2- TICKETS ARE NON REFUNDABLE AND NON CHANGEABLE ANY TIME.</div>'+extraRuleHtml+'</div></div>'
-        +'<div class="ft-bar"><div><strong style="color:#0b1f44;">GOLAN INTERNATIONAL TRAVEL &amp; TOURS</strong><br/>CEO Shan Chairman: 0345-3326318 • Manager Tariq Mehmod: 0341-6929324 • PTCL: 046-2512722<br/>Digitally Verified Electronic Ticket • Ref: '+esc(b.BookingID)+'</div><div>'+qrHtml+'</div></div></div></body></html>';
+
+      return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Service Voucher - '+esc(b.BookingID)+'</title>'
+        +'<style>@page{size:A4 portrait;margin:8mm;}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;box-sizing:border-box;}'
+        +'body{font-family:"Segoe UI",Arial,sans-serif;background:#eef2f7;color:#0f172a;margin:0;padding:16px;}'
+        +'.a4-page{width:194mm;max-width:100%;margin:0 auto;background:#fff;padding:18px 22px;border-radius:8px;box-shadow:0 12px 36px rgba(11,31,68,.14);border:1px solid #dbe3ee;}'
+        +'.top-bar{display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;border-bottom:2px solid #d97706;margin-bottom:10px;}'
+        +'.greet{background:#f1f5f9;padding:7px 12px;border-radius:6px;font-size:11.5px;font-weight:700;color:#0b1f44;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}'
+        +'.it-card{background:linear-gradient(180deg,#f8fafc,#ffffff);border:1px solid #cbd5e1;border-radius:8px;padding:11px 14px;margin-bottom:10px;}'
+        +'.code-big{font-size:21px;font-weight:900;color:#163b7a;letter-spacing:.5px;line-height:1.1;}.city-sub{font-size:10.5px;font-weight:700;color:#475569;margin-bottom:5px;}.time-big{font-size:16px;font-weight:900;color:#0f172a;}.date-sm{font-size:10.5px;color:#163b7a;font-weight:600;}'
+        +'.sec-hdr{background:linear-gradient(90deg,#0b1f44,#163b7a);color:#fff;font-size:12px;font-weight:800;padding:6px 12px;border-radius:6px 6px 0 0;margin-top:9px;}'
+        +'.sec-box{border:1px solid #cbd5e1;border-top:none;border-radius:0 0 6px 6px;padding:9px 12px;font-size:11px;margin-bottom:8px;}'
+        +'.v-tbl{width:100%;border-collapse:collapse;font-size:11px;}.v-tbl th{background:#f1f5f9;padding:6px 8px;text-align:left;color:#0b1f44;font-weight:800;border-bottom:1px solid #cbd5e1;}.v-tbl td{padding:7px 8px;border-bottom:1px solid #eef2f6;}'
+        +'.ft-contacts{margin-top:10px;padding:9px 12px;background:linear-gradient(90deg,#071530,#163b7a);color:#fff;border-radius:8px;font-size:10.5px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;border-bottom:3px solid #d97706;}'
+        +'.no-print{text-align:center;margin-bottom:12px;}@media print{body{background:#fff;padding:0;}.a4-page{box-shadow:none;border:none;padding:4mm;width:100%;}.no-print{display:none!important;}}</style></head><body>'
+        +(forPrint?'<div class="no-print"><button onclick="window.print()" style="background:#0b1f44;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-weight:800;cursor:pointer;font-size:13px;">🖨️ Print / Save A4 PDF</button></div>':'')
+        +'<div class="a4-page"><div class="top-bar"><div><div style="font-size:18px;font-weight:900;color:#0b1f44;">Service(s) Voucher / Electronic Ticket</div><div style="font-size:11.5px;font-weight:800;color:#163b7a;margin-top:2px;">Super Ref: '+esc(b.BookingID)+' &nbsp;|&nbsp; PNR: <span style="background:#eff6ff;padding:1px 7px;border-radius:4px;border:1px solid #bfdbfe;">'+pnrText+'</span></div></div><div>'+rightLogoHtml+'</div></div>'
+        +'<div class="greet"><span>Hi '+esc(paxTitleDisp)+', thank you for choosing Golan International Travel &amp; Tours</span><span>Issued: '+ticketedAt+'</span></div>'
+        +segsHtml
+        +'<div class="sec-hdr">Farefamily &amp; Baggage Description</div><div class="sec-box"><strong style="color:#0b1f44;">'+esc(fi.cleanTitle)+'</strong> • Baggage: <strong>'+esc(fi.baggage||'20+5 KG')+'</strong> • Meal: <strong>'+esc(fi.meal||'Included')+'</strong>'+(fi.stay?' • Stay/Transit: '+esc(fi.stay):'')+'</div>'
+        +'<div class="sec-hdr">Passenger Information</div><div class="sec-box" style="padding:0;"><table class="v-tbl"><thead><tr><th>Passenger Name</th><th>Segment</th><th>Doc / Passport</th><th>Baggage</th><th>Seat</th><th>Meal</th><th>Status</th></tr></thead><tbody><tr><td><b>'+esc(paxTitleDisp)+'</b></td><td>'+segNames+'</td><td style="font-family:monospace;">'+esc(String(b.PassportNo||'').toUpperCase())+'</td><td>'+esc(fi.baggage||'20+5 KG')+'</td><td>'+esc(b.SeatPref||'Any')+'</td><td>'+esc(fi.meal||'Included')+'</td><td><b style="color:'+stCol+';">'+esc(st)+'</b></td></tr></tbody></table></div>'
+        +'<div class="sec-hdr">Account &amp; Price Info (In PKR)</div><div class="sec-box" style="padding:0;"><table class="v-tbl"><thead><tr><th>Booking Code</th><th>Agency</th><th>Email</th><th>Contact</th><th>Status</th><th style="text-align:right;">Grand Total</th></tr></thead><tbody><tr><td style="font-family:monospace;">'+bookingCodeText+'</td><td><b>'+esc(agencyName)+'</b></td><td>'+esc(agencyEmail)+'</td><td>'+esc(agencyContact)+'</td><td>'+esc(st)+'</td><td style="text-align:right;font-weight:900;color:#15803d;">PKR '+Number(b.FarePKR||0).toLocaleString()+'</td></tr></tbody></table></div>'
+        +'<div style="font-size:10px;color:#334155;line-height:1.6;background:#f8fafc;border:1px solid #e2e8f0;border-left:4px solid #163b7a;padding:7px 10px;border-radius:5px;"><strong style="color:#0b1f44;">TERM &amp; CONDITION:</strong><div>1- PASSENGER SHOULD REPORT AT CHECK IN COUNTER AT LEAST 0400 HOURS PRIOR TO FLIGHT.</div><div>2- TICKETS ARE NON REFUNDABLE AND NON CHANGEABLE ANY TIME.</div>'+extraRuleHtml+'</div>'
+        +'<div class="ft-contacts"><div><strong style="color:#fbbf24;">GOLAN INTERNATIONAL TRAVEL &amp; TOURS</strong> (Toba Tek Singh)</div><div>CEO Shan Chairman: <strong>0345-3326318</strong> &nbsp;|&nbsp; Manager Tariq Mehmod: <strong>0341-6929324</strong> &nbsp;|&nbsp; Muhammad Umer: <strong>0331-6379110</strong></div></div>'
+        +'</div></body></html>';
     }
 
     function buildPaymentReceiptHtml(d,forPrint){
       var st=String(d.Status||'PENDING').toUpperCase(),stCol=st==='APPROVED'?'#10b981':(st==='CANCELED'?'#ef4444':'#f59e0b'),stLabel=st==='APPROVED'?'Paid & Credited':st;
-      var qrData=makeQrDataUrlSync('GOLAN-RECEIPT|'+(d.DepositID||'')+'|'+(d.BankName||'')+'|PKR '+(d.AmountPKR||0)+'|'+st);
-      var qrImgHtml=qrData?'<img src="'+qrData+'" style="width:74px;height:74px;border-radius:8px;border:1px solid #e2e8f0;padding:2px;background:#fff;"/>':'';
       return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Payment Receipt - '+esc(d.DepositID)+'</title><style>@page{size:A4;margin:14mm;}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;box-sizing:border-box;}body{font-family:"Segoe UI",Arial,sans-serif;background:#f5f3f7;color:#0f172a;margin:0;padding:26px;}.rcard{max-width:480px;margin:auto;background:#fff;border-radius:22px;overflow:hidden;box-shadow:0 20px 50px rgba(15,23,42,.14);border:1px solid #e2e8f0;}.rtop{background:linear-gradient(105deg,#0b1f44 0%,#4f46e5 48%,#f59e0b 100%);color:#fff;padding:22px 24px;}.rrow{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding:13px 0;border-bottom:1px solid #eef2f6;font-size:13.5px;}.rrow:last-child{border-bottom:none;}.rlbl{color:#64748b;font-weight:600;}.rval{text-align:right;font-weight:800;color:#0f172a;}.rsub{font-size:11.5px;color:#64748b;font-weight:600;margin-top:2px;}.perf{position:relative;height:22px;background:#fff;display:flex;align-items:center;}.perf:before,.perf:after{content:"";position:absolute;width:24px;height:24px;background:#f5f3f7;border-radius:50%;top:-1px;}.perf:before{left:-12px;}.perf:after{right:-12px;}.perf-dots{width:100%;border-top:3px dotted #cbd5e1;margin:0 22px;}.no-print{text-align:center;margin-bottom:14px;}@media print{body{background:#fff;padding:0;}.rcard{box-shadow:none;border:1px solid #cbd5e1;}.perf:before,.perf:after{background:#fff;border:1px solid #cbd5e1;}.no-print{display:none!important;}}</style></head><body>'
         +(forPrint?'<div class="no-print"><button onclick="window.print()" style="background:#0b1f44;color:#fff;border:none;padding:10px 22px;border-radius:9px;font-weight:800;cursor:pointer;font-size:13px;">🖨️ Print / Save PDF Receipt</button></div>':'')
         +'<div class="rcard"><div class="rtop"><div style="display:flex;justify-content:space-between;align-items:center;"><div><div style="font-size:11px;font-weight:800;letter-spacing:.8px;opacity:.9;">GOLAN INTERNATIONAL B2B</div><h2 style="margin:3px 0 0;font-size:21px;font-weight:900;">Transaction Details</h2></div><img src="'+esc(GOLAN_SVG_LOGO)+'" style="width:48px;height:48px;border-radius:12px;background:#fff;padding:3px;"/></div><div style="display:flex;justify-content:space-between;font-size:12px;margin-top:12px;opacity:.95;font-weight:600;"><span>'+esc(d.CreatedAt||'-')+'</span><span>REF: '+esc(d.DepositID||'-')+'</span></div></div>'
         +'<div style="padding:10px 24px 6px;"><div class="rrow"><div class="rlbl">From (Sub-Agent)</div><div class="rval">'+esc(d.AgencyName||d.AgentEmail||'Partner Agency')+'<div class="rsub">'+esc(d.AgentEmail||'')+'</div></div></div><div class="rrow"><div class="rlbl">To (Corporate)</div><div class="rval">Golan International Travel &amp; Tours<div class="rsub">'+esc(d.BankName||'UBL 384263615')+'</div></div></div><div class="rrow"><div class="rlbl">Transaction / Slip Ref</div><div class="rval" style="font-family:monospace;">'+esc(d.TxRef||'SLIP-AUTO')+'</div></div><div class="rrow"><div class="rlbl">Status</div><div class="rval" style="color:'+stCol+';">● '+esc(stLabel)+'</div></div></div>'
-        +'<div class="perf"><div class="perf-dots"></div></div><div style="padding:14px 24px 22px;"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;"><div><div style="font-size:12px;color:#64748b;font-weight:700;">Amount Deposited</div><div style="font-size:28px;font-weight:900;color:#0f172a;margin-top:2px;">PKR '+Number(d.AmountPKR||0).toLocaleString()+'</div></div><div>'+qrImgHtml+'</div></div><div style="margin-top:16px;padding-top:12px;border-top:1px solid #eef2f6;text-align:center;font-size:11px;color:#64748b;line-height:1.5;"><strong style="color:#0b1f44;">Golan International Travel &amp; Tours (Toba Tek Singh)</strong><br/>CEO: 0345-3326318 • Manager Tariq Mehmod: 0341-6929324 • PTCL: 046-2512722</div></div></div></body></html>';
+        +'<div class="perf"><div class="perf-dots"></div></div><div style="padding:14px 24px 22px;"><div><div style="font-size:12px;color:#64748b;font-weight:700;">Amount Deposited</div><div style="font-size:28px;font-weight:900;color:#0f172a;margin-top:2px;">PKR '+Number(d.AmountPKR||0).toLocaleString()+'</div></div><div style="margin-top:16px;padding-top:12px;border-top:1px solid #eef2f6;text-align:center;font-size:11px;color:#64748b;line-height:1.5;"><strong style="color:#0b1f44;">Golan International Travel &amp; Tours (Toba Tek Singh)</strong><br/>CEO Shan Chairman: 0345-3326318 • Manager Tariq Mehmod: 0341-6929324 • Muhammad Umer: 0331-6379110</div></div></div></body></html>';
     }
 
-    async function printSingleGolanTicket(bookingId){var b=(window.__ALL_BOOKINGS__||[]).find(function(x){return String(x.BookingID)===String(bookingId);});if(!b)return;await ensureQRiousLoaded();var w=window.open('','_blank','width=900,height=900');if(!w){alert('Please allow pop-ups to print / save PDF.');return;}w.document.open();w.document.write(buildBookingVoucherHtml(b,true));w.document.close();}
-    async function printPaymentReceiptPdf(depositId){var d=(window.__ALL_DEPOSITS__||[]).find(function(x){return String(x.DepositID)===String(depositId);});if(!d)return;await ensureQRiousLoaded();var w=window.open('','_blank','width=620,height=860');if(!w){alert('Please allow pop-ups to print / save PDF Receipt.');return;}w.document.open();w.document.write(buildPaymentReceiptHtml(d,true));w.document.close();}
+    async function printSingleGolanTicket(bookingId){var b=(window.__ALL_BOOKINGS__||[]).find(function(x){return String(x.BookingID)===String(bookingId);});if(!b)return;var w=window.open('','_blank','width=900,height=900');if(!w){alert('Please allow pop-ups to print / save PDF.');return;}w.document.open();w.document.write(buildBookingVoucherHtml(b,true));w.document.close();}
+    async function printPaymentReceiptPdf(depositId){var d=(window.__ALL_DEPOSITS__||[]).find(function(x){return String(x.DepositID)===String(depositId);});if(!d)return;var w=window.open('','_blank','width=620,height=860');if(!w){alert('Please allow pop-ups to print / save PDF Receipt.');return;}w.document.open();w.document.write(buildPaymentReceiptHtml(d,true));w.document.close();}
 
-    function compressFileToDataUrl(file,maxW,quality){
-      return new Promise(function(resolve,reject){
-        if(!file)return resolve('');
-        if(file.type==='application/pdf'){if(file.size>400000)return reject(new Error('PDF must be under 400 KB.'));var rd=new FileReader();rd.onload=function(){resolve(rd.result||'');};rd.onerror=function(){reject(new Error('Could not read PDF.'));};rd.readAsDataURL(file);return;}
-        var reader=new FileReader();
-        reader.onload=function(ev){var img=new Image();img.onload=function(){var w=img.width,h=img.height;if(w>maxW){h=Math.round(h*(maxW/w));w=maxW;}var c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);resolve(c.toDataURL('image/png',quality||.85));};img.onerror=function(){reject(new Error('Invalid image file.'));};img.src=ev.target.result;};
-        reader.onerror=function(){reject(new Error('Could not read file.'));};reader.readAsDataURL(file);
-      });
-    }
-
+    function compressFileToDataUrl(file,maxW,quality){return new Promise(function(resolve,reject){if(!file)return resolve('');if(file.type==='application/pdf'){if(file.size>400000)return reject(new Error('PDF must be under 400 KB.'));var rd=new FileReader();rd.onload=function(){resolve(rd.result||'');};rd.onerror=function(){reject(new Error('Could not read PDF.'));};rd.readAsDataURL(file);return;}var reader=new FileReader();reader.onload=function(ev){var img=new Image();img.onload=function(){var w=img.width,h=img.height;if(w>maxW){h=Math.round(h*(maxW/w));w=maxW;}var c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);resolve(c.toDataURL('image/png',quality||.85));};img.onerror=function(){reject(new Error('Invalid image file.'));};img.src=ev.target.result;};reader.onerror=function(){reject(new Error('Could not read file.'));};reader.readAsDataURL(file);});}
     function getProfileStorageKey(){return 'golan_profile_'+(currentEmail||'guest').toLowerCase();}
     function getLocalProfile(){try{return JSON.parse(localStorage.getItem(getProfileStorageKey())||'{}')||{};}catch(e){return{};}}
     function applyBrandLogos(){var h=document.getElementById('mainHeaderLogo');if(h)h.src=GOLAN_SVG_LOGO;var a=getLocalProfile().logoDataUrl||GOLAN_SVG_LOGO,s=document.getElementById('sidebarBrandLogo'),p=document.getElementById('profileLogoPreview');if(s)s.src=a;if(p)p.src=a;}
@@ -827,8 +652,7 @@
       var email=document.getElementById('loginEmail').value.trim(),password=document.getElementById('loginPassword').value;
       callBackend({action:'loginStep1',email:email,password:password}).then(function(res){
         if(!res||!res.ok){alertBox.textContent=(res&&res.message)||'Invalid credentials.';alertBox.classList.remove('hidden');return;}
-        currentEmail=email.toLowerCase();
-        var sE=(localStorage.getItem('golan_email')||'').toLowerCase(),sT=localStorage.getItem('golan_token')||'',sEx=Number(localStorage.getItem('golan_expiry')||0);
+        currentEmail=email.toLowerCase();var sE=(localStorage.getItem('golan_email')||'').toLowerCase(),sT=localStorage.getItem('golan_token')||'',sEx=Number(localStorage.getItem('golan_expiry')||0);
         if(sE===currentEmail&&sT&&Date.now()<sEx){return callBackend({action:'checkSession',email:sE,token:sT}).then(function(s){if(s&&s.ok){currentToken=sT;enterDashboard(s.agencyName,s.isAdmin,s.expiry,s.canIssue);}else showTotpPrompt(res,email);}).catch(function(){showTotpPrompt(res,email);});}
         showTotpPrompt(res,email);
       }).catch(function(err){alertBox.textContent='Connection error: '+err.message;alertBox.classList.remove('hidden');}).finally(function(){btn.disabled=false;btn.textContent='Verify Credentials →';});
@@ -867,7 +691,9 @@
 
     function parseFareMeta(f){
       var raw=String(f.Route||f.Title||f.PackageName||f.Category||''),fullTxt=(raw+' '+String(f.Timing||'')+' '+String(f.Stay||'')+' '+String(f.Details||'')).toUpperCase(),airline='GOLAN GROUP FARES',tag='GL',color='#0b1f44',bg='#eff6ff';
-      if(/AIRSIAL|\bPF\b/i.test(fullTxt)){airline='AIRSIAL';tag='★ AIRSIAL';color='#15803d';bg='#f0fdf4';}
+      if(f.Category==='Visit Visa'){return{airline:'VISIT VISAS',tag:'🛂 VISA',color:'#0f4c5c',bg:'#ecfeff',routeCode:'GLOBAL VISA',rawTitle:raw,isVisa:true};}
+      if(f.Category==='Umrah Package'){return{airline:'UMRAH PACKAGES',tag:'🕋 UMRAH',color:'#b45309',bg:'#fffbeb',routeCode:'KSA UMRAH',rawTitle:raw};}
+      if(/AIRSIAL|\bPF[-\s]?\d/i.test(fullTxt)){airline='AIRSIAL';tag='★ AIRSIAL';color='#15803d';bg='#f0fdf4';}
       else if(/\bPIA\b|\bPK[-\s]?\d/i.test(fullTxt)){airline='PIA (PAKISTAN INTL)';tag='PIA';color='#166534';bg='#dcfce7';}
       else if(/SAUDIA|SAUDI|\bSV[-\s]?\d/i.test(fullTxt)){airline='SAUDIA AIRLINES';tag='SV';color='#065f46';bg='#ecfdf5';}
       else if(/AIRBLUE|\bPA[-\s]?\d/i.test(fullTxt)){airline='AIRBLUE';tag='airblue';color='#1d4ed8';bg='#eff6ff';}
@@ -881,37 +707,47 @@
       else if(/ETIHAD|\bEY[-\s]?\d/i.test(fullTxt)){airline='ETIHAD AIRWAYS';tag='EY';color='#b45309';bg='#fffbeb';}
       else if(/AZAL|AZERBAIJAN|\bJ2[-\s]?\d/i.test(fullTxt)){airline='AZERBAIJAN AIRLINES';tag='AZAL';color='#0369a1';bg='#e0f2fe';}
       else if(/SALAM|\bOV[-\s]?\d/i.test(fullTxt)){airline='SALAMAIR';tag='OV';color='#15803d';bg='#f0fdf4';}
-      else if(f.Category==='Umrah Package'){airline='UMRAH PACKAGES';tag='🕋 UMRAH';color='#b45309';bg='#fffbeb';}
-      else if(f.Category==='Visit Visa'){airline='VISIT VISAS';tag='🛂 VISA';color='#0f4c5c';bg='#ecfeff';}
       var rm=raw.toUpperCase().match(/\b([A-Z]{3})\s*[-–\/]\s*([A-Z]{3})\b/);
-      return{airline:airline,tag:tag,color:color,bg:bg,routeCode:rm?(rm[1]+'-'+rm[2]):(f.Category==='Visit Visa'?'GLOBAL VISA':(f.Category==='Umrah Package'?'KSA UMRAH':raw.slice(0,22))),rawTitle:raw};
+      return{airline:airline,tag:tag,color:color,bg:bg,routeCode:rm?(rm[1]+'-'+rm[2]):raw.slice(0,22),rawTitle:raw};
     }
 
     function renderGroupedFares(faresList){
       var list=faresList||[],countEl=document.getElementById('faresShowingCount'),container=document.getElementById('faresGroupedContainer');
       if(countEl)countEl.textContent='Showing '+list.length+' bookable option'+(list.length===1?'':'s');
       if(!container)return;
-      if(!list.length){container.innerHTML='<div class="card" style="text-align:center;color:#64748b;padding:34px;">No bookable fares or packages match this filter. <button type="button" class="btn btn-sm btn-primary" style="margin-left:8px;" onclick="openFareCategoryTab(\'ALL\')">Show All</button></div>';return;}
+      if(!list.length){container.innerHTML='<div class="card" style="text-align:center;color:#64748b;padding:34px;">No bookable options in this category yet. <button type="button" class="btn btn-sm btn-primary" style="margin-left:8px;" onclick="openFareCategoryTab(\'ALL\')">Show All</button></div>';return;}
       var groupsMap={},groupsOrder=[];
       list.forEach(function(f){var meta=parseFareMeta(f),key=meta.airline+'||'+meta.routeCode;if(!groupsMap[key]){groupsMap[key]={meta:meta,items:[]};groupsOrder.push(key);}groupsMap[key].items.push(f);});
       container.innerHTML=groupsOrder.map(function(key){
-        var grp=groupsMap[key],m=grp.meta,items=grp.items;
+        var grp=groupsMap[key],m=grp.meta,items=grp.items,isVisaGrp=!!m.isVisa||items.every(function(x){return x.Category==='Visit Visa';});
         var rowsHtml=items.map(function(f){
           var isVisa=f.Category==='Visit Visa',mainName=f.Route||f.Title||f.PackageName||f.Category,fullLabel=f.Category+' - '+mainName,isSoldOut=!isVisa&&(String(f.Seats)==='0'||String(f.Seats)==='Sold Out');
-          var depText=f.TravelDate||f.Date||(isVisa?'Open Validity':'Flexible'),schedText=f.Timing||mainName,bagText=f.Luggage||(isVisa?'Official E-Visa':'20+7 KG'),mealStr=String(f.Meal||'').trim();
+          var depText=isVisa?mainName:(f.TravelDate||f.Date||'Flexible'),schedText=f.Timing||mainName,bagText=f.Luggage||(isVisa?'Official E-Visa':'20+7 KG'),mealStr=String(f.Meal||'').trim();
           var mealBadge=(!mealStr||!/no\s*meal|none|not\s*included|n\/a/i.test(mealStr))?'<span class="meal-pill-yes">✓ '+esc(mealStr||'Included')+'</span>':'<span class="meal-pill-no">✕ '+esc(mealStr)+'</span>';
           var seatBadge=isSoldOut?'<span class="seat-pill-sold">Sold Out</span>':'<span class="seat-pill-avail">'+(currentIsAdmin&&f.Seats&&!isVisa?(esc(f.Seats)+' Seats'):'Available')+'</span>';
           var delBtn=currentIsAdmin?' <button type="button" class="btn btn-sm btn-red" data-fareid="'+esc(f.ID)+'" onclick="adminDeleteFareReq(this.getAttribute(\'data-fareid\'))">🗑️</button>':'';
-          return '<tr><td><div style="font-weight:700;color:#0f172a;">'+esc(depText)+'</div>'+(f.Stay||f.Details?'<div style="font-size:11px;color:#64748b;margin-top:2px;">'+esc(f.Stay||f.Details)+'</div>':'')+'</td><td><span style="color:#475569;font-weight:600;">🕒 '+esc(schedText)+'</span></td><td><span style="color:#334155;font-weight:600;">🧳 '+esc(bagText)+'</span></td><td>'+mealBadge+'</td><td>'+seatBadge+'</td><td><div class="fare-price-main">'+Number(f.FarePKR||0).toLocaleString()+'</div><div class="fare-price-sub">PKR / SEAT</div></td><td style="text-align:right;white-space:nowrap;"><button type="button" class="btn-book-amber" '+(isSoldOut?'disabled':'')+' data-cat="'+esc(f.Category)+'" data-title="'+esc(fullLabel)+'" data-fare="'+Number(f.FarePKR||0)+'" data-fareid="'+esc(f.ID||'')+'" data-holdmins="'+Number(f.HoldMins||30)+'" onclick="handleFareBookClick(this)">Book now <span>→</span></button>'+delBtn+'</td></tr>';
+          return '<tr><td><div style="font-weight:700;color:#0f172a;">'+esc(depText)+'</div>'+(f.Stay||f.Details?'<div style="font-size:11px;color:#64748b;margin-top:2px;">'+esc(f.Stay||f.Details)+'</div>':'')+'</td><td><span style="color:#475569;font-weight:600;">🕒 '+esc(schedText)+'</span></td><td><span style="color:#334155;font-weight:600;">'+(isVisa?'📄 ':'🧳 ')+esc(bagText)+'</span></td><td>'+mealBadge+'</td><td>'+seatBadge+'</td><td><div class="fare-price-main">'+Number(f.FarePKR||0).toLocaleString()+'</div><div class="fare-price-sub">'+(isVisa?'PKR / VISA':'PKR / SEAT')+'</div></td><td style="text-align:right;white-space:nowrap;"><button type="button" class="btn-book-amber" '+(isSoldOut?'disabled':'')+' data-cat="'+esc(f.Category)+'" data-title="'+esc(fullLabel)+'" data-fare="'+Number(f.FarePKR||0)+'" data-fareid="'+esc(f.ID||'')+'" data-holdmins="'+Number(f.HoldMins||30)+'" onclick="handleFareBookClick(this)">Book now <span>→</span></button>'+delBtn+'</td></tr>';
         }).join('');
-        return '<div class="airline-group-card"><div class="ag-header"><div class="ag-brand"><div class="ag-logo-badge" style="color:'+esc(m.color)+';background:'+esc(m.bg)+';border-color:'+esc(m.color)+'33;">'+esc(m.tag)+'</div><div><div class="ag-label">AIRLINE / PACKAGE</div><div class="ag-name">'+esc(m.airline)+'</div></div></div><span class="ag-count-pill">'+items.length+' fare'+(items.length===1?'':'s')+'</span></div><div class="ag-subheader"><div class="ag-brand"><div class="ag-logo-badge" style="min-width:56px;height:30px;font-size:10.5px;color:'+esc(m.color)+';background:'+esc(m.bg)+';">'+esc(m.tag)+'</div><div><div class="ag-label">CARRIER</div><div style="font-size:13px;font-weight:800;color:#0f172a;">'+esc(m.airline)+'</div></div></div><div class="ag-route-box"><div class="ag-plane-icon">✈️</div><div><div class="ag-label">ROUTE</div><div class="ag-route-code">'+esc(m.routeCode)+'</div></div></div></div><div class="ag-table-wrap"><table class="ag-table"><thead><tr><th>DEPARTURE</th><th>SCHEDULE</th><th>BAGGAGE</th><th>MEAL</th><th>SEATS</th><th>FARE</th><th style="text-align:right;">ACTION</th></tr></thead><tbody>'+rowsHtml+'</tbody></table></div></div>';
+        var theadCols=isVisaGrp?'<tr><th>VISA &amp; REQUIREMENTS</th><th>PROCESSING TIME</th><th>VALIDITY</th><th>ENTRY TYPE</th><th>STATUS</th><th>FEE</th><th style="text-align:right;">ACTION</th></tr>':'<tr><th>DEPARTURE</th><th>SCHEDULE</th><th>BAGGAGE</th><th>MEAL</th><th>SEATS</th><th>FARE</th><th style="text-align:right;">ACTION</th></tr>';
+        return '<div class="airline-group-card"><div class="ag-header"><div class="ag-brand"><div class="ag-logo-badge" style="color:'+esc(m.color)+';background:'+esc(m.bg)+';border-color:'+esc(m.color)+'33;">'+esc(m.tag)+'</div><div><div class="ag-label">'+(isVisaGrp?'VISA CATEGORY':'AIRLINE / PACKAGE')+'</div><div class="ag-name">'+esc(m.airline)+'</div></div></div><span class="ag-count-pill">'+items.length+' option'+(items.length===1?'':'s')+'</span></div><div class="ag-subheader"><div class="ag-brand"><div class="ag-logo-badge" style="min-width:56px;height:30px;font-size:10.5px;color:'+esc(m.color)+';background:'+esc(m.bg)+';">'+esc(m.tag)+'</div><div><div class="ag-label">PROVIDER</div><div style="font-size:13px;font-weight:800;color:#0f172a;">'+esc(m.airline)+'</div></div></div><div class="ag-route-box"><div class="ag-plane-icon">'+(isVisaGrp?'🛂':'✈️')+'</div><div><div class="ag-label">'+(isVisaGrp?'TYPE':'ROUTE')+'</div><div class="ag-route-code">'+esc(m.routeCode)+'</div></div></div></div><div class="ag-table-wrap"><table class="ag-table"><thead>'+theadCols+'</thead><tbody>'+rowsHtml+'</tbody></table></div></div>';
       }).join('');
     }
 
     function applyFaresFilter(){
       var allFares=window.__ALL_FARES__||[],catName=ACTIVE_FARE_CATEGORY||'ALL',searchInput=document.getElementById('faresQuickSearch'),q=searchInput?searchInput.value.trim().toUpperCase():'';
-      var mapKeys={DXB:['DXB','SHJ','AUH','UAE','DUBAI'],JED:['JED','RUH','DMM','MED','KSA','SAUDI','JEDDAH','RIYADH'],UMRAH_SEATS:['JED','MED','UMRAH','SEAT','SV','PK','PA','ER'],KWI:['KWI','KUWAIT'],GYD:['GYD','BAKU','AZERBAIJAN'],EUROPE:['LHR','MAN','BHX','UK','LONDON','MANCHESTER','IST','EUROPE','SCHENGEN','PARIS','ROME'],MCT:['MCT','SLL','MUSCAT','OMAN'],BAH:['BAH','BAHRAIN'],LHR:['LHR','MAN','BHX','UK','LONDON','MANCHESTER']};
-      renderGroupedFares(allFares.filter(function(f){var rowTxt=(String(f.Category||'')+' '+String(f.Route||'')+' '+String(f.Title||'')+' '+String(f.PackageName||'')+' '+String(f.Timing||'')+' '+String(f.TravelDate||f.Date||'')+' '+String(f.Stay||'')+' '+String(f.Details||'')).toUpperCase();var catMatch=(!catName||catName==='ALL')?true:(mapKeys[catName]?mapKeys[catName].some(function(k){return rowTxt.indexOf(k)!==-1;}):rowTxt.indexOf(catName.toUpperCase())!==-1);return catMatch&&(!q||rowTxt.indexOf(q)!==-1);}));
+      var wordRegs={DXB:/\b(DXB|SHJ|AUH|UAE|DUBAI|SHARJAH|ABU DHABI)\b/i,JED:/\b(JED|RUH|DMM|MED|KSA|SAUDI|SAUDIA|JEDDAH|RIYADH|DAMMAM|MADINAH)\b/i,UMRAH_SEATS:/\b(JED|MED|UMRAH|SAUDI|SAUDIA|SV)\b/i,KWI:/\b(KWI|KUWAIT)\b/i,GYD:/\b(GYD|BAKU|AZERBAIJAN|AZAL)\b/i,EUROPE:/\b(LHR|MAN|BHX|UK|LONDON|MANCHESTER|BIRMINGHAM|IST|ISTANBUL|EUROPE|SCHENGEN|PARIS|ROME)\b/i,MCT:/\b(MCT|SLL|MUSCAT|OMAN|SALAM)\b/i,BAH:/\b(BAH|BAHRAIN)\b/i,LHR:/\b(LHR|MAN|BHX|UK|LONDON|MANCHESTER)\b/i};
+      renderGroupedFares(allFares.filter(function(f){
+        var rowTxt=(String(f.Category||'')+' '+String(f.Route||'')+' '+String(f.Title||'')+' '+String(f.PackageName||'')+' '+String(f.Timing||'')+' '+String(f.TravelDate||f.Date||'')+' '+String(f.Stay||'')+' '+String(f.Details||'')).toUpperCase();
+        var catMatch=true;
+        if(catName&&catName!=='ALL'){
+          if(catName==='Visit Visa')catMatch=(f.Category==='Visit Visa');
+          else if(catName==='Umrah Package')catMatch=(f.Category==='Umrah Package');
+          else if(catName==='UMRAH_SEATS')catMatch=(f.Category==='Group Flight'&&wordRegs.UMRAH_SEATS.test(rowTxt));
+          else if(wordRegs[catName])catMatch=(f.Category!=='Visit Visa'&&wordRegs[catName].test(rowTxt));
+          else catMatch=(f.Category===catName);
+        }
+        return catMatch&&(!q||rowTxt.indexOf(q)!==-1);
+      }));
     }
 
     function loadDashboardData(){
@@ -953,30 +789,16 @@
     }
     var loadDashboard=loadDashboardData;
 
-    function switchTab(tabName,btnEl){
-      var isDash=(tabName==='liveair');document.getElementById('dashHeroBanner').style.display=isDash?'flex':'none';document.getElementById('dashHomeBlocks').style.display=isDash?'block':'none';
-      ['liveair','fares','bookings','banks','ledger','contacts','profile','password','admin'].forEach(function(id){var el=document.getElementById('tab-'+id);if(el)el.classList.toggle('hidden',id!==tabName);});
-      var tb=(btnEl&&(btnEl.classList.contains('side-btn')||btnEl.classList.contains('sub-side-btn')))?btnEl:document.querySelector('[data-tab="'+tabName+'"]');
-      document.querySelectorAll('.side-btn,.sub-side-btn').forEach(function(b){b.classList.remove('active');});if(tb)tb.classList.add('active');window.scrollTo({top:0,behavior:'smooth'});
-    }
-
-    function openFareCategoryTab(catName,btnEl){
-      ACTIVE_FARE_CATEGORY=catName||'ALL';switchTab('fares',btnEl);
-      var titles={ALL:'🌐 All Group Fares, Packages & Visas','Umrah Package':'🕋 Live Umrah Packages',UMRAH_SEATS:'🕋 Umrah Groups (Only Seats)',GYD:'🇦🇿 Baku Packages (GYD)',DXB:'🇦🇪 UAE (United Arab Emirates)',KWI:'🇰🇼 Kuwait (KWI) Group Fares',JED:'🇸🇦 KSA Groups',EUROPE:'🇪🇺 Europe & UK Group Fares','Visit Visa':'🛂 Live Visit Visas',MCT:'🇴🇲 Muscat Group Fares',BAH:'🇧🇭 Bahrain Group Fares',LHR:'🇬🇧 UK & London Fares'};
-      document.getElementById('faresTabHeading').textContent=titles[ACTIVE_FARE_CATEGORY]||('🛫 '+ACTIVE_FARE_CATEGORY);
-      var s=document.getElementById('faresQuickSearch');if(s&&ACTIVE_FARE_CATEGORY==='ALL')s.value='';applyFaresFilter();
-    }
+    function switchTab(tabName,btnEl){var isDash=(tabName==='liveair');document.getElementById('dashHeroBanner').style.display=isDash?'flex':'none';document.getElementById('dashHomeBlocks').style.display=isDash?'block':'none';['liveair','fares','bookings','banks','ledger','contacts','profile','password','admin'].forEach(function(id){var el=document.getElementById('tab-'+id);if(el)el.classList.toggle('hidden',id!==tabName);});var tb=(btnEl&&(btnEl.classList.contains('side-btn')||btnEl.classList.contains('sub-side-btn')))?btnEl:document.querySelector('[data-tab="'+tabName+'"]');document.querySelectorAll('.side-btn,.sub-side-btn').forEach(function(b){b.classList.remove('active');});if(tb)tb.classList.add('active');window.scrollTo({top:0,behavior:'smooth'});}
+    function openFareCategoryTab(catName,btnEl){ACTIVE_FARE_CATEGORY=catName||'ALL';switchTab('fares',btnEl);var titles={ALL:'🌐 All Group Fares, Packages & Visas','Umrah Package':'🕋 Live Umrah Packages',UMRAH_SEATS:'🕋 Umrah Groups (Only Seats)',GYD:'🇦🇿 Baku Packages (GYD)',DXB:'🇦🇪 UAE (United Arab Emirates)',KWI:'🇰🇼 Kuwait (KWI) Group Fares',JED:'🇸🇦 KSA Groups',EUROPE:'🇪🇺 Europe & UK Group Fares','Visit Visa':'🛂 Live Visit Visas',MCT:'🇴🇲 Muscat Group Fares',BAH:'🇧🇭 Bahrain Group Fares',LHR:'🇬🇧 UK & London Fares'};document.getElementById('faresTabHeading').textContent=titles[ACTIVE_FARE_CATEGORY]||('🛫 '+ACTIVE_FARE_CATEGORY);var s=document.getElementById('faresQuickSearch');if(s&&ACTIVE_FARE_CATEGORY==='ALL')s.value='';applyFaresFilter();}
 
     function renderBookingsTable(isAdmin){
       var list=window.__ALL_BOOKINGS__||[],now=Date.now(),todayStr=new Date().toLocaleDateString('en-GB',{timeZone:'Asia/Karachi'}),todayCnt=0,soldCnt=0,holdCnt=0,cancCnt=0,hasIssueAccess=userHasIssueAccess();
       list.forEach(function(b){if(String(b.CreatedAt||'').indexOf(todayStr)!==-1)todayCnt++;var st=String(b.Status||'PENDING').toUpperCase(),isExp=(st==='PENDING'&&b.HoldUntil&&now>Number(b.HoldUntil));if(st==='CONFIRMED'||st==='ISSUED')soldCnt++;else if(st==='CANCELED'||st==='EXPIRED'||isExp)cancCnt++;else holdCnt++;});
-      document.getElementById('statTodayBookings').textContent=todayCnt;document.getElementById('statTotalBookings').textContent=list.length;
-      document.getElementById('statSoldTickets').textContent=soldCnt;document.getElementById('statHoldTickets').textContent=holdCnt;document.getElementById('statCanceledTickets').textContent=cancCnt;
-
+      document.getElementById('statTodayBookings').textContent=todayCnt;document.getElementById('statTotalBookings').textContent=list.length;document.getElementById('statSoldTickets').textContent=soldCnt;document.getElementById('statHoldTickets').textContent=holdCnt;document.getElementById('statCanceledTickets').textContent=cancCnt;
       document.getElementById('bookingsTableBody').innerHTML=list.length?list.map(function(b){
         var fi=extractFlightInfo(b),dtParts=String(b.CreatedAt||'').split(','),dateHtml=dtParts.length>1?('<div style="font-weight:700;color:#0f172a;">'+esc(dtParts[0].trim())+'</div><div style="font-size:10px;color:#64748b;margin-top:2px;">'+esc(dtParts.slice(1).join(',').trim())+'</div>'):esc(b.CreatedAt);
-        var st=String(b.Status||'PENDING').toUpperCase(),isExp=(st==='PENDING'&&b.HoldUntil&&now>Number(b.HoldUntil)),badgeSt=isExp?'EXPIRED':st;
-        var timerHtml=(st==='PENDING'&&b.HoldUntil&&!isExp)?'<div style="margin-top:4px;"><span class="live-timer" data-until="'+esc(b.HoldUntil)+'" style="color:#dc2626;font-weight:800;font-size:10px;font-family:monospace;">⏳ ...</span></div>':'';
+        var st=String(b.Status||'PENDING').toUpperCase(),isExp=(st==='PENDING'&&b.HoldUntil&&now>Number(b.HoldUntil)),badgeSt=isExp?'EXPIRED':st,timerHtml=(st==='PENDING'&&b.HoldUntil&&!isExp)?'<div style="margin-top:4px;"><span class="live-timer" data-until="'+esc(b.HoldUntil)+'" style="color:#dc2626;font-weight:800;font-size:10px;font-family:monospace;">⏳ ...</span></div>':'';
         var pnrHtml='<span class="pnr-pill">'+esc(b.PNR||'PENDING')+'</span>'+(b.TicketNo?'<div style="font-size:9.5px;color:#15803d;font-weight:800;margin-top:3px;">TKT: '+esc(b.TicketNo)+'</div>':'');
         var schedMini=(fi.date||fi.timing)?'<div style="font-size:10.5px;color:#475569;margin-top:3px;line-height:1.35;">'+(fi.date?'📅 '+esc(fi.date):'')+(fi.timing?' • 🕒 '+esc(fi.timing):'')+'</div>':'';
         var paxDisp=(b.Title?(esc(b.Title)+'. '):'')+esc(b.PassengerName),bid=esc(b.BookingID),btns='';
@@ -1007,7 +829,6 @@
       document.getElementById('paxDocType').value='Passport';document.getElementById('paxIssueCountry').value='Pakistan';document.getElementById('paxNat').value='Pakistani';document.getElementById('paxPhoneCode').value='+92';document.getElementById('paxSeat').value='Any';document.getElementById('fzTermsCheck').checked=true;
       var isVisa=(cat==='Visit Visa');document.getElementById('flightFieldsWrap').classList.toggle('hidden',isVisa);document.getElementById('visaFieldsWrap').classList.toggle('hidden',!isVisa);
       document.getElementById('modalHeaderTitle').textContent=isVisa?'Visit Visa Application & Checkout':'Passenger & Itinerary Checkout';
-
       var fAir='Golan Group',fNo='GL-GRP',fDep='--',fArr='--',fBag='30 KG + 7 KG',fMeal='Included',fRules='Non-Refundable • Report 4 Hours Before Departure',fStay='Direct';
       if(cat==='Live Airline'){var o=(window.__GDS_OFFERS__||[])[ACTIVE_GDS_IDX]||{};fAir=o.Airline||'Airline';fNo=o.FlightNo||'GDS';fDep=(o.Origin||'')+' '+(o.DepTime||'');fArr=(o.Dest||'')+' '+(o.ArrTime||'');fBag=o.Baggage||o.Luggage||'30 KG + 7 KG';fStay=o.Stops||'Direct';}
       else if(fareId){var fo=(window.__ALL_FARES__||[]).find(function(x){return String(x.ID)===String(fareId);})||{};fAir=parseFareMeta(fo).airline;fNo=fo.Title||cat;fDep=fo.TravelDate||'Flexible';fArr=fo.Timing||'-';fBag=fo.Luggage||'30 KG + 7 KG';fMeal=fo.Meal||'Included';fStay=fo.Stay||'Direct';fRules=fo.Details||fRules;}
@@ -1015,11 +836,9 @@
       document.getElementById('fzRouteBadge').textContent=title;
       document.getElementById('fzFlightInfoBody').innerHTML='<tr><td><b>'+esc(fDep)+'</b></td><td><b>'+esc(fArr)+'</b></td><td>'+esc(fAir)+'</td><td style="font-family:monospace;font-weight:700;">'+esc(fNo)+'</td><td>'+esc(cat)+' • '+esc(fMeal)+'</td><td>🧳 '+esc(fBag)+'</td></tr>';
       document.getElementById('fzFareDescBody').innerHTML='<div style="font-weight:800;color:#0b1f44;font-size:14px;margin-bottom:6px;">'+esc(title)+'</div><ul style="padding-left:18px;font-size:12px;color:#334155;line-height:1.7;"><li>Checked &amp; Carry-on Baggage: <strong>'+esc(fBag)+'</strong></li><li>Meal: <strong>'+esc(fMeal)+'</strong> (Changeable above)</li><li>Transit / Stay: <strong>'+esc(fStay)+'</strong></li><li>Rules: '+esc(fRules)+'</li></ul>';
-      var fAmt=Number(fare||0);
+      var fAmt=Number(fare||0),rem=Math.max(0,currentWalletBal-fAmt);
       document.getElementById('fzFareDetailsBody').innerHTML='<tr><td><b>Adult</b></td><td>PKR '+fAmt.toLocaleString()+'</td><td>PKR 0</td><td>PKR 0</td><td>PKR 0</td><td>x 1 =</td><td style="text-align:right;font-weight:900;color:#15803d;">PKR '+fAmt.toLocaleString()+'</td></tr><tr><td colspan="6" style="text-align:right;font-weight:800;">Grand Total :</td><td style="text-align:right;font-size:15px;font-weight:900;color:#0b1f44;">PKR '+fAmt.toLocaleString()+'</td></tr>';
-      var rem=Math.max(0,currentWalletBal-fAmt);
       document.getElementById('fzPaymentBoxes').innerHTML='<div class="fz-pay-box"><small>Payable (Amt.)</small><strong>PKR '+fAmt.toLocaleString()+'</strong></div><div class="fz-pay-box"><small>Invoice (Amt.)</small><strong>PKR '+fAmt.toLocaleString()+'</strong></div><div class="fz-pay-box"><small>Wallet Balance</small><strong style="color:#15803d;">PKR '+currentWalletBal.toLocaleString()+'</strong></div><div class="fz-pay-box"><small>After Issue Balance</small><strong>PKR '+rem.toLocaleString()+'</strong></div>';
-
       var sb=document.getElementById('modalSubmitBtn');sb.disabled=false;sb.textContent='Book Only (Hold)';
       var issBtn=document.getElementById('modalIssueDirectBtn');if(issBtn)issBtn.classList.toggle('hidden',!userHasIssueAccess()||isVisa);
       document.getElementById('bookingModal').classList.remove('hidden');
@@ -1069,13 +888,11 @@
         if(selectedItem.Category==='Live Airline'){var o=(window.__GDS_OFFERS__||[])[ACTIVE_GDS_IDX]||{};fDate=String(o.DepTime||'').split(' ')[0]||'';fDep=o.DepTime||'';fArr=o.ArrTime||'';fTiming=(fDep?('Dep: '+fDep):'')+(fArr?(' → Arr: '+fArr):'');fBag=o.Baggage||o.Luggage||'30 KG + 7 KG';fStay=o.Stops||'Direct';if(fullTitle.indexOf('{DATE:')===-1&&o.DepTime)fullTitle+=' {DATE:'+fDate+'|DEP:'+fDep+'|ARR:'+fArr+'|DTERM:1|ATERM:1|BAG:'+fBag+'|STAY:'+fStay+'}';}
         else if(selectedItem.FareID){var fo=(window.__ALL_FARES__||[]).find(function(x){return String(x.ID)===String(selectedItem.FareID);})||{};fDate=fo.TravelDate||fo.Date||'';fTiming=fo.Timing||'';fBag=fo.Luggage||'';fStay=fo.Stay||'';fDetails=fo.Details||'';}
         var agencyDisp=getLocalProfile().agencyName||document.getElementById('dashAgencyName').textContent||'Partner';
-        var previewBooking={BookingID:'PENDING',PNR:'PENDING',AgencyName:agencyDisp,AgentEmail:currentEmail,Title:titleVal,PassengerName:fullName,PassportNo:ppFinal,PaxMobile:mobFull,Category:selectedItem.Category,ItemTitle:fullTitle,FlightDate:fDate,DepTime:fDep,ArrTime:fArr,Timing:fTiming,Baggage:fBag,Meal:fMeal,Stay:fStay,Details:fDetails,FarePKR:selectedItem.FarePKR,FareID:selectedItem.FareID||'',Status:'PENDING',CreatedAt:new Date().toLocaleString('en-GB',{timeZone:'Asia/Karachi'})};
+        var previewBooking={BookingID:'PENDING',PNR:'PENDING',AgencyName:agencyDisp,AgentEmail:currentEmail,Title:titleVal,SeatPref:seatVal,PassengerName:fullName,PassportNo:ppFinal,PaxMobile:mobFull,Category:selectedItem.Category,ItemTitle:fullTitle,FlightDate:fDate,DepTime:fDep,ArrTime:fArr,Timing:fTiming,Baggage:fBag,Meal:fMeal,Stay:fStay,Details:fDetails,FarePKR:selectedItem.FarePKR,FareID:selectedItem.FareID||'',Status:'PENDING',CreatedAt:new Date().toLocaleString('en-GB',{timeZone:'Asia/Karachi'})};
         var voucherHtml=buildBookingVoucherHtml(previewBooking,false);
         var res=await callBackend({action:'addBooking',email:currentEmail,token:currentToken,agentEmail:currentEmail,adminEmail:ADMIN_NOTIFY_EMAIL,notifyAdmin:true,notifySubAgent:true,title:titleVal,gender:genderVal,seatPref:seatVal,docType:docTypeVal,issueCountry:issueCountryVal,issueDate:issueDateVal,passengerName:fullName,passengerEmail:paxEm,passportNo:ppFinal,dob:dobVal,passportExpiry:expVal,nationality:natVal,paxMobile:mobFull,category:selectedItem.Category,itemTitle:fullTitle,farePKR:selectedItem.FarePKR,fareId:selectedItem.FareID||'',offerId:selectedItem.OfferID||'',holdMins:selectedItem.HoldMins||0,flightDate:fDate,depTime:fDep,arrTime:fArr,timing:fTiming,baggage:fBag,meal:fMeal,stay:fStay,details:fDetails,passportDoc:passportDoc,photoDoc:photoDoc,voucherHtml:voucherHtml});
         if(!res||!res.ok){alert((res&&res.message)||'Booking failed.');return;}
-        if(directIssue&&userHasIssueAccess()){
-          var pnrInp=prompt('Enter Airline / GDS PNR to Issue:',res.pnr||'');if(pnrInp!==null){var tktInp=prompt('Enter 13-Digit Ticket Number (Optional):','')||'';await callBackend({action:'adminIssueBooking',email:currentEmail,token:currentToken,bookingId:res.bookingId,pnr:pnrInp.trim()||res.pnr,ticketNo:tktInp.trim(),agentEmail:currentEmail,passengerEmail:paxEm,adminEmail:ADMIN_NOTIFY_EMAIL,notifyAdmin:true,notifySubAgent:true});}
-        }
+        if(directIssue&&userHasIssueAccess()){var pnrInp=prompt('Enter Airline / GDS PNR to Issue:',res.pnr||'');if(pnrInp!==null){var tktInp=prompt('Enter 13-Digit Ticket Number (Optional):','')||'';await callBackend({action:'adminIssueBooking',email:currentEmail,token:currentToken,bookingId:res.bookingId,pnr:pnrInp.trim()||res.pnr,ticketNo:tktInp.trim(),agentEmail:currentEmail,passengerEmail:paxEm,adminEmail:ADMIN_NOTIFY_EMAIL,notifyAdmin:true,notifySubAgent:true});}}
         closeBookingModal();document.getElementById('gdsDetailsModal').classList.add('hidden');
         showProBookingCard(res.bookingId,res.pnr,(titleVal?(titleVal+'. '):'')+fullName,ppFinal,selectedItem.Title,selectedItem.FarePKR);
         loadDashboardData();switchTab('bookings');
@@ -1083,7 +900,7 @@
       finally{isBookingSubmitting=false;subBtn.disabled=false;subBtn.textContent='Book Only (Hold)';}
     }
 
-    function showProBookingCard(id,pnr,pax,pp,itin,fare){var old=document.getElementById('golanProBookingCard');if(old)old.remove();var pop=document.createElement('div');pop.id='golanProBookingCard';pop.style.cssText='position:fixed;inset:0;background:rgba(11,31,68,.75);z-index:100020;display:flex;align-items:center;justify-content:center;padding:16px;';pop.innerHTML='<div style="background:#fff;max-width:450px;width:100%;border-radius:16px;overflow:hidden;border:2px solid #0b1f44;box-shadow:0 20px 50px rgba(0,0,0,.35);"><div style="background:linear-gradient(135deg,#0b1f44,#163570);color:#fff;padding:18px;text-align:center;border-bottom:4px solid #d97706;"><div style="font-size:28px;">✅</div><div style="font-size:17px;font-weight:800;">BOOKING CONFIRMED</div><div style="font-size:11px;color:#fde68a;margin-top:3px;">📧 Auto-Gmail Voucher Sent to Sub-Agent &amp; Admins</div></div><div style="padding:18px;font-size:13px;"><div style="display:flex;gap:10px;margin-bottom:12px;"><div style="flex:1;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:10px;text-align:center;"><small style="color:#64748b;font-weight:700;">PNR</small><div style="font-size:19px;font-weight:900;color:#0b1f44;font-family:monospace;">'+esc(pnr)+'</div></div><div style="flex:1;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:10px;text-align:center;"><small style="color:#64748b;font-weight:700;">REF ID</small><div style="font-size:16px;font-weight:800;color:#b45309;font-family:monospace;">'+esc(id)+'</div></div></div><p><b>Passenger:</b> '+esc(pax)+' (Doc: '+esc(pp)+')</p><p style="margin:6px 0;"><b>Item:</b> '+esc(itin)+'</p><p><b>Net Fare:</b> <b style="color:#15803d;">PKR '+Number(fare||0).toLocaleString()+'</b></p><div style="display:flex;gap:8px;margin-top:14px;"><button type="button" class="btn btn-primary" data-bid="'+esc(id)+'" onclick="document.getElementById(\'golanProBookingCard\').remove();printSingleGolanTicket(this.getAttribute(\'data-bid\'))">🖨 Print Electronic Ticket</button><button type="button" class="btn btn-gold" onclick="document.getElementById(\'golanProBookingCard\').remove()">Done</button></div></div></div>';document.body.appendChild(pop);}
+    function showProBookingCard(id,pnr,pax,pp,itin,fare){var old=document.getElementById('golanProBookingCard');if(old)old.remove();var pop=document.createElement('div');pop.id='golanProBookingCard';pop.style.cssText='position:fixed;inset:0;background:rgba(11,31,68,.75);z-index:100020;display:flex;align-items:center;justify-content:center;padding:16px;';pop.innerHTML='<div style="background:#fff;max-width:450px;width:100%;border-radius:16px;overflow:hidden;border:2px solid #0b1f44;box-shadow:0 20px 50px rgba(0,0,0,.35);"><div style="background:linear-gradient(135deg,#0b1f44,#163570);color:#fff;padding:18px;text-align:center;border-bottom:4px solid #d97706;"><div style="font-size:28px;">✅</div><div style="font-size:17px;font-weight:800;">BOOKING CONFIRMED</div><div style="font-size:11px;color:#fde68a;margin-top:3px;">📧 Auto-Gmail Voucher Sent to Sub-Agent &amp; Admins</div></div><div style="padding:18px;font-size:13px;"><div style="display:flex;gap:10px;margin-bottom:12px;"><div style="flex:1;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:10px;text-align:center;"><small style="color:#64748b;font-weight:700;">PNR</small><div style="font-size:19px;font-weight:900;color:#0b1f44;font-family:monospace;">'+esc(pnr)+'</div></div><div style="flex:1;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:10px;text-align:center;"><small style="color:#64748b;font-weight:700;">REF ID</small><div style="font-size:16px;font-weight:800;color:#b45309;font-family:monospace;">'+esc(id)+'</div></div></div><p><b>Passenger:</b> '+esc(pax)+' (Doc: '+esc(pp)+')</p><p style="margin:6px 0;"><b>Item:</b> '+esc(itin)+'</p><p><b>Net Fare:</b> <b style="color:#15803d;">PKR '+Number(fare||0).toLocaleString()+'</b></p><div style="display:flex;gap:8px;margin-top:14px;"><button type="button" class="btn btn-primary" data-bid="'+esc(id)+'" onclick="document.getElementById(\'golanProBookingCard\').remove();printSingleGolanTicket(this.getAttribute(\'data-bid\'))">🖨 Print Service Voucher</button><button type="button" class="btn btn-gold" onclick="document.getElementById(\'golanProBookingCard\').remove()">Done</button></div></div></div>';document.body.appendChild(pop);}
 
     function setTripType(t){CURRENT_TRIP_TYPE=t;['oneway','roundtrip','multicity'].forEach(function(id){document.getElementById('pill-'+id).className=(id===t)?'tab-btn active':'tab-btn';});document.getElementById('boxReturnDate').style.display=(t==='roundtrip')?'block':'none';document.getElementById('srchReturnDate').required=(t==='roundtrip');document.getElementById('boxMultiCity').style.display=(t==='multicity')?'grid':'none';document.getElementById('srchOrigin2Text').required=(t==='multicity');document.getElementById('srchDest2Text').required=(t==='multicity');document.getElementById('srchDate2').required=(t==='multicity');}
     function filterAirports(which){var cap=which.charAt(0).toUpperCase()+which.slice(1),q=(document.getElementById('srch'+cap+'Text').value||'').toLowerCase(),matches=AIRPORTS_LIST.filter(function(a){return a.label.toLowerCase().indexOf(q)!==-1||a.code.toLowerCase().indexOf(q)!==-1;});if(!matches.length)matches=AIRPORTS_LIST;var d=document.getElementById('drop-'+which);d.innerHTML=matches.map(function(a){return '<div data-which="'+esc(which)+'" data-code="'+esc(a.code)+'" data-label="'+esc(a.label)+'" onmousedown="selectAirport(this.getAttribute(\'data-which\'),this.getAttribute(\'data-code\'),this.getAttribute(\'data-label\'))" style="padding:9px 12px;cursor:pointer;border-bottom:1px solid #f1f5f9;font-size:12.5px;">'+esc(a.label)+'</div>';}).join('');d.style.display='block';}
@@ -1118,18 +935,16 @@
     function adminIssueGolanTicket(id){if(!userHasIssueAccess()){alert('⛔ Only Admin or authorized sub-agents can issue tickets.');return;}var existing=(window.__ALL_BOOKINGS__||[]).find(function(x){return String(x.BookingID)===String(id);})||{};var pnr=prompt('Enter Airline / GDS PNR:',existing.PNR&&existing.PNR!=='PENDING'?existing.PNR:'');if(pnr===null)return;var tkt=prompt('Enter 13-Digit Ticket Number (Optional):',existing.TicketNo||'')||'';var updatedB=Object.assign({},existing,{BookingID:id,PNR:pnr.trim()||existing.PNR||'CONFIRMED',TicketNo:tkt.trim()||existing.TicketNo||'',Status:'ISSUED'});var voucherHtml=buildBookingVoucherHtml(updatedB,false);callBackend({action:'adminIssueBooking',email:currentEmail,token:currentToken,bookingId:id,pnr:pnr.trim(),ticketNo:tkt.trim(),agentEmail:existing.AgentEmail||'',passengerEmail:existing.PassengerEmail||'',adminEmail:ADMIN_NOTIFY_EMAIL,notifyAdmin:true,notifySubAgent:true,voucherHtml:voucherHtml}).then(function(r){alert((r&&r.message)||'Ticket Issued & Gmail Sent');loadDashboardData();}).catch(function(err){alert('Error: '+err.message);});}
     function adminCancelGolanTicket(id){if(confirm('Cancel booking '+id+'?'))callBackend({action:'adminCancelBooking',email:currentEmail,token:currentToken,bookingId:id}).then(function(r){alert((r&&r.message)||'Canceled');loadDashboardData();}).catch(function(err){alert('Error: '+err.message);});}
     function deleteBookingAdmin(id){if(confirm('Permanently delete booking '+id+'?'))callBackend({action:'adminDeleteBooking',email:currentEmail,token:currentToken,bookingId:id}).then(function(r){alert((r&&r.message)||'Deleted');loadDashboardData();}).catch(function(err){alert('Error: '+err.message);});}
-
     function adminApproveDepositReq(depId){var d=(window.__ALL_DEPOSITS__||[]).find(function(x){return String(x.DepositID)===String(depId);});pendingApproveDepId=depId;var detEl=document.getElementById('approveConfirmDetails');if(detEl){detEl.innerHTML='<div><b>Deposit ID:</b> '+esc(depId)+'</div>'+(d?'<div><b>Agency:</b> '+esc(d.AgencyName||d.AgentEmail||'-')+'</div><div><b>Bank:</b> '+esc(d.BankName||'-')+'</div><div><b>Amount:</b> <span style="color:#15803d;font-weight:900;">PKR '+Number(d.AmountPKR||0).toLocaleString()+'</span></div>':'');}var okBtn=document.getElementById('approveConfirmOkBtn');if(okBtn){okBtn.disabled=false;okBtn.textContent='✓ OK (Approve & Update Wallet)';}document.getElementById('approveConfirmModal').classList.remove('hidden');}
     function closeApproveConfirmModal(){pendingApproveDepId='';document.getElementById('approveConfirmModal').classList.add('hidden');}
     function confirmApproveDepositOk(){if(!pendingApproveDepId)return;var okBtn=document.getElementById('approveConfirmOkBtn');if(okBtn){okBtn.disabled=true;okBtn.textContent='⏳ Updating Wallet...';}callBackend({action:'adminApproveDeposit',email:currentEmail,token:currentToken,depositId:pendingApproveDepId}).then(function(r){closeApproveConfirmModal();alert((r&&r.message)||'✅ Approved & Agent Wallet Updated!');loadDashboardData();}).catch(function(err){if(okBtn){okBtn.disabled=false;okBtn.textContent='✓ OK (Approve & Update Wallet)';}alert('Error: '+err.message);});}
     function adminToggleIssueAuth(targetEmail,allow){if(!confirm(allow?('Give Ticket Issue Authority to '+targetEmail+'?'):('Cancel / Remove Ticket Issue Authority from '+targetEmail+'?')))return;callBackend({action:'adminManageAgent',email:currentEmail,token:currentToken,targetEmail:targetEmail,subAction:allow?'GRANT_ISSUE':'REVOKE_ISSUE'}).then(function(r){alert((r&&r.message)||(allow?'✅ Issue Authority Granted!':'✅ Issue Authority Canceled!'));loadDashboardData();}).catch(function(err){alert('Error: '+err.message);});}
     function adminAgentCtrl(targetEmail,subAction){var amt=0;if(subAction==='ADD_LIMIT'){var v=prompt('Enter PKR Amount to Add:','50000');if(v===null)return;amt=Number(v||0);if(amt<=0){alert('Enter valid amount.');return;}}else if(!confirm('Confirm '+subAction+' for '+targetEmail+'?'))return;callBackend({action:'adminManageAgent',email:currentEmail,token:currentToken,targetEmail:targetEmail,subAction:subAction,amountPKR:amt}).then(function(r){alert((r&&r.message)||'Updated');loadDashboardData();}).catch(function(err){alert('Error: '+err.message);});}
     function resetAgentPass(targetEmail){var np=prompt('Enter NEW temporary password for '+targetEmail+':');if(!np||np.length<6){if(np!==null)alert('Password must be at least 6 characters.');return;}callBackend({action:'adminManageAgent',email:currentEmail,token:currentToken,targetEmail:targetEmail,subAction:'RESET_PASSWORD',newPassword:np}).then(function(r){alert((r&&r.message)||'Reset done');loadDashboardData();}).catch(function(err){alert('Error: '+err.message);});}
-
-function autoScanBankSlip(inp){var file=inp&&inp.files&&inp.files[0],st=document.getElementById('slipScanStatus'),amtInp=document.getElementById('depAmount'),refInp=document.getElementById('depRef');if(!file)return;st.style.color='#1d4ed8';st.textContent='⏳ Scanning deposit slip...';var runOcr=function(){window.Tesseract.recognize(file,'eng').then(function(res){var txt=(res&&res.data&&res.data.text)||'',amt=0,m1=txt.match(/(?:PKR|Rs\.?|Amount|Total)\s*[:\-]?\s*([1-9]\d{0,2}(?:,\d{3})*(?:\.\d{1,2})?|[1-9]\d{2,7}(?:\.\d{1,2})?)/i);if(m1&&m1[1])amt=Math.round(parseFloat(m1[1].replace(/,/g,'')));else(txt.match(/\b\d{1,3}(?:,\d{3})+(?:\.\d{2})?\b/g)||[]).forEach(function(n){var v=Math.round(parseFloat(n.replace(/,/g,'')));if(v>=100&&v<=50000000&&v>amt)amt=v;});var mTid=txt.match(/(?:TID|Ref(?:erence)?|Trans(?:action)?\s*(?:ID|No)|Auth\s*Code)\s*[:#\-]?\s*([A-Z0-9\-]{6,22})/i);if(refInp)refInp.value=(mTid&&mTid[1])?mTid[1].trim():('SLIP-'+Date.now().toString().slice(-6));if(amt>=100&&amtInp){amtInp.value=amt;st.style.color='#15803d';st.textContent='✅ Auto-Detected: PKR '+amt.toLocaleString();}else{st.style.color='#b45309';st.textContent='⚠️ Slip unclear — please enter amount manually.';}}).catch(function(){st.style.color='#b45309';st.textContent='⚠️ Enter amount manually.';});};if(window.Tesseract)runOcr();else{var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';s.onload=runOcr;document.head.appendChild(s);}}
+    function autoScanBankSlip(inp){var file=inp&&inp.files&&inp.files[0],st=document.getElementById('slipScanStatus'),amtInp=document.getElementById('depAmount'),refInp=document.getElementById('depRef');if(!file)return;st.style.color='#1d4ed8';st.textContent='⏳ Scanning deposit slip...';var runOcr=function(){window.Tesseract.recognize(file,'eng').then(function(res){var txt=(res&&res.data&&res.data.text)||'',amt=0,m1=txt.match(/(?:PKR|Rs\.?|Amount|Total)\s*[:\-]?\s*([1-9]\d{0,2}(?:,\d{3})*(?:\.\d{1,2})?|[1-9]\d{2,7}(?:\.\d{1,2})?)/i);if(m1&&m1[1])amt=Math.round(parseFloat(m1[1].replace(/,/g,'')));else(txt.match(/\b\d{1,3}(?:,\d{3})+(?:\.\d{2})?\b/g)||[]).forEach(function(n){var v=Math.round(parseFloat(n.replace(/,/g,'')));if(v>=100&&v<=50000000&&v>amt)amt=v;});var mTid=txt.match(/(?:TID|Ref(?:erence)?|Trans(?:action)?\s*(?:ID|No)|Auth\s*Code)\s*[:#\-]?\s*([A-Z0-9\-]{6,22})/i);if(refInp)refInp.value=(mTid&&mTid[1])?mTid[1].trim():('SLIP-'+Date.now().toString().slice(-6));if(amt>=100&&amtInp){amtInp.value=amt;st.style.color='#15803d';st.textContent='✅ Auto-Detected: PKR '+amt.toLocaleString();}else{st.style.color='#b45309';st.textContent='⚠️ Slip unclear — please enter amount manually.';}}).catch(function(){st.style.color='#b45309';st.textContent='⚠️ Enter amount manually.';});};if(window.Tesseract)runOcr();else{var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';s.onload=runOcr;document.head.appendChild(s);}}
     async function handleInstantSlipUpload(e){e.preventDefault();var amt=Number(document.getElementById('depAmount').value||0),ref=(document.getElementById('depRef').value||('SLIP-'+Date.now().toString().slice(-6))).trim(),bankSel=document.getElementById('depBank'),bank=(bankSel&&bankSel.value)?bankSel.value.trim():'UBL (384263615)',fileInp=document.getElementById('depSlipFile');if(amt<100){alert('Minimum deposit PKR 100.');return;}if(!fileInp||!fileInp.files||!fileInp.files.length){alert('Please attach deposit slip image.');return;}var btn=document.getElementById('slipUploadBtn');btn.disabled=true;btn.textContent='⏳ Uploading Slip...';try{var slipImage=await compressFileToDataUrl(fileInp.files[0],900,.65);var r=await callBackend({action:'requestDeposit',email:currentEmail,token:currentToken,amountPKR:amt,bankName:bank,txRef:ref,slipImage:slipImage});if(r&&r.ok){document.getElementById('headOfficeContactBanner').classList.remove('hidden');alert('📞 Deposit slip uploaded & auto-Gmail sent! Please contact Head Office for approval.');e.target.reset();document.getElementById('depRef').value='SLIP-AUTO';if(bankSel&&bankSel.options.length)bankSel.selectedIndex=0;document.getElementById('slipScanStatus').textContent='';loadDashboardData();}else alert('❌ '+((r&&r.message)||'Submission failed.'));}catch(err){alert('❌ Error: '+err.message);}finally{btn.disabled=false;btn.textContent='✅ Submit Deposit Slip';}}
 
-    setInterval(function(){var now=Date.now();document.querySelectorAll('.live-timer').forEach(function(el){var diff=Number(el.getAttribute('data-until')||0)-now;if(diff<=0){el.textContent='⌛ EXPIRED';var td=el.parentElement?el.parentElement.parentElement:null,b=td?td.querySelector('.status-badge'):null;if(b&&b.textContent==='PENDING'){b.textContent='EXPIRED';b.className='status-badge st-EXPIRED';}}else{var h=Math.floor(diff/3600000),m=Math.floor((diff%3600000)/60000),s=Math.floor((diff%60000)/1000);el.textContent='⏳ '+(h>0?String(h).padStart(2,'0')+':':'')+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');}});},1000);
+setInterval(function(){var now=Date.now();document.querySelectorAll('.live-timer').forEach(function(el){var diff=Number(el.getAttribute('data-until')||0)-now;if(diff<=0){el.textContent='⌛ EXPIRED';var td=el.parentElement?el.parentElement.parentElement:null,b=td?td.querySelector('.status-badge'):null;if(b&&b.textContent==='PENDING'){b.textContent='EXPIRED';b.className='status-badge st-EXPIRED';}}else{var h=Math.floor(diff/3600000),m=Math.floor((diff%3600000)/60000),s=Math.floor((diff%60000)/1000);el.textContent='⏳ '+(h>0?String(h).padStart(2,'0')+':':'')+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');}});},1000);
 
     (function initPortalWidgets(){
       applyBrandLogos();var pktToday=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Karachi'});

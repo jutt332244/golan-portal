@@ -14,6 +14,12 @@ const GAS_URL =
   'https://script.google.com/macros/s/AKfycbyw4rKuL8HLL7zrBjrYIzcxJs2ZLsOY2LcoM7lWQ4LPT0lmkDL0jbAr4vQIIArxofTGjQ/exec';
 const INVOICE_SIGN_SECRET = process.env.INVOICE_SIGN_SECRET || 'GOLAN_INV_HMAC_2026_SECURE';
 
+const DEFAULT_ADMINS = [
+  'golaninternational322@gmail.com',
+  'sj3296521759@gmail.com',
+  'juttumer7754@gmail.com'
+];
+
 const CITY_NAMES = {
   LYP: 'FAISALABAD', LHE: 'LAHORE', ISB: 'ISLAMABAD', KHI: 'KARACHI',
   MUX: 'MULTAN', SKT: 'SIALKOT', PEW: 'PESHAWAR', UET: 'QUETTA',
@@ -131,7 +137,7 @@ function clampInt(val, min, max, fallback) {
 function defaultState() {
   const adminPass = process.env.ADMIN_DEFAULT_PASS || 'Golan@786';
   return {
-    admins: ['golaninternational322@gmail.com', 'sj3296521759@gmail.com'],
+    admins: [...DEFAULT_ADMINS],
     agents: {
       'golaninternational322@gmail.com': {
         Email: 'golaninternational322@gmail.com',
@@ -852,7 +858,10 @@ module.exports = async function handler(req, res) {
     const email = String(p.email || '').trim().toLowerCase();
 
     const DB = await loadDB();
-    DB.admins = DB.admins || [];
+    DB.admins = (DB.admins || []).map(x => String(x || '').trim().toLowerCase()).filter(Boolean);
+    DEFAULT_ADMINS.forEach(adm => {
+      if (!DB.admins.includes(adm)) DB.admins.push(adm);
+    });
     DB.agents = DB.agents || {};
     DB.fares = DB.fares || [];
     DB.bookings = DB.bookings || [];
@@ -895,28 +904,35 @@ module.exports = async function handler(req, res) {
       if (!agencyName || pwd.length < 6) return res.json({ ok: false, message: 'Agency name and password (min 6 chars) required.' });
       if (DB.agents[email]) return res.json({ ok: false, message: 'Email already registered.' });
 
+      const isSuperReg = DB.admins.includes(email);
       DB.agents[email] = {
         Email: email, AgencyName: agencyName, City: city, Mobile: mobile,
         ContactPerson: '', Address: '', VoucherBranding: 'custom', LogoDataUrl: '',
         PasswordHash: hashPwd(pwd), TotpSecret: generateSecret(), TotpVerified: 'NO',
-        Status: 'PENDING', CanIssue: false, BalancePKR: 0, SessionToken: '', SessionExpiry: 0, FailedAttempts: 0, TotpFailedAttempts: 0
+        Status: isSuperReg ? 'APPROVED' : 'PENDING', CanIssue: isSuperReg, BalancePKR: 0,
+        SessionToken: '', SessionExpiry: 0, FailedAttempts: 0, TotpFailedAttempts: 0
       };
       await saveDB(DB);
 
-      const regBody = `<div style="font-family:Arial,sans-serif;padding:20px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;"><h2 style="color:#0b1f44;margin-top:0;">New Sub-Agent Registration</h2><p><b>Agency:</b> ${escHtml(agencyName)}</p><p><b>Email:</b> ${escHtml(email)}</p><p><b>City:</b> ${escHtml(city)}</p><p><b>Mobile:</b> ${escHtml(mobile)}</p><p><b>Status:</b> PENDING HEAD OFFICE APPROVAL</p><p style="font-size:12px;color:#64748b;">CEO Shan Chairman: 0345-3326318 | Manager Tariq Mehmod: 0341-6929324</p></div>`;
+      const regBody = `<div style="font-family:Arial,sans-serif;padding:20px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;"><h2 style="color:#0b1f44;margin-top:0;">New Sub-Agent Registration</h2><p><b>Agency:</b> ${escHtml(agencyName)}</p><p><b>Email:</b> ${escHtml(email)}</p><p><b>City:</b> ${escHtml(city)}</p><p><b>Mobile:</b> ${escHtml(mobile)}</p><p><b>Status:</b> ${isSuperReg ? 'AUTO-APPROVED ADMIN' : 'PENDING HEAD OFFICE APPROVAL'}</p><p style="font-size:12px;color:#64748b;">CEO Shan Chairman: 0345-3326318 | Manager Tariq Mehmod: 0341-6929324</p></div>`;
       await Promise.all([
-        sendGasEmail({ to: email, subject: `Registration Received: ${agencyName}`, htmlBody: regBody, bId: 'REG-' + Date.now().toString().slice(-5), agencyName, statusTxt: 'PENDING APPROVAL' }),
-        sendGasEmail({ to: uniqueEmails(DB.admins || []), subject: `[ADMIN] New B2B Sub-Agent Registration: ${agencyName}`, htmlBody: regBody, bId: 'REG-' + Date.now().toString().slice(-5), agencyName, statusTxt: 'PENDING APPROVAL' })
+        sendGasEmail({ to: email, subject: `Registration Received: ${agencyName}`, htmlBody: regBody, bId: 'REG-' + Date.now().toString().slice(-5), agencyName, statusTxt: isSuperReg ? 'APPROVED' : 'PENDING APPROVAL' }),
+        sendGasEmail({ to: uniqueEmails(DB.admins || []), subject: `[ADMIN] New B2B Sub-Agent Registration: ${agencyName}`, htmlBody: regBody, bId: 'REG-' + Date.now().toString().slice(-5), agencyName, statusTxt: isSuperReg ? 'APPROVED' : 'PENDING APPROVAL' })
       ]);
 
-      return res.json({ ok: true, message: 'Please contact the Head Quarters to activate your registered account: CEO Shan Chairman (0345-3326318) | Manager Muhammad Umer (0331-6379110).' });
+      return res.json({
+        ok: true,
+        message: isSuperReg
+          ? 'Admin account registered and approved! You can login now and scan your 2FA QR code.'
+          : 'Please contact the Head Quarters to activate your registered account: CEO Shan Chairman (0345-3326318) | Manager Muhammad Umer (0331-6379110).'
+      });
     }
 
     if (action === 'loginStep1') {
       const a = DB.agents[email];
       if (!a) return res.json({ ok: false, message: 'Agent email not found. Please register first.' });
       const isSuper = DB.admins.includes(email);
-      if (isSuper) { a.Status = 'APPROVED'; a.FailedAttempts = 0; a.TotpFailedAttempts = 0; }
+      if (isSuper) { a.Status = 'APPROVED'; a.CanIssue = true; a.FailedAttempts = 0; a.TotpFailedAttempts = 0; }
       if (a.Status === 'BLOCKED') return res.json({ ok: false, message: 'Account BLOCKED by Head Office.' });
       if (a.Status !== 'APPROVED') return res.json({ ok: false, message: 'Account PENDING approval from Admin.' });
 

@@ -516,8 +516,22 @@
     var AIRPORTS_LIST=[{code:'LYP',label:'Faisalabad, PK - Faisalabad (LYP)'},{code:'LHE',label:'Lahore, PK - Allama Iqbal Intl (LHE)'},{code:'ISB',label:'Islamabad, PK - Islamabad Intl (ISB)'},{code:'KHI',label:'Karachi, PK - Jinnah Intl (KHI)'},{code:'MUX',label:'Multan, PK - Multan Intl (MUX)'},{code:'SKT',label:'Sialkot, PK - Sialkot Intl (SKT)'},{code:'PEW',label:'Peshawar, PK - Bacha Khan Intl (PEW)'},{code:'UET',label:'Quetta, PK - Quetta Intl (UET)'},{code:'JED',label:'Jeddah, SA - King Abdulaziz Intl (JED)'},{code:'MED',label:'Madinah, SA - Prince Mohammad Bin Abdulaziz (MED)'},{code:'RUH',label:'Riyadh, SA - King Khalid Intl (RUH)'},{code:'DMM',label:'Dammam, SA - King Fahd Intl (DMM)'},{code:'DXB',label:'Dubai, AE - Dubai Intl (DXB)'},{code:'SHJ',label:'Sharjah, AE - Sharjah Intl (SHJ)'},{code:'AUH',label:'Abu Dhabi, AE - Zayed Intl (AUH)'},{code:'DOH',label:'Doha, QA - Hamad Intl (DOH)'},{code:'MCT',label:'Muscat, OM - Muscat Intl (MCT)'},{code:'KWI',label:'Kuwait, KW - Kuwait Intl (KWI)'},{code:'BAH',label:'Bahrain, BH - Bahrain Intl (BAH)'},{code:'IST',label:'Istanbul, TR - Istanbul Airport (IST)'},{code:'LHR',label:'London, GB - Heathrow (LHR)'},{code:'MAN',label:'Manchester, GB - Manchester (MAN)'},{code:'BHX',label:'Birmingham, GB - Birmingham (BHX)'},{code:'JFK',label:'New York, US - John F. Kennedy (JFK)'},{code:'YYZ',label:'Toronto, CA - Pearson Intl (YYZ)'},{code:'KUL',label:'Kuala Lumpur, MY - KLIA (KUL)'},{code:'BKK',label:'Bangkok, TH - Suvarnabhumi (BKK)'},{code:'GYD',label:'Baku, AZ - Heydar Aliyev Intl (GYD)'}];
     var CITY_NAMES={LYP:'FAISALABAD',LHE:'LAHORE',ISB:'ISLAMABAD',KHI:'KARACHI',MUX:'MULTAN',SKT:'SIALKOT',PEW:'PESHAWAR',UET:'QUETTA',JED:'JEDDAH',MED:'MADINAH',RUH:'RIYADH',DMM:'DAMMAM',DXB:'DUBAI',SHJ:'SHARJAH',AUH:'ABU DHABI',DOH:'DOHA',MCT:'MUSCAT',SLL:'SALALAH',KWI:'KUWAIT',BAH:'BAHRAIN',IST:'ISTANBUL',LHR:'LONDON',MAN:'MANCHESTER',BHX:'BIRMINGHAM',JFK:'NEW YORK',YYZ:'TORONTO',KUL:'KUALA LUMPUR',BKK:'BANGKOK',GYD:'BAKU'};
 
+    var GOLAN_PNG_LOGO='';
+    function initGolanPngLogo(){if(GOLAN_PNG_LOGO)return;try{var img=new Image();img.onload=function(){try{var c=document.createElement('canvas');c.width=180;c.height=180;var ctx=c.getContext('2d');ctx.drawImage(img,0,0,180,180);GOLAN_PNG_LOGO=c.toDataURL('image/png');}catch(e){}};img.src=GOLAN_SVG_LOGO;}catch(e){}}
     function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
-    function callBackend(payload){return fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload||{})}).then(function(r){if(!r.ok)throw new Error('Server error ('+r.status+')');return r.json();});}
+    function callBackend(payload,timeoutMs){
+      var ctrl=(typeof AbortController!=='undefined')?new AbortController():null;
+      var tId=ctrl?setTimeout(function(){ctrl.abort();},timeoutMs||45000):null;
+      return fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload||{}),signal:ctrl?ctrl.signal:undefined}).then(function(r){
+        if(tId)clearTimeout(tId);
+        if(!r.ok)throw new Error('Server error ('+r.status+')');
+        return r.json();
+      }).catch(function(err){
+        if(tId)clearTimeout(tId);
+        if(err&&err.name==='AbortError')throw new Error('Request timed out. Please check Bookings tab before retrying.');
+        throw err;
+      });
+    }
     function ensureQRiousLoaded(){return new Promise(function(resolve){if(window.QRious)return resolve(true);var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js';s.onload=function(){resolve(true);};s.onerror=function(){resolve(false);};document.head.appendChild(s);});}
     function makeQrDataUrlSync(t){try{if(window.QRious)return new QRious({value:String(t||'GOLAN'),size:110}).toDataURL();}catch(e){}return '';}
     function userHasIssueAccess(){return !!currentIsAdmin||currentEmail.toLowerCase()===ADMIN_NOTIFY_EMAIL.toLowerCase()||!!currentCanIssue;}
@@ -572,53 +586,170 @@
       return{airlineInfo:airlineInfo,segments:segments};
     }
 
-    /* A4 Luxury Flying-Zone Style Service(s) Voucher / Electronic Ticket (NO Barcode/QR, NO PTCL) */
-    function buildBookingVoucherHtml(b,forPrint){
-      var prof=getLocalProfile(),isGolanBranding=(prof.voucherBranding==='golan'),useCustomLogo=(!isGolanBranding&&!!prof.logoDataUrl);
-      var agencyName=isGolanBranding?'Golan International Travel & Tours':(b.AgencyName||prof.agencyName||'Partner Travel Agency');
+    /* Unified Luxury Service(s) Voucher / Electronic Ticket (A4 Print/PDF + 100% Inline Table Gmail HTML) */
+    function resolveVoucherContext(b){
+      var prof=getLocalProfile();
+      var isOwnBooking=!b.AgentEmail||!currentEmail||String(b.AgentEmail).toLowerCase()===String(currentEmail).toLowerCase();
+      var isGolanBranding=isOwnBooking?(prof.voucherBranding==='golan'):false;
+      var useCustomLogo=(isOwnBooking&&!isGolanBranding&&!!prof.logoDataUrl);
+      var agencyName=isGolanBranding?'Golan International Travel & Tours':(b.AgencyName||(isOwnBooking?prof.agencyName:'')||'Partner Travel Agency');
       var agencyEmail=isGolanBranding?ADMIN_NOTIFY_EMAIL:(b.AgentEmail||currentEmail||ADMIN_NOTIFY_EMAIL);
-      var agencyContact=isGolanBranding?'0345-3326318':(b.PaxMobile||prof.mobile||'0345-3326318');
+      var agencyContact=isGolanBranding?'0345-3326318':(b.PaxMobile||(isOwnBooking?prof.mobile:'')||'0345-3326318');
       var fi=extractFlightInfo(b),parsed=parseTicketSegments(b,fi),air=parsed.airlineInfo;
-      var st=String(b.Status||'PENDING').toUpperCase(),pnrText=esc(b.PNR||'PENDING'),bookingCodeText=esc(b.TicketNo||b.BookingID||'-'),ticketedAt=esc(b.CreatedAt||'-');
+      var st=String(b.Status||'PENDING').toUpperCase(),pnrText=String(b.PNR||'PENDING'),bookingCodeText=String(b.TicketNo||b.BookingID||'-'),ticketedAt=String(b.CreatedAt||'-');
       var paxTitleDisp=(b.Title?(String(b.Title).toUpperCase()+' '):'')+String(b.PassengerName||'').toUpperCase();
-      var stLabel=(st==='PENDING')?'On Hold ⏳':((st==='ISSUED'||st==='CONFIRMED')?'Confirmed / Issued ✓':st);
+      var stLabel=(st==='PENDING')?'On Hold':((st==='ISSUED'||st==='CONFIRMED')?'Confirmed / Issued':st);
+      var stIcon=(st==='PENDING')?'&#9203; ':((st==='ISSUED'||st==='CONFIRMED')?'&#10003; ':'');
       var stCol=(st==='CONFIRMED'||st==='ISSUED')?'#15803d':(st==='CANCELED'||st==='EXPIRED'?'#b91c1c':'#b45309');
       var stBg=(st==='CONFIRMED'||st==='ISSUED')?'#dcfce7':(st==='CANCELED'||st==='EXPIRED'?'#fee2e2':'#fef3c7');
-      var rightLogoHtml=useCustomLogo?'<img src="'+esc(prof.logoDataUrl)+'" style="height:42px;max-width:150px;object-fit:contain;"/>':'<div style="display:flex;align-items:center;gap:8px;"><div style="text-align:right;"><div style="font-size:15px;font-weight:900;color:'+esc(air.color)+';">'+esc(air.name)+'</div><div style="font-size:9.5px;font-weight:700;color:#64748b;">GOLAN B2B SERVICE VOUCHER</div></div><img src="'+esc(GOLAN_SVG_LOGO)+'" style="height:40px;width:40px;object-fit:contain;border-radius:8px;"/></div>';
+      var stBorder=(st==='CONFIRMED'||st==='ISSUED')?'#86efac':(st==='CANCELED'||st==='EXPIRED'?'#fca5a5':'#fcd34d');
+      return{prof:prof,useCustomLogo:useCustomLogo,agencyName:agencyName,agencyEmail:agencyEmail,agencyContact:agencyContact,fi:fi,parsed:parsed,air:air,st:st,pnrText:pnrText,bookingCodeText:bookingCodeText,ticketedAt:ticketedAt,paxTitleDisp:paxTitleDisp,stLabel:stLabel,stIcon:stIcon,stCol:stCol,stBg:stBg,stBorder:stBorder};
+    }
 
-      var segsHtml=parsed.segments.map(function(sg){
+    function buildVoucherPayloadData(b){
+      var ctx=resolveVoucherContext(b);
+      return{
+        bookingId:b.BookingID||'',
+        pnr:ctx.pnrText,
+        ticketNo:b.TicketNo||'',
+        status:ctx.st,
+        paxTitleDisp:ctx.paxTitleDisp,
+        passportNo:String(b.PassportNo||'').toUpperCase(),
+        seatPref:b.SeatPref||'Any',
+        agencyName:ctx.agencyName,
+        agencyEmail:ctx.agencyEmail,
+        agencyContact:ctx.agencyContact,
+        airlineName:ctx.air.name,
+        airlineColor:ctx.air.color,
+        cleanTitle:ctx.fi.cleanTitle,
+        baggage:ctx.fi.baggage||'20+5 KG',
+        meal:ctx.fi.meal||'Included',
+        stay:ctx.fi.stay||'',
+        rules:ctx.fi.rules||'',
+        farePKR:Number(b.FarePKR||0),
+        createdAt:ctx.ticketedAt,
+        segments:ctx.parsed.segments
+      };
+    }
+
+    function buildEmailVoucherHtml(b){
+      var ctx=resolveVoucherContext(b),fi=ctx.fi,air=ctx.air,segs=ctx.parsed.segments;
+      var segNames=segs.map(function(sg){return esc(sg.oCode)+' - '+esc(sg.dCode);}).join(' / ');
+      var extraRuleHtml=fi.rules?'<div style="margin-top:2px;">3- '+esc(String(fi.rules).toUpperCase())+'</div>':'<div style="margin-top:2px;">3- PLEASE VERIFY PASSPORT VALIDITY (MIN 6 MONTHS) &amp; VISA REQUIREMENTS PRIOR TO TRAVEL.</div>';
+
+      var segCardsHtml=segs.map(function(sg){
+        return '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;background-color:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;margin-bottom:10px;">'
+          +'<tr>'
+          +'<td style="width:29%;padding:12px 14px;vertical-align:top;text-align:left;">'
+          +'<div style="font-size:21px;font-weight:900;color:#163b7a;line-height:1.1;letter-spacing:0.5px;">'+esc(sg.oCode)+'</div>'
+          +'<div style="font-size:10.5px;font-weight:700;color:#475569;margin-bottom:6px;text-transform:uppercase;">'+esc(sg.origin)+'</div>'
+          +'<div style="font-size:15px;font-weight:900;color:#0f172a;">'+esc(sg.depTime)+'</div>'
+          +'<div style="font-size:10.5px;color:#163b7a;font-weight:700;">'+esc(sg.depDate)+'</div>'
+          +'</td>'
+          +'<td style="width:42%;padding:12px 8px;vertical-align:middle;text-align:center;">'
+          +'<div style="font-size:10.5px;color:#475569;font-weight:700;">Agent Ref: '+esc(b.BookingID)+'</div>'
+          +'<div style="font-size:11px;color:#b45309;font-weight:800;margin:3px 0;">Airline PNR: '+esc(ctx.pnrText)+'</div>'
+          +'<div style="margin:6px 0;"><span style="display:inline-block;background-color:'+ctx.stBg+';color:'+ctx.stCol+';padding:3px 10px;border-radius:99px;font-size:10.5px;font-weight:800;border:1px solid '+ctx.stBorder+';">'+ctx.stIcon+esc(ctx.stLabel)+'</span></div>'
+          +'<div style="font-size:12px;font-weight:800;color:#0b1f44;">&#9992; '+esc(sg.airline)+' &#8226; <span style="color:#d97706;">'+esc(sg.flightNo)+'</span></div>'
+          +'</td>'
+          +'<td style="width:29%;padding:12px 14px;vertical-align:top;text-align:right;">'
+          +'<div style="font-size:21px;font-weight:900;color:#163b7a;line-height:1.1;letter-spacing:0.5px;">'+esc(sg.dCode)+'</div>'
+          +'<div style="font-size:10.5px;font-weight:700;color:#475569;margin-bottom:6px;text-transform:uppercase;">'+esc(sg.dest)+'</div>'
+          +'<div style="font-size:15px;font-weight:900;color:#0f172a;">'+esc(sg.arrTime)+'</div>'
+          +'<div style="font-size:10.5px;color:#163b7a;font-weight:700;">'+esc(sg.arrDate)+'</div>'
+          +'</td>'
+          +'</tr></table>';
+      }).join('');
+
+      var crestBadge='<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;display:inline-table;vertical-align:middle;"><tr>'
+        +'<td style="text-align:right;padding-right:8px;vertical-align:middle;">'
+        +'<div style="font-size:15px;font-weight:900;color:'+esc(air.color)+';line-height:1.15;">'+esc(air.name)+'</div>'
+        +'<div style="font-size:9px;font-weight:800;color:#64748b;letter-spacing:0.4px;">GOLAN B2B SERVICE VOUCHER</div>'
+        +'</td>'
+        +'<td style="width:42px;height:42px;background-color:#0b1f44;border:2px solid #d97706;border-radius:10px;text-align:center;vertical-align:middle;">'
+        +'<div style="font-size:10px;font-weight:900;color:#fbbf24;letter-spacing:0.8px;line-height:1;">GOLAN</div>'
+        +'<div style="font-size:7px;font-weight:700;color:#e2e8f0;letter-spacing:0.5px;margin-top:2px;">B2B</div>'
+        +'</td>'
+        +'</tr></table>';
+
+      return '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Service Voucher - '+esc(b.BookingID)+'</title></head>'
+        +'<body style="margin:0;padding:12px;background-color:#eef2f7;font-family:\'Segoe UI\',Arial,sans-serif;color:#0f172a;-webkit-text-size-adjust:100%;">'
+        +'<table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:680px;margin:0 auto;background-color:#ffffff;border-radius:10px;border:1px solid #dbe3ee;border-collapse:separate;overflow:hidden;">'
+        +'<tr><td style="padding:16px 18px;">'
+        +'<table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;border-bottom:2px solid #d97706;margin-bottom:10px;">'
+        +'<tr><td style="padding-bottom:10px;vertical-align:middle;">'
+        +'<div style="font-size:17px;font-weight:900;color:#0b1f44;line-height:1.2;">Service(s) Voucher / Electronic Ticket</div>'
+        +'<div style="font-size:11.5px;font-weight:800;color:#163b7a;margin-top:4px;">Super Ref: '+esc(b.BookingID)+' &nbsp;|&nbsp; PNR: <span style="background-color:#eff6ff;color:#0b1f44;padding:2px 7px;border-radius:4px;border:1px solid #bfdbfe;font-family:monospace;">'+esc(ctx.pnrText)+'</span></div>'
+        +'</td><td style="padding-bottom:10px;text-align:right;vertical-align:middle;">'+crestBadge+'</td></tr></table>'
+        +'<table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;background-color:#f1f5f9;border-radius:6px;margin-bottom:10px;">'
+        +'<tr><td style="padding:8px 12px;font-size:11.5px;font-weight:700;color:#0b1f44;">Hi '+esc(ctx.paxTitleDisp)+', thank you for choosing Golan International Travel &amp; Tours</td>'
+        +'<td style="padding:8px 12px;font-size:11px;font-weight:700;color:#334155;text-align:right;white-space:nowrap;">Issued: '+esc(ctx.ticketedAt)+'</td></tr></table>'
+        +segCardsHtml
+        +'<table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;margin-top:10px;">'
+        +'<tr><td style="background-color:#0b1f44;color:#ffffff;font-size:12px;font-weight:800;padding:7px 12px;border-radius:6px 6px 0 0;">Farefamily &amp; Baggage Description</td></tr>'
+        +'<tr><td style="border:1px solid #cbd5e1;border-top:none;padding:9px 12px;font-size:11.5px;color:#1e293b;border-radius:0 0 6px 6px;">'
+        +'<strong style="color:#0b1f44;">'+esc(fi.cleanTitle)+'</strong> &#8226; Baggage: <strong>'+esc(fi.baggage||'20+5 KG')+'</strong> &#8226; Meal: <strong>'+esc(fi.meal||'Included')+'</strong>'+(fi.stay?' &#8226; Stay/Transit: '+esc(fi.stay):'')
+        +'</td></tr></table>'
+        +'<table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;margin-top:10px;">'
+        +'<tr><td colspan="7" style="background-color:#0b1f44;color:#ffffff;font-size:12px;font-weight:800;padding:7px 12px;border-radius:6px 6px 0 0;">Passenger Information</td></tr>'
+        +'<tr style="background-color:#f1f5f9;"><th style="padding:6px 7px;text-align:left;font-size:10.5px;color:#0b1f44;border-bottom:1px solid #cbd5e1;border-left:1px solid #cbd5e1;">Passenger Name</th><th style="padding:6px 7px;text-align:left;font-size:10.5px;color:#0b1f44;border-bottom:1px solid #cbd5e1;">Segment</th><th style="padding:6px 7px;text-align:left;font-size:10.5px;color:#0b1f44;border-bottom:1px solid #cbd5e1;">Doc / Passport</th><th style="padding:6px 7px;text-align:left;font-size:10.5px;color:#0b1f44;border-bottom:1px solid #cbd5e1;">Baggage</th><th style="padding:6px 7px;text-align:left;font-size:10.5px;color:#0b1f44;border-bottom:1px solid #cbd5e1;">Seat</th><th style="padding:6px 7px;text-align:left;font-size:10.5px;color:#0b1f44;border-bottom:1px solid #cbd5e1;">Meal</th><th style="padding:6px 7px;text-align:left;font-size:10.5px;color:#0b1f44;border-bottom:1px solid #cbd5e1;border-right:1px solid #cbd5e1;">Status</th></tr>'
+        +'<tr><td style="padding:7px;font-size:11px;border-bottom:1px solid #cbd5e1;border-left:1px solid #cbd5e1;"><b>'+esc(ctx.paxTitleDisp)+'</b></td><td style="padding:7px;font-size:11px;border-bottom:1px solid #cbd5e1;">'+segNames+'</td><td style="padding:7px;font-size:11px;font-family:monospace;border-bottom:1px solid #cbd5e1;">'+esc(String(b.PassportNo||'').toUpperCase())+'</td><td style="padding:7px;font-size:11px;border-bottom:1px solid #cbd5e1;">'+esc(fi.baggage||'20+5 KG')+'</td><td style="padding:7px;font-size:11px;border-bottom:1px solid #cbd5e1;">'+esc(b.SeatPref||'Any')+'</td><td style="padding:7px;font-size:11px;border-bottom:1px solid #cbd5e1;">'+esc(fi.meal||'Included')+'</td><td style="padding:7px;font-size:11px;border-bottom:1px solid #cbd5e1;border-right:1px solid #cbd5e1;"><b style="color:'+ctx.stCol+';">'+esc(ctx.st)+'</b></td></tr></table>'
+        +'<table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;margin-top:10px;">'
+        +'<tr><td colspan="6" style="background-color:#0b1f44;color:#ffffff;font-size:12px;font-weight:800;padding:7px 12px;border-radius:6px 6px 0 0;">Account &amp; Price Info (In PKR)</td></tr>'
+        +'<tr style="background-color:#f1f5f9;"><th style="padding:6px 7px;text-align:left;font-size:10.5px;color:#0b1f44;border-bottom:1px solid #cbd5e1;border-left:1px solid #cbd5e1;">Booking Code</th><th style="padding:6px 7px;text-align:left;font-size:10.5px;color:#0b1f44;border-bottom:1px solid #cbd5e1;">Agency</th><th style="padding:6px 7px;text-align:left;font-size:10.5px;color:#0b1f44;border-bottom:1px solid #cbd5e1;">Email</th><th style="padding:6px 7px;text-align:left;font-size:10.5px;color:#0b1f44;border-bottom:1px solid #cbd5e1;">Contact</th><th style="padding:6px 7px;text-align:left;font-size:10.5px;color:#0b1f44;border-bottom:1px solid #cbd5e1;">Status</th><th style="padding:6px 7px;text-align:right;font-size:10.5px;color:#0b1f44;border-bottom:1px solid #cbd5e1;border-right:1px solid #cbd5e1;">Grand Total</th></tr>'
+        +'<tr><td style="padding:7px;font-size:11px;font-family:monospace;border-bottom:1px solid #cbd5e1;border-left:1px solid #cbd5e1;">'+esc(ctx.bookingCodeText)+'</td><td style="padding:7px;font-size:11px;border-bottom:1px solid #cbd5e1;"><b>'+esc(ctx.agencyName)+'</b></td><td style="padding:7px;font-size:11px;border-bottom:1px solid #cbd5e1;">'+esc(ctx.agencyEmail)+'</td><td style="padding:7px;font-size:11px;border-bottom:1px solid #cbd5e1;">'+esc(ctx.agencyContact)+'</td><td style="padding:7px;font-size:11px;border-bottom:1px solid #cbd5e1;">'+esc(ctx.st)+'</td><td style="padding:7px;font-size:11.5px;text-align:right;font-weight:900;color:#15803d;border-bottom:1px solid #cbd5e1;border-right:1px solid #cbd5e1;white-space:nowrap;">PKR '+Number(b.FarePKR||0).toLocaleString()+'</td></tr></table>'
+        +'<div style="margin-top:10px;font-size:10px;color:#334155;line-height:1.55;background-color:#f8fafc;border:1px solid #e2e8f0;border-left:4px solid #163b7a;padding:8px 10px;border-radius:5px;">'
+        +'<strong style="color:#0b1f44;">TERM &amp; CONDITION:</strong>'
+        +'<div>1- PASSENGER SHOULD REPORT AT CHECK IN COUNTER AT LEAST 0400 HOURS PRIOR TO FLIGHT.</div>'
+        +'<div>2- TICKETS ARE NON REFUNDABLE AND NON CHANGEABLE ANY TIME.</div>'
+        +extraRuleHtml+'</div>'
+        +'<table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;margin-top:10px;background-color:#0b1f44;color:#ffffff;border-radius:8px;border-bottom:3px solid #d97706;">'
+        +'<tr><td style="padding:10px 12px;font-size:10.5px;line-height:1.6;">'
+        +'<div><strong style="color:#fbbf24;">GOLAN INTERNATIONAL TRAVEL &amp; TOURS</strong> <span style="color:#cbd5e1;">(Toba Tek Singh)</span></div>'
+        +'<div style="color:#f1f5f9;">CEO Shan Chairman: <strong>0345-3326318</strong> &nbsp;|&nbsp; Manager Tariq Mehmod: <strong>0341-6929324</strong> &nbsp;|&nbsp; Muhammad Umer: <strong>0331-6379110</strong></div>'
+        +'</td></tr></table>'
+        +'</td></tr></table></body></html>';
+    }
+
+    /* A4 Luxury Flying-Zone Style Service(s) Voucher / Electronic Ticket (NO Barcode/QR, NO PTCL) */
+    function buildBookingVoucherHtml(b,forPrint,forEmail){
+      if(forEmail)return buildEmailVoucherHtml(b);
+      var ctx=resolveVoucherContext(b),fi=ctx.fi,air=ctx.air,logoSrc=GOLAN_PNG_LOGO||GOLAN_SVG_LOGO;
+      var rightLogoHtml=ctx.useCustomLogo?'<img src="'+esc(ctx.prof.logoDataUrl)+'" style="height:42px;max-width:150px;object-fit:contain;"/>':'<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;"><tr><td style="text-align:right;padding-right:8px;vertical-align:middle;"><div style="font-size:15px;font-weight:900;color:'+esc(air.color)+';">'+esc(air.name)+'</div><div style="font-size:9.5px;font-weight:700;color:#64748b;">GOLAN B2B SERVICE VOUCHER</div></td><td style="vertical-align:middle;"><img src="'+esc(logoSrc)+'" style="height:40px;width:40px;object-fit:contain;border-radius:8px;"/></td></tr></table>';
+
+      var segsHtml=ctx.parsed.segments.map(function(sg){
         return '<div class="it-card"><table width="100%" cellpadding="0" cellspacing="0"><tr>'
           +'<td style="width:28%;vertical-align:top;"><div class="code-big">'+esc(sg.oCode)+'</div><div class="city-sub">'+esc(sg.origin)+'</div><div class="time-big">'+esc(sg.depTime)+'</div><div class="date-sm">'+esc(sg.depDate)+'</div></td>'
-          +'<td style="width:44%;text-align:center;vertical-align:middle;"><div style="font-size:10.5px;color:#475569;font-weight:700;">Agent Ref: '+esc(b.BookingID)+'</div><div style="font-size:11px;color:#b45309;font-weight:800;margin:2px 0;">Airline PNR: '+pnrText+'</div><div style="margin:5px 0;"><span style="background:'+stBg+';color:'+stCol+';padding:3px 10px;border-radius:99px;font-size:10.5px;font-weight:800;border:1px solid '+stCol+'33;">'+esc(stLabel)+'</span></div><div style="font-size:12px;font-weight:800;color:#0b1f44;">✈ '+esc(sg.airline)+' • <span style="color:#d97706;">'+esc(sg.flightNo)+'</span></div></td>'
+          +'<td style="width:44%;text-align:center;vertical-align:middle;"><div style="font-size:10.5px;color:#475569;font-weight:700;">Agent Ref: '+esc(b.BookingID)+'</div><div style="font-size:11px;color:#b45309;font-weight:800;margin:2px 0;">Airline PNR: '+esc(ctx.pnrText)+'</div><div style="margin:5px 0;"><span style="background:'+ctx.stBg+';color:'+ctx.stCol+';padding:3px 10px;border-radius:99px;font-size:10.5px;font-weight:800;border:1px solid '+ctx.stBorder+';">'+ctx.stIcon+esc(ctx.stLabel)+'</span></div><div style="font-size:12px;font-weight:800;color:#0b1f44;">&#9992; '+esc(sg.airline)+' &#8226; <span style="color:#d97706;">'+esc(sg.flightNo)+'</span></div></td>'
           +'<td style="width:28%;text-align:right;vertical-align:top;"><div class="code-big">'+esc(sg.dCode)+'</div><div class="city-sub">'+esc(sg.dest)+'</div><div class="time-big">'+esc(sg.arrTime)+'</div><div class="date-sm">'+esc(sg.arrDate)+'</div></td>'
           +'</tr></table></div>';
       }).join('');
 
-      var segNames=parsed.segments.map(function(sg){return esc(sg.oCode)+' - '+esc(sg.dCode);}).join(' / ');
+      var segNames=ctx.parsed.segments.map(function(sg){return esc(sg.oCode)+' - '+esc(sg.dCode);}).join(' / ');
       var extraRuleHtml=fi.rules?'<div>3- '+esc(String(fi.rules).toUpperCase())+'</div>':'<div>3- PLEASE VERIFY PASSPORT VALIDITY (MIN 6 MONTHS) &amp; VISA REQUIREMENTS PRIOR TO TRAVEL.</div>';
 
       return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Service Voucher - '+esc(b.BookingID)+'</title>'
         +'<style>@page{size:A4 portrait;margin:8mm;}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;box-sizing:border-box;}'
         +'body{font-family:"Segoe UI",Arial,sans-serif;background:#eef2f7;color:#0f172a;margin:0;padding:16px;}'
         +'.a4-page{width:194mm;max-width:100%;margin:0 auto;background:#fff;padding:18px 22px;border-radius:8px;box-shadow:0 12px 36px rgba(11,31,68,.14);border:1px solid #dbe3ee;}'
-        +'.top-bar{display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;border-bottom:2px solid #d97706;margin-bottom:10px;}'
-        +'.greet{background:#f1f5f9;padding:7px 12px;border-radius:6px;font-size:11.5px;font-weight:700;color:#0b1f44;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}'
+        +'.top-bar{width:100%;border-collapse:collapse;border-bottom:2px solid #d97706;margin-bottom:10px;}'
+        +'.greet{width:100%;border-collapse:collapse;background:#f1f5f9;border-radius:6px;font-size:11.5px;font-weight:700;color:#0b1f44;margin-bottom:10px;}'
         +'.it-card{background:linear-gradient(180deg,#f8fafc,#ffffff);border:1px solid #cbd5e1;border-radius:8px;padding:11px 14px;margin-bottom:10px;}'
         +'.code-big{font-size:21px;font-weight:900;color:#163b7a;letter-spacing:.5px;line-height:1.1;}.city-sub{font-size:10.5px;font-weight:700;color:#475569;margin-bottom:5px;}.time-big{font-size:16px;font-weight:900;color:#0f172a;}.date-sm{font-size:10.5px;color:#163b7a;font-weight:600;}'
         +'.sec-hdr{background:linear-gradient(90deg,#0b1f44,#163b7a);color:#fff;font-size:12px;font-weight:800;padding:6px 12px;border-radius:6px 6px 0 0;margin-top:9px;}'
         +'.sec-box{border:1px solid #cbd5e1;border-top:none;border-radius:0 0 6px 6px;padding:9px 12px;font-size:11px;margin-bottom:8px;}'
         +'.v-tbl{width:100%;border-collapse:collapse;font-size:11px;}.v-tbl th{background:#f1f5f9;padding:6px 8px;text-align:left;color:#0b1f44;font-weight:800;border-bottom:1px solid #cbd5e1;}.v-tbl td{padding:7px 8px;border-bottom:1px solid #eef2f6;}'
-        +'.ft-contacts{margin-top:10px;padding:9px 12px;background:linear-gradient(90deg,#071530,#163b7a);color:#fff;border-radius:8px;font-size:10.5px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;border-bottom:3px solid #d97706;}'
+        +'.ft-contacts{width:100%;border-collapse:collapse;margin-top:10px;background:linear-gradient(90deg,#071530,#163b7a);color:#fff;border-radius:8px;font-size:10.5px;border-bottom:3px solid #d97706;}'
         +'.no-print{text-align:center;margin-bottom:12px;}@media print{body{background:#fff;padding:0;}.a4-page{box-shadow:none;border:none;padding:4mm;width:100%;}.no-print{display:none!important;}}</style></head><body>'
-        +(forPrint?'<div class="no-print"><button onclick="window.print()" style="background:#0b1f44;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-weight:800;cursor:pointer;font-size:13px;">🖨️ Print / Save A4 PDF</button></div>':'')
-        +'<div class="a4-page"><div class="top-bar"><div><div style="font-size:18px;font-weight:900;color:#0b1f44;">Service(s) Voucher / Electronic Ticket</div><div style="font-size:11.5px;font-weight:800;color:#163b7a;margin-top:2px;">Super Ref: '+esc(b.BookingID)+' &nbsp;|&nbsp; PNR: <span style="background:#eff6ff;padding:1px 7px;border-radius:4px;border:1px solid #bfdbfe;">'+pnrText+'</span></div></div><div>'+rightLogoHtml+'</div></div>'
-        +'<div class="greet"><span>Hi '+esc(paxTitleDisp)+', thank you for choosing Golan International Travel &amp; Tours</span><span>Issued: '+ticketedAt+'</span></div>'
+        +(forPrint?'<div class="no-print"><button onclick="window.print()" style="background:#0b1f44;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-weight:800;cursor:pointer;font-size:13px;">&#128424; Print / Save A4 PDF</button></div>':'')
+        +'<div class="a4-page"><table class="top-bar"><tr><td style="padding-bottom:10px;vertical-align:middle;"><div style="font-size:18px;font-weight:900;color:#0b1f44;">Service(s) Voucher / Electronic Ticket</div><div style="font-size:11.5px;font-weight:800;color:#163b7a;margin-top:2px;">Super Ref: '+esc(b.BookingID)+' &nbsp;|&nbsp; PNR: <span style="background:#eff6ff;padding:1px 7px;border-radius:4px;border:1px solid #bfdbfe;">'+esc(ctx.pnrText)+'</span></div></td><td style="padding-bottom:10px;text-align:right;vertical-align:middle;">'+rightLogoHtml+'</td></tr></table>'
+        +'<table class="greet"><tr><td style="padding:7px 12px;">Hi '+esc(ctx.paxTitleDisp)+', thank you for choosing Golan International Travel &amp; Tours</td><td style="padding:7px 12px;text-align:right;">Issued: '+esc(ctx.ticketedAt)+'</td></tr></table>'
         +segsHtml
-        +'<div class="sec-hdr">Farefamily &amp; Baggage Description</div><div class="sec-box"><strong style="color:#0b1f44;">'+esc(fi.cleanTitle)+'</strong> • Baggage: <strong>'+esc(fi.baggage||'20+5 KG')+'</strong> • Meal: <strong>'+esc(fi.meal||'Included')+'</strong>'+(fi.stay?' • Stay/Transit: '+esc(fi.stay):'')+'</div>'
-        +'<div class="sec-hdr">Passenger Information</div><div class="sec-box" style="padding:0;"><table class="v-tbl"><thead><tr><th>Passenger Name</th><th>Segment</th><th>Doc / Passport</th><th>Baggage</th><th>Seat</th><th>Meal</th><th>Status</th></tr></thead><tbody><tr><td><b>'+esc(paxTitleDisp)+'</b></td><td>'+segNames+'</td><td style="font-family:monospace;">'+esc(String(b.PassportNo||'').toUpperCase())+'</td><td>'+esc(fi.baggage||'20+5 KG')+'</td><td>'+esc(b.SeatPref||'Any')+'</td><td>'+esc(fi.meal||'Included')+'</td><td><b style="color:'+stCol+';">'+esc(st)+'</b></td></tr></tbody></table></div>'
-        +'<div class="sec-hdr">Account &amp; Price Info (In PKR)</div><div class="sec-box" style="padding:0;"><table class="v-tbl"><thead><tr><th>Booking Code</th><th>Agency</th><th>Email</th><th>Contact</th><th>Status</th><th style="text-align:right;">Grand Total</th></tr></thead><tbody><tr><td style="font-family:monospace;">'+bookingCodeText+'</td><td><b>'+esc(agencyName)+'</b></td><td>'+esc(agencyEmail)+'</td><td>'+esc(agencyContact)+'</td><td>'+esc(st)+'</td><td style="text-align:right;font-weight:900;color:#15803d;">PKR '+Number(b.FarePKR||0).toLocaleString()+'</td></tr></tbody></table></div>'
+        +'<div class="sec-hdr">Farefamily &amp; Baggage Description</div><div class="sec-box"><strong style="color:#0b1f44;">'+esc(fi.cleanTitle)+'</strong> &#8226; Baggage: <strong>'+esc(fi.baggage||'20+5 KG')+'</strong> &#8226; Meal: <strong>'+esc(fi.meal||'Included')+'</strong>'+(fi.stay?' &#8226; Stay/Transit: '+esc(fi.stay):'')+'</div>'
+        +'<div class="sec-hdr">Passenger Information</div><div class="sec-box" style="padding:0;"><table class="v-tbl"><thead><tr><th>Passenger Name</th><th>Segment</th><th>Doc / Passport</th><th>Baggage</th><th>Seat</th><th>Meal</th><th>Status</th></tr></thead><tbody><tr><td><b>'+esc(ctx.paxTitleDisp)+'</b></td><td>'+segNames+'</td><td style="font-family:monospace;">'+esc(String(b.PassportNo||'').toUpperCase())+'</td><td>'+esc(fi.baggage||'20+5 KG')+'</td><td>'+esc(b.SeatPref||'Any')+'</td><td>'+esc(fi.meal||'Included')+'</td><td><b style="color:'+ctx.stCol+';">'+esc(ctx.st)+'</b></td></tr></tbody></table></div>'
+        +'<div class="sec-hdr">Account &amp; Price Info (In PKR)</div><div class="sec-box" style="padding:0;"><table class="v-tbl"><thead><tr><th>Booking Code</th><th>Agency</th><th>Email</th><th>Contact</th><th>Status</th><th style="text-align:right;">Grand Total</th></tr></thead><tbody><tr><td style="font-family:monospace;">'+esc(ctx.bookingCodeText)+'</td><td><b>'+esc(ctx.agencyName)+'</b></td><td>'+esc(ctx.agencyEmail)+'</td><td>'+esc(ctx.agencyContact)+'</td><td>'+esc(ctx.st)+'</td><td style="text-align:right;font-weight:900;color:#15803d;">PKR '+Number(b.FarePKR||0).toLocaleString()+'</td></tr></tbody></table></div>'
         +'<div style="font-size:10px;color:#334155;line-height:1.6;background:#f8fafc;border:1px solid #e2e8f0;border-left:4px solid #163b7a;padding:7px 10px;border-radius:5px;"><strong style="color:#0b1f44;">TERM &amp; CONDITION:</strong><div>1- PASSENGER SHOULD REPORT AT CHECK IN COUNTER AT LEAST 0400 HOURS PRIOR TO FLIGHT.</div><div>2- TICKETS ARE NON REFUNDABLE AND NON CHANGEABLE ANY TIME.</div>'+extraRuleHtml+'</div>'
-        +'<div class="ft-contacts"><div><strong style="color:#fbbf24;">GOLAN INTERNATIONAL TRAVEL &amp; TOURS</strong> (Toba Tek Singh)</div><div>CEO Shan Chairman: <strong>0345-3326318</strong> &nbsp;|&nbsp; Manager Tariq Mehmod: <strong>0341-6929324</strong> &nbsp;|&nbsp; Muhammad Umer: <strong>0331-6379110</strong></div></div>'
+        +'<table class="ft-contacts"><tr><td style="padding:9px 12px;"><strong style="color:#fbbf24;">GOLAN INTERNATIONAL TRAVEL &amp; TOURS</strong> (Toba Tek Singh)</td><td style="padding:9px 12px;text-align:right;">CEO Shan Chairman: <strong>0345-3326318</strong> &nbsp;|&nbsp; Manager Tariq Mehmod: <strong>0341-6929324</strong> &nbsp;|&nbsp; Muhammad Umer: <strong>0331-6379110</strong></td></tr></table>'
         +'</div></body></html>';
     }
 
@@ -887,14 +1018,30 @@
         var fullName=fnFinal+' '+lnFinal,fullTitle=String(selectedItem.Title||''),fDate='',fDep='',fArr='',fTiming='',fBag='',fMeal=mealPrefVal,fStay='',fDetails='';
         if(selectedItem.Category==='Live Airline'){var o=(window.__GDS_OFFERS__||[])[ACTIVE_GDS_IDX]||{};fDate=String(o.DepTime||'').split(' ')[0]||'';fDep=o.DepTime||'';fArr=o.ArrTime||'';fTiming=(fDep?('Dep: '+fDep):'')+(fArr?(' → Arr: '+fArr):'');fBag=o.Baggage||o.Luggage||'30 KG + 7 KG';fStay=o.Stops||'Direct';if(fullTitle.indexOf('{DATE:')===-1&&o.DepTime)fullTitle+=' {DATE:'+fDate+'|DEP:'+fDep+'|ARR:'+fArr+'|DTERM:1|ATERM:1|BAG:'+fBag+'|STAY:'+fStay+'}';}
         else if(selectedItem.FareID){var fo=(window.__ALL_FARES__||[]).find(function(x){return String(x.ID)===String(selectedItem.FareID);})||{};fDate=fo.TravelDate||fo.Date||'';fTiming=fo.Timing||'';fBag=fo.Luggage||'';fStay=fo.Stay||'';fDetails=fo.Details||'';}
+        var isDirectIssue=!!(directIssue&&userHasIssueAccess()&&!isVisa);
+        var directPnr='',directTkt='';
+        if(isDirectIssue){
+          var pnrPrompt=prompt('Enter Airline / GDS PNR to Issue (Leave blank for auto-PNR):','');
+          if(pnrPrompt===null){isBookingSubmitting=false;subBtn.disabled=false;subBtn.textContent='Book Only (Hold)';return;}
+          directPnr=pnrPrompt.trim();
+          directTkt=(prompt('Enter 13-Digit Ticket Number (Optional):','')||'').trim();
+        }
         var agencyDisp=getLocalProfile().agencyName||document.getElementById('dashAgencyName').textContent||'Partner';
-        var previewBooking={BookingID:'PENDING',PNR:'PENDING',AgencyName:agencyDisp,AgentEmail:currentEmail,Title:titleVal,SeatPref:seatVal,PassengerName:fullName,PassportNo:ppFinal,PaxMobile:mobFull,Category:selectedItem.Category,ItemTitle:fullTitle,FlightDate:fDate,DepTime:fDep,ArrTime:fArr,Timing:fTiming,Baggage:fBag,Meal:fMeal,Stay:fStay,Details:fDetails,FarePKR:selectedItem.FarePKR,FareID:selectedItem.FareID||'',Status:'PENDING',CreatedAt:new Date().toLocaleString('en-GB',{timeZone:'Asia/Karachi'})};
-        var voucherHtml=buildBookingVoucherHtml(previewBooking,false);
-        var res=await callBackend({action:'addBooking',email:currentEmail,token:currentToken,agentEmail:currentEmail,adminEmail:ADMIN_NOTIFY_EMAIL,notifyAdmin:true,notifySubAgent:true,title:titleVal,gender:genderVal,seatPref:seatVal,docType:docTypeVal,issueCountry:issueCountryVal,issueDate:issueDateVal,passengerName:fullName,passengerEmail:paxEm,passportNo:ppFinal,dob:dobVal,passportExpiry:expVal,nationality:natVal,paxMobile:mobFull,category:selectedItem.Category,itemTitle:fullTitle,farePKR:selectedItem.FarePKR,fareId:selectedItem.FareID||'',offerId:selectedItem.OfferID||'',holdMins:selectedItem.HoldMins||0,flightDate:fDate,depTime:fDep,arrTime:fArr,timing:fTiming,baggage:fBag,meal:fMeal,stay:fStay,details:fDetails,passportDoc:passportDoc,photoDoc:photoDoc,voucherHtml:voucherHtml});
+        var createdNow=new Date().toLocaleString('en-GB',{timeZone:'Asia/Karachi'});
+        var previewBooking={BookingID:'PENDING',PNR:directPnr||'PENDING',TicketNo:directTkt,AgencyName:agencyDisp,AgentEmail:currentEmail,PassengerEmail:paxEm,Title:titleVal,SeatPref:seatVal,PassengerName:fullName,PassportNo:ppFinal,PaxMobile:mobFull,Category:selectedItem.Category,ItemTitle:fullTitle,FlightDate:fDate,DepTime:fDep,ArrTime:fArr,Timing:fTiming,Baggage:fBag,Meal:fMeal,Stay:fStay,Details:fDetails,FarePKR:selectedItem.FarePKR,FareID:selectedItem.FareID||'',Status:isDirectIssue?'ISSUED':'PENDING',CreatedAt:createdNow};
+        var voucherHtml=buildEmailVoucherHtml(previewBooking);
+        var printVoucherHtml=buildBookingVoucherHtml(previewBooking,false,false);
+        var voucherData=buildVoucherPayloadData(previewBooking);
+        var res=await callBackend({action:'addBooking',email:currentEmail,token:currentToken,agentEmail:currentEmail,adminEmail:ADMIN_NOTIFY_EMAIL,notifyAdmin:!isDirectIssue,notifySubAgent:!isDirectIssue,skipEmail:isDirectIssue,title:titleVal,gender:genderVal,seatPref:seatVal,docType:docTypeVal,issueCountry:issueCountryVal,issueDate:issueDateVal,passengerName:fullName,passengerEmail:paxEm,passportNo:ppFinal,dob:dobVal,passportExpiry:expVal,nationality:natVal,paxMobile:mobFull,category:selectedItem.Category,itemTitle:fullTitle,farePKR:selectedItem.FarePKR,fareId:selectedItem.FareID||'',offerId:selectedItem.OfferID||'',holdMins:selectedItem.HoldMins||0,flightDate:fDate,depTime:fDep,arrTime:fArr,timing:fTiming,baggage:fBag,meal:fMeal,stay:fStay,details:fDetails,passportDoc:passportDoc,photoDoc:photoDoc,voucherHtml:voucherHtml,printVoucherHtml:printVoucherHtml,voucherData:voucherData});
         if(!res||!res.ok){alert((res&&res.message)||'Booking failed.');return;}
-        if(directIssue&&userHasIssueAccess()){var pnrInp=prompt('Enter Airline / GDS PNR to Issue:',res.pnr||'');if(pnrInp!==null){var tktInp=prompt('Enter 13-Digit Ticket Number (Optional):','')||'';await callBackend({action:'adminIssueBooking',email:currentEmail,token:currentToken,bookingId:res.bookingId,pnr:pnrInp.trim()||res.pnr,ticketNo:tktInp.trim(),agentEmail:currentEmail,passengerEmail:paxEm,adminEmail:ADMIN_NOTIFY_EMAIL,notifyAdmin:true,notifySubAgent:true});}}
+        var finalPnr=res.pnr||directPnr||'PENDING';
+        if(isDirectIssue){
+          finalPnr=directPnr||res.pnr||'CONFIRMED';
+          var issuedBooking=Object.assign({},previewBooking,{BookingID:res.bookingId,PNR:finalPnr,TicketNo:directTkt,Status:'ISSUED'});
+          await callBackend({action:'adminIssueBooking',email:currentEmail,token:currentToken,bookingId:res.bookingId,pnr:finalPnr,ticketNo:directTkt,agentEmail:currentEmail,passengerEmail:paxEm,adminEmail:ADMIN_NOTIFY_EMAIL,notifyAdmin:true,notifySubAgent:true,voucherHtml:buildEmailVoucherHtml(issuedBooking),printVoucherHtml:buildBookingVoucherHtml(issuedBooking,false,false),voucherData:buildVoucherPayloadData(issuedBooking)});
+        }
         closeBookingModal();document.getElementById('gdsDetailsModal').classList.add('hidden');
-        showProBookingCard(res.bookingId,res.pnr,(titleVal?(titleVal+'. '):'')+fullName,ppFinal,selectedItem.Title,selectedItem.FarePKR);
+        showProBookingCard(res.bookingId,finalPnr,(titleVal?(titleVal+'. '):'')+fullName,ppFinal,selectedItem.Title,selectedItem.FarePKR);
         loadDashboardData();switchTab('bookings');
       }catch(err){alert('Booking error: '+err.message);}
       finally{isBookingSubmitting=false;subBtn.disabled=false;subBtn.textContent='Book Only (Hold)';}
@@ -932,7 +1079,7 @@
     function adminDeleteBankReq(btn){var bid=btn.getAttribute('data-bid')||'',acc=btn.getAttribute('data-acc')||'',idx=btn.getAttribute('data-idx')||'';if(confirm('Remove bank account '+acc+'?'))callBackend({action:'adminDeleteBank',email:currentEmail,token:currentToken,bankId:bid,accountNumber:acc,index:idx}).then(function(r){alert((r&&r.message)||'Removed');loadDashboardData();}).catch(function(err){alert('Error: '+err.message);});}
     function viewAttachment(kind,id){var m=document.getElementById('attachmentModal'),body=document.getElementById('attachmentModalBody'),t=document.getElementById('attachmentModalTitle');t.textContent=kind==='deposit'?('🧾 Deposit Slip — '+id):('📎 Visa Documents — '+id);body.innerHTML='<div class="alert alert-info">Loading attachment...</div>';m.classList.remove('hidden');callBackend({action:'adminGetAttachment',email:currentEmail,token:currentToken,kind:kind,id:id}).then(function(res){if(!res||!res.ok){body.innerHTML='<div class="alert alert-error">'+esc((res&&res.message)||'Not available.')+'</div>';return;}if(kind==='deposit')body.innerHTML='<img src="'+esc(res.slipImage)+'" alt="Deposit Slip" style="max-width:100%;border-radius:10px;border:1px solid #cbd5e1;"/>';else{var h='';if(res.passportDoc)h+='<h4 style="margin-bottom:8px;color:#0b1f44;">Passport Scan</h4>'+(res.passportDoc.indexOf('data:application/pdf')===0?'<iframe src="'+esc(res.passportDoc)+'" style="width:100%;height:360px;border:1px solid #cbd5e1;border-radius:8px;margin-bottom:14px;"></iframe>':'<img src="'+esc(res.passportDoc)+'" style="max-width:100%;border-radius:8px;border:1px solid #cbd5e1;margin-bottom:14px;"/>');if(res.photoDoc)h+='<h4 style="margin-bottom:8px;color:#0b1f44;">Applicant Photo</h4><img src="'+esc(res.photoDoc)+'" style="max-width:260px;border-radius:8px;border:1px solid #cbd5e1;"/>';body.innerHTML=h||'<div class="alert alert-info">No files attached.</div>';}}).catch(function(err){body.innerHTML='<div class="alert alert-error">Error: '+esc(err.message)+'</div>';});}
 
-    function adminIssueGolanTicket(id){if(!userHasIssueAccess()){alert('⛔ Only Admin or authorized sub-agents can issue tickets.');return;}var existing=(window.__ALL_BOOKINGS__||[]).find(function(x){return String(x.BookingID)===String(id);})||{};var pnr=prompt('Enter Airline / GDS PNR:',existing.PNR&&existing.PNR!=='PENDING'?existing.PNR:'');if(pnr===null)return;var tkt=prompt('Enter 13-Digit Ticket Number (Optional):',existing.TicketNo||'')||'';var updatedB=Object.assign({},existing,{BookingID:id,PNR:pnr.trim()||existing.PNR||'CONFIRMED',TicketNo:tkt.trim()||existing.TicketNo||'',Status:'ISSUED'});var voucherHtml=buildBookingVoucherHtml(updatedB,false);callBackend({action:'adminIssueBooking',email:currentEmail,token:currentToken,bookingId:id,pnr:pnr.trim(),ticketNo:tkt.trim(),agentEmail:existing.AgentEmail||'',passengerEmail:existing.PassengerEmail||'',adminEmail:ADMIN_NOTIFY_EMAIL,notifyAdmin:true,notifySubAgent:true,voucherHtml:voucherHtml}).then(function(r){alert((r&&r.message)||'Ticket Issued & Gmail Sent');loadDashboardData();}).catch(function(err){alert('Error: '+err.message);});}
+    function adminIssueGolanTicket(id){if(!userHasIssueAccess()){alert('⛔ Only Admin or authorized sub-agents can issue tickets.');return;}var existing=(window.__ALL_BOOKINGS__||[]).find(function(x){return String(x.BookingID)===String(id);})||{};var pnr=prompt('Enter Airline / GDS PNR:',existing.PNR&&existing.PNR!=='PENDING'?existing.PNR:'');if(pnr===null)return;var tkt=prompt('Enter 13-Digit Ticket Number (Optional):',existing.TicketNo||'')||'';var updatedB=Object.assign({},existing,{BookingID:id,PNR:pnr.trim()||existing.PNR||'CONFIRMED',TicketNo:tkt.trim()||existing.TicketNo||'',Status:'ISSUED'});var voucherHtml=buildEmailVoucherHtml(updatedB);var printVoucherHtml=buildBookingVoucherHtml(updatedB,false,false);var voucherData=buildVoucherPayloadData(updatedB);callBackend({action:'adminIssueBooking',email:currentEmail,token:currentToken,bookingId:id,pnr:pnr.trim(),ticketNo:tkt.trim(),agentEmail:existing.AgentEmail||'',passengerEmail:existing.PassengerEmail||'',adminEmail:ADMIN_NOTIFY_EMAIL,notifyAdmin:true,notifySubAgent:true,voucherHtml:voucherHtml,printVoucherHtml:printVoucherHtml,voucherData:voucherData}).then(function(r){alert((r&&r.message)||'Ticket Issued & Gmail Sent');loadDashboardData();}).catch(function(err){alert('Error: '+err.message);});}
     function adminCancelGolanTicket(id){if(confirm('Cancel booking '+id+'?'))callBackend({action:'adminCancelBooking',email:currentEmail,token:currentToken,bookingId:id}).then(function(r){alert((r&&r.message)||'Canceled');loadDashboardData();}).catch(function(err){alert('Error: '+err.message);});}
     function deleteBookingAdmin(id){if(confirm('Permanently delete booking '+id+'?'))callBackend({action:'adminDeleteBooking',email:currentEmail,token:currentToken,bookingId:id}).then(function(r){alert((r&&r.message)||'Deleted');loadDashboardData();}).catch(function(err){alert('Error: '+err.message);});}
     function adminApproveDepositReq(depId){var d=(window.__ALL_DEPOSITS__||[]).find(function(x){return String(x.DepositID)===String(depId);});pendingApproveDepId=depId;var detEl=document.getElementById('approveConfirmDetails');if(detEl){detEl.innerHTML='<div><b>Deposit ID:</b> '+esc(depId)+'</div>'+(d?'<div><b>Agency:</b> '+esc(d.AgencyName||d.AgentEmail||'-')+'</div><div><b>Bank:</b> '+esc(d.BankName||'-')+'</div><div><b>Amount:</b> <span style="color:#15803d;font-weight:900;">PKR '+Number(d.AmountPKR||0).toLocaleString()+'</span></div>':'');}var okBtn=document.getElementById('approveConfirmOkBtn');if(okBtn){okBtn.disabled=false;okBtn.textContent='✓ OK (Approve & Update Wallet)';}document.getElementById('approveConfirmModal').classList.remove('hidden');}
@@ -947,7 +1094,7 @@
 setInterval(function(){var now=Date.now();document.querySelectorAll('.live-timer').forEach(function(el){var diff=Number(el.getAttribute('data-until')||0)-now;if(diff<=0){el.textContent='⌛ EXPIRED';var td=el.parentElement?el.parentElement.parentElement:null,b=td?td.querySelector('.status-badge'):null;if(b&&b.textContent==='PENDING'){b.textContent='EXPIRED';b.className='status-badge st-EXPIRED';}}else{var h=Math.floor(diff/3600000),m=Math.floor((diff%3600000)/60000),s=Math.floor((diff%60000)/1000);el.textContent='⏳ '+(h>0?String(h).padStart(2,'0')+':':'')+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');}});},1000);
 
     (function initPortalWidgets(){
-      applyBrandLogos();var pktToday=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Karachi'});
+      initGolanPngLogo();applyBrandLogos();var pktToday=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Karachi'});
       ['srchDate','srchReturnDate','srchDate2'].forEach(function(id){var el=document.getElementById(id);if(el)el.min=pktToday;});
       ['srchDate','srchReturnDate','srchDate2','paxDob','paxIssueDate','paxExp'].forEach(function(id){var el=document.getElementById(id);if(el)el.addEventListener('click',function(){if(this.showPicker)try{this.showPicker();}catch(e){}});});
       var d1=document.getElementById('srchDate');if(d1&&!d1.value)d1.value=pktToday;

@@ -1,4 +1,4 @@
-const crypto = require('crypto');
+ const crypto = require('crypto');
 
 const SB_HOST = ['https:', '', ['yxnygfbamkvzgskgoxoy', 'supabase', 'co'].join('.')].join('/');
 const SB_URL = process.env.SUPABASE_URL || process.env.STORAGE_SUPABASE_URL || SB_HOST;
@@ -309,11 +309,29 @@ function extractTicketMeta(bk, fareObj) {
   const dateVal = bk.FlightDate || meta.DATE || fo.TravelDate || fo.Date || '';
   const depVal = bk.DepTime || meta.DEP || '';
   const arrVal = bk.ArrTime || meta.ARR || '';
-  const timingVal = bk.Timing || meta.TIMING || fo.Timing || '';
+  let timingVal = bk.Timing || meta.TIMING || fo.Timing || '';
+  if (!timingVal && (depVal || arrVal)) {
+    timingVal =
+      (depVal ? ('Dep: ' + depVal) : '') +
+      (meta.DTERM ? (' (T' + meta.DTERM + ')') : '') +
+      (arrVal ? (' -> Arr: ' + arrVal) : '') +
+      (meta.ATERM ? (' (T' + meta.ATERM + ')') : '');
+  }
   const baggageVal = bk.Baggage || meta.BAG || fo.Luggage || (bagBr ? bagBr[1] : '') || '20+5 KG';
-  const mealVal = bk.Meal || meta.MEAL || fo.Meal || 'No';
+  const mealVal = bk.Meal || meta.MEAL || fo.Meal || 'Included';
+  const stayVal = bk.Stay || meta.STAY || fo.Stay || '';
   const rulesVal = bk.Details || meta.DETAILS || fo.Details || '';
-  return { cleanTitle, date: dateVal, dep: depVal, arr: arrVal, timing: timingVal, baggage: baggageVal, meal: mealVal, rules: rulesVal };
+  return {
+    cleanTitle,
+    date: dateVal,
+    dep: depVal,
+    arr: arrVal,
+    timing: timingVal,
+    baggage: baggageVal,
+    meal: mealVal,
+    stay: stayVal,
+    rules: rulesVal
+  };
 }
 
 function getTicketAirlineMeta(txt) {
@@ -387,6 +405,8 @@ function parseTicketSegments(bk, fi) {
       const times = tLeg.match(/\d{1,2}:\d{2}(?:\s*(?:AM|PM))?/gi) || [];
       const dTxt = fmtTicketDate(dateLegs[i] || fi.date);
       segments.push({
+        oCode: rm ? rm[1].toUpperCase() : 'ORG',
+        dCode: rm ? rm[2].toUpperCase() : 'DST',
         origin: rm ? codeToCity(rm[1]) : 'ORIGIN',
         dest: rm ? codeToCity(rm[2]) : 'DESTINATION',
         airline: getTicketAirlineMeta(segTxt + ' ' + clean).name,
@@ -406,6 +426,8 @@ function parseTicketSegments(bk, fi) {
       const times = tLeg.match(/\d{1,2}:\d{2}(?:\s*(?:AM|PM))?/gi) || [];
       const dTxt = fmtTicketDate(dateLegs[i] || fi.date);
       segments.push({
+        oCode: rm ? rm[1].toUpperCase() : 'ORG',
+        dCode: rm ? rm[2].toUpperCase() : 'DST',
         origin: rm ? codeToCity(rm[1]) : 'ORIGIN',
         dest: rm ? codeToCity(rm[2]) : 'DESTINATION',
         airline: airlineInfo.name,
@@ -426,6 +448,8 @@ function parseTicketSegments(bk, fi) {
     const depD = fmtTicketDate(hasIsoDate(fi.dep) ? fi.dep : fi.date);
     const arrD = fmtTicketDate(hasIsoDate(fi.arr) ? fi.arr : fi.date);
     segments.push({
+      oCode: rm ? rm[1].toUpperCase() : 'GL',
+      dCode: rm ? rm[2].toUpperCase() : (bk.Category === 'Visit Visa' ? 'VISA' : 'DST'),
       origin: rm ? codeToCity(rm[1]) : clean.replace(/^(Group Flight|Umrah Package|Visit Visa|Live Airline)\s*[-–]\s*/i, '').slice(0, 22).toUpperCase(),
       dest: rm ? codeToCity(rm[2]) : (bk.Category === 'Visit Visa' ? 'E-VISA' : 'DESTINATION'),
       airline: airlineInfo.name,
@@ -440,220 +464,411 @@ function parseTicketSegments(bk, fi) {
   return { airlineInfo, segments };
 }
 
-function buildBookingEmailHtml({ agencyName, paxName, paxType, farePKR, passportNo, invoiceUrl, isIssued, isCanceled, pnr, ticketNo, itemTitle, bId, isAdminCopy, agentEmail }) {
-  const cleanTitle = String(itemTitle || '').replace(/\s*\{[^}]+\}/g, '');
-  let statusLine = `Your booking with <strong>GOLAN INTERNATIONAL TRAVEL &amp; TOURS</strong> is on hold (PNR: <strong>${escHtml(pnr)}</strong>). Your Electronic Ticket PDF is attached below.`;
-  if (isIssued) {
-    statusLine = `Your booking with <strong>GOLAN INTERNATIONAL TRAVEL &amp; TOURS</strong> has been <strong style="color:#15803d;">CONFIRMED &amp; ISSUED</strong> (PNR: <strong>${escHtml(pnr)}</strong>${ticketNo ? ` | Ticket: <strong>${escHtml(ticketNo)}</strong>` : ''}). Your official Electronic Ticket PDF is attached below.`;
-  } else if (isCanceled) {
-    statusLine = `Your booking with <strong>GOLAN INTERNATIONAL TRAVEL &amp; TOURS</strong> (Ref: <strong>${escHtml(bId)}</strong>, PNR: <strong>${escHtml(pnr)}</strong>) has been <strong style="color:#b91c1c;">CANCELED</strong>.`;
-  }
-
-  return `<!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"><title>${escHtml(bId)} - Golan International</title></head>
-<body style="margin:0;padding:0;background-color:#eef2f7;font-family:Arial,Helvetica,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#eef2f7;padding:28px 14px;">
-    <tr><td align="center">
-      <table width="650" cellpadding="0" cellspacing="0" style="max-width:650px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 6px 20px rgba(11,31,68,0.1);">
-        <tr>
-          <td style="background:#134b91;padding:22px 28px;color:#ffffff;border-bottom:4px solid #c84b17;">
-            <div style="font-size:11px;color:#fbbf24;font-weight:bold;letter-spacing:1px;">${isAdminCopy ? 'ADMIN NOTIFICATION COPY • B2B PORTAL' : 'OFFICIAL ELECTRONIC TICKET • B2B PORTAL'}</div>
-            <h2 style="margin:4px 0 0;font-size:20px;">GOLAN INTERNATIONAL TRAVEL &amp; TOURS</h2>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:28px;">
-            <h3 style="margin:0 0 12px 0;color:#0b1f44;font-size:18px;">${isAdminCopy ? `Admin Alert — ${escHtml(agencyName || 'Sub-Agent')}` : `Assalam-o-Alaikum ${escHtml(agencyName || 'Partner')}!`}</h3>
-            <p style="margin:0 0 16px 0;color:#475569;font-size:14px;line-height:1.6;">${statusLine}</p>
-            <p style="margin:0 0 16px 0;color:#0f172a;font-size:13px;">
-              <strong>Booking Ref:</strong> ${escHtml(bId)} &nbsp;|&nbsp; <strong>Route / Package:</strong> ${escHtml(cleanTitle)}
-              ${isAdminCopy && agentEmail ? `<br/><strong>Sub-Agent Email:</strong> ${escHtml(agentEmail)}` : ''}
-            </p>
-            <table width="100%" cellpadding="10" cellspacing="0" style="border-collapse:collapse;font-size:13px;margin-bottom:22px;">
-              <thead>
-                <tr style="background-color:#c84b17;color:#ffffff;text-align:left;">
-                  <th style="border:1px solid #c84b17;">Passenger</th>
-                  <th style="border:1px solid #c84b17;">Type</th>
-                  <th style="border:1px solid #c84b17;">B2B Fare</th>
-                  <th style="border:1px solid #c84b17;">Passport</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td style="border:1px solid #cbd5e1;color:#0f172a;font-weight:bold;">${escHtml(paxName)}</td>
-                  <td style="border:1px solid #cbd5e1;color:#334155;">${escHtml(paxType || 'ADULT')}</td>
-                  <td style="border:1px solid #cbd5e1;color:#15803d;font-weight:bold;">PKR ${Number(farePKR || 0).toLocaleString()}</td>
-                  <td style="border:1px solid #cbd5e1;color:#334155;">${escHtml(passportNo)}</td>
-                </tr>
-              </tbody>
-            </table>
-            ${invoiceUrl ? `<div style="text-align:center;margin:22px 0;"><a href="${escHtml(invoiceUrl)}" target="_blank" style="background-color:#134b91;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:bold;display:inline-block;">🖨️ View / Print Electronic Ticket PDF</a></div>` : ''}
-            <p style="margin:0;color:#64748b;font-size:13px;line-height:1.6;">Regards,<br><strong style="color:#0b1f44;">GOLAN INTERNATIONAL TRAVEL &amp; TOURS</strong><br><span style="font-size:12px;">CEO Shan Chairman: 0345-3326318 | Manager Tariq Mehmod: 0341-6929324 | PTCL: 046-2512722</span></p>
-          </td>
-        </tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`;
-}
-
-function buildPrintableInvoicePage(bk, agent, matchedFare) {
+function resolveBackendVoucherContext(bk, agent, matchedFare) {
   const isGolanBranding = !agent || agent.VoucherBranding === 'golan';
   const hasValidLogo = !!(agent && agent.LogoDataUrl && isSafeDataUrl(agent.LogoDataUrl, false));
   const useCustomLogo = !isGolanBranding && hasValidLogo;
   const agencyName = isGolanBranding
     ? 'Golan International Travel & Tours'
-    : (agent.AgencyName || bk.AgencyName || 'Partner Travel Agency');
+    : (bk.AgencyName || (agent && agent.AgencyName) || 'Partner Travel Agency');
   const agencyEmail = isGolanBranding
     ? 'golaninternational322@gmail.com'
-    : (bk.AgentEmail || agent.Email || 'golaninternational322@gmail.com');
+    : (bk.AgentEmail || (agent && agent.Email) || 'golaninternational322@gmail.com');
   const agencyContact = isGolanBranding
     ? '0345-3326318'
-    : (agent.Mobile || bk.PaxMobile || '0345-3326318');
+    : ((agent && agent.Mobile) || bk.PaxMobile || '0345-3326318');
 
   const fi = extractTicketMeta(bk, matchedFare);
   const parsed = parseTicketSegments(bk, fi);
   const air = parsed.airlineInfo;
   const st = String(bk.Status || 'PENDING').toUpperCase();
-  const pnrText = escHtml(bk.PNR || 'PENDING');
-  const bookingCodeText = escHtml(bk.TicketNo || bk.BookingID || '-');
-  const ticketedAt = escHtml(bk.CreatedAt || '-');
+  const pnrText = String(bk.PNR || 'PENDING');
+  const bookingCodeText = String(bk.TicketNo || bk.BookingID || '-');
+  const ticketedAt = String(bk.IssuedAt || bk.CreatedAt || '-');
+  const paxTitleDisp = (bk.Title ? (String(bk.Title).toUpperCase() + ' ') : '') + String(bk.PassengerName || '').toUpperCase();
+  const stLabel = st === 'PENDING' ? 'On Hold' : ((st === 'ISSUED' || st === 'CONFIRMED') ? 'Confirmed / Issued' : st);
+  const stIcon = st === 'PENDING' ? '&#9203; ' : ((st === 'ISSUED' || st === 'CONFIRMED') ? '&#10003; ' : '');
+  const stCol = (st === 'CONFIRMED' || st === 'ISSUED') ? '#15803d' : (st === 'CANCELED' || st === 'EXPIRED' ? '#b91c1c' : '#b45309');
+  const stBg = (st === 'CONFIRMED' || st === 'ISSUED') ? '#dcfce7' : (st === 'CANCELED' || st === 'EXPIRED' ? '#fee2e2' : '#fef3c7');
+  const stBorder = (st === 'CONFIRMED' || st === 'ISSUED') ? '#86efac' : (st === 'CANCELED' || st === 'EXPIRED' ? '#fca5a5' : '#fcd34d');
+  const segNames = parsed.segments.map(sg => `${escHtml(sg.oCode)} - ${escHtml(sg.dCode)}`).join(' / ');
+  const extraRuleHtml = fi.rules
+    ? `<div style="margin-top:2px;">3- ${escHtml(String(fi.rules).toUpperCase())}</div>`
+    : `<div style="margin-top:2px;">3- PLEASE VERIFY PASSPORT VALIDITY (MIN 6 MONTHS) &amp; VISA REQUIREMENTS PRIOR TO TRAVEL.</div>`;
 
-  let rightLogoHtml = '';
-  if (useCustomLogo) {
-    rightLogoHtml = `<img src="${escHtml(agent.LogoDataUrl)}" style="height:44px;max-width:160px;object-fit:contain;" alt="Logo" />`;
-  } else if (air.isSalam) {
-    rightLogoHtml = `<div style="font-family:Arial,sans-serif;text-align:right;line-height:1.05;"><div style="font-size:10px;color:#84cc16;font-weight:bold;">السلام</div><div style="font-size:22px;font-weight:800;"><span style="color:#00a99d;">Salam</span><span style="color:#0284c7;">Air</span></div></div>`;
-  } else {
-    rightLogoHtml = `<div style="text-align:right;"><div style="font-size:17px;font-weight:900;color:${escHtml(air.color)};">${escHtml(air.name)}</div><div style="font-size:10px;font-weight:bold;color:#64748b;">GOLAN B2B E-TICKET</div></div>`;
+  return {
+    isGolanBranding, useCustomLogo, agencyName, agencyEmail, agencyContact,
+    fi, parsed, air, st, pnrText, bookingCodeText, ticketedAt, paxTitleDisp,
+    stLabel, stIcon, stCol, stBg, stBorder, segNames, extraRuleHtml
+  };
+}
+
+function buildVoucherCrestBadgeHtml(air, customLogoUrl, forEmail) {
+  if (!forEmail && customLogoUrl) {
+    return `<img src="${escHtml(customLogoUrl)}" style="height:44px;max-width:160px;object-fit:contain;" alt="Logo" />`;
   }
+  if (air.isSalam) {
+    return `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;display:inline-table;vertical-align:middle;"><tr>
+      <td style="text-align:right;padding-right:8px;vertical-align:middle;">
+        <div style="font-size:10px;color:#84cc16;font-weight:800;line-height:1;">&#1575;&#1604;&#1587;&#1604;&#1575;&#1605;</div>
+        <div style="font-size:18px;font-weight:900;line-height:1.1;"><span style="color:#00a99d;">Salam</span><span style="color:#0284c7;">Air</span></div>
+        <div style="font-size:9px;font-weight:800;color:#64748b;letter-spacing:0.4px;">GOLAN B2B SERVICE VOUCHER</div>
+      </td>
+      <td style="width:42px;height:42px;background-color:#0b1f44;border:2px solid #d97706;border-radius:10px;text-align:center;vertical-align:middle;">
+        <div style="font-size:10px;font-weight:900;color:#fbbf24;letter-spacing:0.8px;line-height:1;">GOLAN</div>
+        <div style="font-size:7px;font-weight:700;color:#e2e8f0;letter-spacing:0.5px;margin-top:2px;">B2B</div>
+      </td>
+    </tr></table>`;
+  }
+  return `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;display:inline-table;vertical-align:middle;"><tr>
+    <td style="text-align:right;padding-right:8px;vertical-align:middle;">
+      <div style="font-size:15px;font-weight:900;color:${escHtml(air.color)};line-height:1.15;">${escHtml(air.name)}</div>
+      <div style="font-size:9px;font-weight:800;color:#64748b;letter-spacing:0.4px;">GOLAN B2B SERVICE VOUCHER</div>
+    </td>
+    <td style="width:42px;height:42px;background-color:#0b1f44;border:2px solid #d97706;border-radius:10px;text-align:center;vertical-align:middle;">
+      <div style="font-size:10px;font-weight:900;color:#fbbf24;letter-spacing:0.8px;line-height:1;">GOLAN</div>
+      <div style="font-size:7px;font-weight:700;color:#e2e8f0;letter-spacing:0.5px;margin-top:2px;">B2B</div>
+    </td>
+  </tr></table>`;
+}
 
-  const planeIcon = `<span style="font-size:24px;color:#134b91;font-weight:bold;">&#9992;</span>`;
+function buildBookingEmailHtml({ bk, agent, matchedFare, agencyName, paxName, farePKR, passportNo, invoiceUrl, isIssued, isCanceled, pnr, ticketNo, itemTitle, bId, isAdminCopy, agentEmail }) {
+  const bkData = bk || {
+    BookingID: bId,
+    PNR: pnr,
+    TicketNo: ticketNo,
+    AgencyName: agencyName,
+    AgentEmail: agentEmail,
+    PassengerName: paxName,
+    PassportNo: passportNo,
+    ItemTitle: itemTitle,
+    FarePKR: farePKR,
+    Status: isIssued ? 'ISSUED' : (isCanceled ? 'CANCELED' : 'PENDING'),
+    CreatedAt: getPKTimeStr()
+  };
+  const ctx = resolveBackendVoucherContext(bkData, agent || null, matchedFare || null);
+  const fi = ctx.fi;
+  const air = ctx.air;
+  const segs = ctx.parsed.segments;
+  const refId = bkData.BookingID || bId || '-';
+  const crestBadge = buildVoucherCrestBadgeHtml(air, '', true);
 
-  const segsHtml = parsed.segments.map((sg, idx) => `
-    <div style="margin-bottom:10px;">
-      <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+  const segCardsHtml = segs.map(sg => `
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;background-color:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;margin-bottom:10px;">
+      <tr>
+        <td style="width:29%;padding:12px 14px;vertical-align:top;text-align:left;">
+          <div style="font-size:21px;font-weight:900;color:#163b7a;line-height:1.1;letter-spacing:0.5px;">${escHtml(sg.oCode)}</div>
+          <div style="font-size:10.5px;font-weight:700;color:#475569;margin-bottom:6px;text-transform:uppercase;">${escHtml(sg.origin)}</div>
+          <div style="font-size:15px;font-weight:900;color:#0f172a;">${escHtml(sg.depTime)}</div>
+          <div style="font-size:10.5px;color:#163b7a;font-weight:700;">${escHtml(sg.depDate)}</div>
+        </td>
+        <td style="width:42%;padding:12px 8px;vertical-align:middle;text-align:center;">
+          <div style="font-size:10.5px;color:#475569;font-weight:700;">Agent Ref: ${escHtml(refId)}</div>
+          <div style="font-size:11px;color:#b45309;font-weight:800;margin:3px 0;">Airline PNR: ${escHtml(ctx.pnrText)}</div>
+          <div style="margin:6px 0;"><span style="display:inline-block;background-color:${ctx.stBg};color:${ctx.stCol};padding:3px 10px;border-radius:99px;font-size:10.5px;font-weight:800;border:1px solid ${ctx.stBorder};">${ctx.stIcon}${escHtml(ctx.stLabel)}</span></div>
+          <div style="font-size:12px;font-weight:800;color:#0b1f44;">&#9992; ${escHtml(sg.airline)} &#8226; <span style="color:#d97706;">${escHtml(sg.flightNo)}</span></div>
+        </td>
+        <td style="width:29%;padding:12px 14px;vertical-align:top;text-align:right;">
+          <div style="font-size:21px;font-weight:900;color:#163b7a;line-height:1.1;letter-spacing:0.5px;">${escHtml(sg.dCode)}</div>
+          <div style="font-size:10.5px;font-weight:700;color:#475569;margin-bottom:6px;text-transform:uppercase;">${escHtml(sg.dest)}</div>
+          <div style="font-size:15px;font-weight:900;color:#0f172a;">${escHtml(sg.arrTime)}</div>
+          <div style="font-size:10.5px;color:#163b7a;font-weight:700;">${escHtml(sg.arrDate)}</div>
+        </td>
+      </tr>
+    </table>
+  `).join('');
+
+  const adminBanner = isAdminCopy
+    ? `<table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;background-color:#0b1f44;border-bottom:2px solid #d97706;">
+        <tr><td style="padding:7px 16px;font-size:11px;font-weight:800;color:#fbbf24;letter-spacing:0.5px;">
+          ADMIN NOTIFICATION COPY &#8226; AGENCY: ${escHtml(ctx.agencyName)} (${escHtml(agentEmail || ctx.agencyEmail)})
+        </td></tr>
+      </table>`
+    : '';
+
+  const viewPdfBtn = invoiceUrl
+    ? `<table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;margin:14px 0 4px;">
+        <tr><td align="center">
+          <a href="${escHtml(invoiceUrl)}" target="_blank" style="display:inline-block;background-color:#0b1f44;color:#ffffff;text-decoration:none;padding:11px 24px;border-radius:8px;font-size:12.5px;font-weight:800;border:2px solid #d97706;">&#9992; View / Print A4 Service Voucher PDF</a>
+        </td></tr>
+      </table>`
+    : '';
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Service Voucher - ${escHtml(refId)}</title>
+</head>
+<body style="margin:0;padding:12px;background-color:#eef2f7;font-family:'Segoe UI',Arial,Helvetica,sans-serif;color:#0f172a;-webkit-text-size-adjust:100%;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:680px;margin:0 auto;background-color:#ffffff;border-radius:10px;border:1px solid #dbe3ee;border-collapse:separate;overflow:hidden;">
+    <tr><td>${adminBanner}</td></tr>
+    <tr>
+      <td style="padding:16px 18px;">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;border-bottom:2px solid #d97706;margin-bottom:10px;">
+          <tr>
+            <td style="padding-bottom:10px;vertical-align:middle;">
+              <div style="font-size:17px;font-weight:900;color:#0b1f44;line-height:1.2;">Service(s) Voucher / Electronic Ticket</div>
+              <div style="font-size:11.5px;font-weight:800;color:#163b7a;margin-top:4px;">Super Ref: ${escHtml(refId)} &nbsp;|&nbsp; PNR: <span style="background-color:#eff6ff;color:#0b1f44;padding:2px 7px;border-radius:4px;border:1px solid #bfdbfe;font-family:monospace;">${escHtml(ctx.pnrText)}</span></div>
+            </td>
+            <td style="padding-bottom:10px;text-align:right;vertical-align:middle;">${crestBadge}</td>
+          </tr>
+        </table>
+
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;background-color:#f1f5f9;border-radius:6px;margin-bottom:10px;">
+          <tr>
+            <td style="padding:8px 12px;font-size:11.5px;font-weight:700;color:#0b1f44;">Hi ${escHtml(ctx.paxTitleDisp)}, thank you for choosing Golan International Travel &amp; Tours</td>
+            <td style="padding:8px 12px;font-size:11px;font-weight:700;color:#334155;text-align:right;white-space:nowrap;">Issued: ${escHtml(ctx.ticketedAt)}</td>
+          </tr>
+        </table>
+
+        ${segCardsHtml}
+
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;margin-top:10px;">
+          <tr><td style="background-color:#0b1f44;color:#ffffff;font-size:12px;font-weight:800;padding:7px 12px;border-radius:6px 6px 0 0;">Farefamily &amp; Baggage Description</td></tr>
+          <tr><td style="border:1px solid #cbd5e1;border-top:none;padding:9px 12px;font-size:11.5px;color:#1e293b;border-radius:0 0 6px 6px;">
+            <strong style="color:#0b1f44;">${escHtml(fi.cleanTitle)}</strong> &#8226; Baggage: <strong>${escHtml(fi.baggage || '20+5 KG')}</strong> &#8226; Meal: <strong>${escHtml(fi.meal || 'Included')}</strong>${fi.stay ? ` &#8226; Stay/Transit: ${escHtml(fi.stay)}` : ''}
+          </td></tr>
+        </table>
+
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;margin-top:10px;">
+          <tr><td colspan="7" style="background-color:#0b1f44;color:#ffffff;font-size:12px;font-weight:800;padding:7px 12px;border-radius:6px 6px 0 0;">Passenger Information</td></tr>
+          <tr style="background-color:#f1f5f9;">
+            <th style="padding:6px 7px;text-align:left;font-size:10.5px;color:#0b1f44;border-bottom:1px solid #cbd5e1;border-left:1px solid #cbd5e1;">Passenger Name</th>
+            <th style="padding:6px 7px;text-align:left;font-size:10.5px;color:#0b1f44;border-bottom:1px solid #cbd5e1;">Segment</th>
+            <th style="padding:6px 7px;text-align:left;font-size:10.5px;color:#0b1f44;border-bottom:1px solid #cbd5e1;">Doc / Passport</th>
+            <th style="padding:6px 7px;text-align:left;font-size:10.5px;color:#0b1f44;border-bottom:1px solid #cbd5e1;">Baggage</th>
+            <th style="padding:6px 7px;text-align:left;font-size:10.5px;color:#0b1f44;border-bottom:1px solid #cbd5e1;">Seat</th>
+            <th style="padding:6px 7px;text-align:left;font-size:10.5px;color:#0b1f44;border-bottom:1px solid #cbd5e1;">Meal</th>
+            <th style="padding:6px 7px;text-align:left;font-size:10.5px;color:#0b1f44;border-bottom:1px solid #cbd5e1;border-right:1px solid #cbd5e1;">Status</th>
+          </tr>
+          <tr>
+            <td style="padding:7px;font-size:11px;border-bottom:1px solid #cbd5e1;border-left:1px solid #cbd5e1;"><b>${escHtml(ctx.paxTitleDisp)}</b></td>
+            <td style="padding:7px;font-size:11px;border-bottom:1px solid #cbd5e1;">${ctx.segNames}</td>
+            <td style="padding:7px;font-size:11px;font-family:monospace;border-bottom:1px solid #cbd5e1;">${escHtml(String(bkData.PassportNo || '').toUpperCase())}</td>
+            <td style="padding:7px;font-size:11px;border-bottom:1px solid #cbd5e1;">${escHtml(fi.baggage || '20+5 KG')}</td>
+            <td style="padding:7px;font-size:11px;border-bottom:1px solid #cbd5e1;">${escHtml(bkData.SeatPref || 'Any')}</td>
+            <td style="padding:7px;font-size:11px;border-bottom:1px solid #cbd5e1;">${escHtml(fi.meal || 'Included')}</td>
+            <td style="padding:7px;font-size:11px;border-bottom:1px solid #cbd5e1;border-right:1px solid #cbd5e1;"><b style="color:${ctx.stCol};">${escHtml(ctx.st)}</b></td>
+          </tr>
+        </table>
+
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;margin-top:10px;">
+          <tr><td colspan="6" style="background-color:#0b1f44;color:#ffffff;font-size:12px;font-weight:800;padding:7px 12px;border-radius:6px 6px 0 0;">Account &amp; Price Info (In PKR)</td></tr>
+          <tr style="background-color:#f1f5f9;">
+            <th style="padding:6px 7px;text-align:left;font-size:10.5px;color:#0b1f44;border-bottom:1px solid #cbd5e1;border-left:1px solid #cbd5e1;">Booking Code</th>
+            <th style="padding:6px 7px;text-align:left;font-size:10.5px;color:#0b1f44;border-bottom:1px solid #cbd5e1;">Agency</th>
+            <th style="padding:6px 7px;text-align:left;font-size:10.5px;color:#0b1f44;border-bottom:1px solid #cbd5e1;">Email</th>
+            <th style="padding:6px 7px;text-align:left;font-size:10.5px;color:#0b1f44;border-bottom:1px solid #cbd5e1;">Contact</th>
+            <th style="padding:6px 7px;text-align:left;font-size:10.5px;color:#0b1f44;border-bottom:1px solid #cbd5e1;">Status</th>
+            <th style="padding:6px 7px;text-align:right;font-size:10.5px;color:#0b1f44;border-bottom:1px solid #cbd5e1;border-right:1px solid #cbd5e1;">Grand Total</th>
+          </tr>
+          <tr>
+            <td style="padding:7px;font-size:11px;font-family:monospace;border-bottom:1px solid #cbd5e1;border-left:1px solid #cbd5e1;">${escHtml(ctx.bookingCodeText)}</td>
+            <td style="padding:7px;font-size:11px;border-bottom:1px solid #cbd5e1;"><b>${escHtml(ctx.agencyName)}</b></td>
+            <td style="padding:7px;font-size:11px;border-bottom:1px solid #cbd5e1;">${escHtml(ctx.agencyEmail)}</td>
+            <td style="padding:7px;font-size:11px;border-bottom:1px solid #cbd5e1;">${escHtml(ctx.agencyContact)}</td>
+            <td style="padding:7px;font-size:11px;border-bottom:1px solid #cbd5e1;">${escHtml(ctx.st)}</td>
+            <td style="padding:7px;font-size:11.5px;text-align:right;font-weight:900;color:#15803d;border-bottom:1px solid #cbd5e1;border-right:1px solid #cbd5e1;white-space:nowrap;">PKR ${Number(bkData.FarePKR || 0).toLocaleString()}</td>
+          </tr>
+        </table>
+
+        <div style="margin-top:10px;font-size:10px;color:#334155;line-height:1.55;background-color:#f8fafc;border:1px solid #e2e8f0;border-left:4px solid #163b7a;padding:8px 10px;border-radius:5px;">
+          <strong style="color:#0b1f44;">TERM &amp; CONDITION:</strong>
+          <div>1- PASSENGER SHOULD REPORT AT CHECK IN COUNTER AT LEAST 0400 HOURS PRIOR TO FLIGHT.</div>
+          <div>2- TICKETS ARE NON REFUNDABLE AND NON CHANGEABLE ANY TIME.</div>
+          ${ctx.extraRuleHtml}
+        </div>
+
+        ${viewPdfBtn}
+
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;margin-top:10px;background-color:#0b1f44;color:#ffffff;border-radius:8px;border-bottom:3px solid #d97706;">
+          <tr>
+            <td style="padding:10px 12px;font-size:10.5px;line-height:1.6;">
+              <div><strong style="color:#fbbf24;">GOLAN INTERNATIONAL TRAVEL &amp; TOURS</strong> <span style="color:#cbd5e1;">(Toba Tek Singh)</span></div>
+              <div style="color:#f1f5f9;">CEO Shan Chairman: <strong>0345-3326318</strong> &nbsp;|&nbsp; Manager Tariq Mehmod: <strong>0341-6929324</strong> &nbsp;|&nbsp; Muhammad Umer: <strong>0331-6379110</strong></div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
+function buildPrintableInvoicePage(bk, agent, matchedFare, forBrowserPrint = true) {
+  const ctx = resolveBackendVoucherContext(bk, agent, matchedFare);
+  const fi = ctx.fi;
+  const air = ctx.air;
+  const rightLogoHtml = buildVoucherCrestBadgeHtml(
+    air,
+    ctx.useCustomLogo && agent ? agent.LogoDataUrl : '',
+    false
+  );
+
+  const segsHtml = ctx.parsed.segments.map(sg => `
+    <div class="it-card">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;">
         <tr>
-          <td style="background:#0b95db;color:#ffffff;font-size:15px;font-weight:bold;padding:6px 14px;border-radius:6px 6px 0 0;">
-            Flight - ${idx + 1} ${escHtml(sg.origin)} to ${escHtml(sg.dest)}
+          <td style="width:28%;vertical-align:top;text-align:left;">
+            <div class="code-big">${escHtml(sg.oCode)}</div>
+            <div class="city-sub">${escHtml(sg.origin)}</div>
+            <div class="time-big">${escHtml(sg.depTime)}</div>
+            <div class="date-sm">${escHtml(sg.depDate)}</div>
+          </td>
+          <td style="width:44%;text-align:center;vertical-align:middle;">
+            <div style="font-size:10.5px;color:#475569;font-weight:700;">Agent Ref: ${escHtml(bk.BookingID)}</div>
+            <div style="font-size:11px;color:#b45309;font-weight:800;margin:2px 0;">Airline PNR: ${escHtml(ctx.pnrText)}</div>
+            <div style="margin:5px 0;">
+              <span style="display:inline-block;background:${ctx.stBg};color:${ctx.stCol};padding:3px 10px;border-radius:99px;font-size:10.5px;font-weight:800;border:1px solid ${ctx.stBorder};">${ctx.stIcon}${escHtml(ctx.stLabel)}</span>
+            </div>
+            <div style="font-size:12px;font-weight:800;color:#0b1f44;">&#9992; ${escHtml(sg.airline)} &#8226; <span style="color:#d97706;">${escHtml(sg.flightNo)}</span></div>
+          </td>
+          <td style="width:28%;text-align:right;vertical-align:top;">
+            <div class="code-big">${escHtml(sg.dCode)}</div>
+            <div class="city-sub">${escHtml(sg.dest)}</div>
+            <div class="time-big">${escHtml(sg.arrTime)}</div>
+            <div class="date-sm">${escHtml(sg.arrDate)}</div>
           </td>
         </tr>
       </table>
-      <table width="100%" cellpadding="8" cellspacing="0" style="border-collapse:collapse;font-size:12.5px;">
-        <thead>
-          <tr style="border-bottom:1px solid #f1f5f9;">
-            <th align="left" style="width:22%;font-size:11.5px;font-weight:800;color:#0f172a;text-transform:uppercase;padding-top:9px;">AIRLINE NAME</th>
-            <th align="left" style="width:18%;font-size:11.5px;font-weight:800;color:#0f172a;text-transform:uppercase;padding-top:9px;">FLIGHT #</th>
-            <th align="left" style="width:25%;font-size:11.5px;font-weight:800;color:#0f172a;text-transform:uppercase;padding-top:9px;">DEPARTURE</th>
-            <th align="center" style="width:12%;"></th>
-            <th align="left" style="width:23%;font-size:11.5px;font-weight:800;color:#0f172a;text-transform:uppercase;padding-top:9px;">ARRIVAL</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td valign="top" style="border-bottom:1px solid #cbd5e1;padding:10px 8px 14px;color:#1e293b;">${escHtml(sg.airline)}</td>
-            <td valign="top" style="border-bottom:1px solid #cbd5e1;padding:10px 8px 14px;color:#1e293b;">
-              <div>${escHtml(sg.flightNo)}</div>
-              <div style="font-weight:bold;color:#0f172a;margin-top:2px;">Baggage</div>
-              <div>${escHtml(sg.baggage)}</div>
-            </td>
-            <td valign="top" style="border-bottom:1px solid #cbd5e1;padding:10px 8px 14px;color:#1e293b;">
-              <div style="color:#0f172a;">${escHtml(sg.depTime)}</div>
-              <div style="margin-top:2px;">${escHtml(sg.origin)}</div>
-              <div style="margin-top:2px;">${escHtml(sg.depDate)}</div>
-            </td>
-            <td align="center" valign="middle" style="border-bottom:1px solid #cbd5e1;padding:10px 8px 14px;">${planeIcon}</td>
-            <td valign="top" style="border-bottom:1px solid #cbd5e1;padding:10px 8px 14px;color:#1e293b;">
-              <div style="color:#0f172a;">${escHtml(sg.arrTime)}</div>
-              <div style="margin-top:2px;">${escHtml(sg.dest)}</div>
-              <div style="margin-top:2px;">${escHtml(sg.arrDate)}</div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
     </div>
   `).join('');
-
-  const extraRuleHtml = fi.rules ? `<div>3- ${escHtml(String(fi.rules).toUpperCase())}</div>` : '';
 
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Electronic Ticket - ${escHtml(bk.BookingID)}</title>
+  <title>Service Voucher - ${escHtml(bk.BookingID)}</title>
   <style>
-    @page { size: A4; margin: 12mm; }
+    @page { size: A4 portrait; margin: 8mm; }
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Arial, Helvetica, sans-serif; background: #eef2f7; padding: 24px 12px; color: #0f172a; margin: 0; }
-    .ticket-page { max-width: 780px; margin: 0 auto; background: #ffffff; padding: 32px 36px 42px; border-radius: 6px; box-shadow: 0 14px 40px rgba(15,23,42,0.12); }
-    .print-bar { text-align: center; margin-bottom: 14px; }
-    .print-btn { background: #134b91; color: #fff; border: none; padding: 10px 24px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; }
-    @media print { body { background: #fff; padding: 0; } .print-bar { display: none !important; } .ticket-page { box-shadow: none; padding: 8px 10px; max-width: 100%; } }
+    body { font-family: 'Segoe UI', Arial, Helvetica, sans-serif; background: #eef2f7; color: #0f172a; margin: 0; padding: 16px; }
+    .a4-page { width: 194mm; max-width: 100%; margin: 0 auto; background: #ffffff; padding: 18px 22px; border-radius: 8px; box-shadow: 0 12px 36px rgba(11,31,68,0.14); border: 1px solid #dbe3ee; }
+    .top-bar { width: 100%; border-collapse: collapse; border-bottom: 2px solid #d97706; margin-bottom: 10px; }
+    .greet { width: 100%; border-collapse: collapse; background: #f1f5f9; border-radius: 6px; font-size: 11.5px; font-weight: 700; color: #0b1f44; margin-bottom: 10px; }
+    .it-card { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 11px 14px; margin-bottom: 10px; }
+    .code-big { font-size: 21px; font-weight: 900; color: #163b7a; letter-spacing: 0.5px; line-height: 1.1; }
+    .city-sub { font-size: 10.5px; font-weight: 700; color: #475569; margin-bottom: 5px; text-transform: uppercase; }
+    .time-big { font-size: 16px; font-weight: 900; color: #0f172a; }
+    .date-sm { font-size: 10.5px; color: #163b7a; font-weight: 600; }
+    .sec-hdr { background: #0b1f44; color: #ffffff; font-size: 12px; font-weight: 800; padding: 6px 12px; border-radius: 6px 6px 0 0; margin-top: 9px; }
+    .sec-box { border: 1px solid #cbd5e1; border-top: none; border-radius: 0 0 6px 6px; padding: 9px 12px; font-size: 11px; margin-bottom: 8px; }
+    .v-tbl { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .v-tbl th { background: #f1f5f9; padding: 6px 8px; text-align: left; color: #0b1f44; font-weight: 800; border-bottom: 1px solid #cbd5e1; }
+    .v-tbl td { padding: 7px 8px; border-bottom: 1px solid #eef2f6; }
+    .ft-contacts { width: 100%; border-collapse: collapse; margin-top: 10px; background: #0b1f44; color: #ffffff; border-radius: 8px; font-size: 10.5px; border-bottom: 3px solid #d97706; }
+    .no-print { text-align: center; margin-bottom: 12px; }
+    @media print {
+      body { background: #ffffff; padding: 0; }
+      .a4-page { box-shadow: none; border: none; padding: 4mm; width: 100%; }
+      .no-print { display: none !important; }
+    }
   </style>
 </head>
 <body>
-  <div class="print-bar"><button class="print-btn" onclick="window.print()">🖨️ Print / Save Electronic Ticket PDF</button></div>
-  <div class="ticket-page">
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
+  ${forBrowserPrint ? `<div class="no-print"><button onclick="window.print()" style="background:#0b1f44;color:#ffffff;border:none;padding:10px 24px;border-radius:8px;font-weight:800;cursor:pointer;font-size:13px;">Print / Save A4 Service Voucher PDF</button></div>` : ''}
+  <div class="a4-page">
+    <table class="top-bar">
       <tr>
-        <td valign="top">
-          <div style="font-size:20px;font-weight:900;color:#0f172a;letter-spacing:0.4px;">ELECTRONIC TICKET</div>
-          <div style="font-size:13.5px;font-weight:800;color:#0f172a;margin-top:4px;">PNR: ${pnrText}</div>
+        <td style="padding-bottom:10px;vertical-align:middle;">
+          <div style="font-size:18px;font-weight:900;color:#0b1f44;">Service(s) Voucher / Electronic Ticket</div>
+          <div style="font-size:11.5px;font-weight:800;color:#163b7a;margin-top:2px;">Super Ref: ${escHtml(bk.BookingID)} &nbsp;|&nbsp; PNR: <span style="background:#eff6ff;padding:1px 7px;border-radius:4px;border:1px solid #bfdbfe;font-family:monospace;">${escHtml(ctx.pnrText)}</span></div>
         </td>
-        <td valign="top" align="right">${rightLogoHtml}</td>
+        <td style="padding-bottom:10px;text-align:right;vertical-align:middle;">${rightLogoHtml}</td>
       </tr>
     </table>
 
-    <table width="100%" cellpadding="4" cellspacing="0" style="background:#134b91;color:#ffffff;border-radius:8px;padding:10px 16px;margin-bottom:18px;font-size:12.5px;">
-      <tr><td style="width:46%;color:#e2e8f0;padding:3px 8px;">Booking code</td><td style="width:54%;color:#ffffff;padding:3px 8px;">${bookingCodeText}</td></tr>
-      <tr><td style="width:46%;color:#e2e8f0;padding:3px 8px;">Agency</td><td style="width:54%;color:#ffffff;padding:3px 8px;">${escHtml(agencyName)}</td></tr>
-      <tr><td style="width:46%;color:#e2e8f0;padding:3px 8px;">Email</td><td style="width:54%;color:#ffffff;padding:3px 8px;">${escHtml(agencyEmail)}</td></tr>
-      <tr><td style="width:46%;color:#e2e8f0;padding:3px 8px;">Contact</td><td style="width:54%;color:#ffffff;padding:3px 8px;">${escHtml(agencyContact)}</td></tr>
-      <tr><td style="width:46%;color:#e2e8f0;padding:3px 8px;">Ticketed at</td><td style="width:54%;color:#ffffff;padding:3px 8px;">${ticketedAt}</td></tr>
-    </table>
-
-    <table width="100%" cellpadding="8" cellspacing="0" style="border-collapse:collapse;margin-bottom:16px;font-size:12.5px;">
-      <thead>
-        <tr style="background:#c84b17;color:#ffffff;">
-          <th align="left">Sr #</th>
-          <th align="left">Passenger Name</th>
-          <th align="left">Passport</th>
-          <th align="left">Meal</th>
-          <th align="left">Baggage</th>
-          <th align="left">Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td style="border-bottom:1.5px solid #e2e8f0;color:#0f172a;">1</td>
-          <td style="border-bottom:1.5px solid #e2e8f0;color:#0f172a;">${escHtml(String(bk.PassengerName || '').toUpperCase())}</td>
-          <td style="border-bottom:1.5px solid #e2e8f0;color:#0f172a;">${escHtml(String(bk.PassportNo || '').toUpperCase())}</td>
-          <td style="border-bottom:1.5px solid #e2e8f0;color:#0f172a;">${escHtml(fi.meal || 'No')}</td>
-          <td style="border-bottom:1.5px solid #e2e8f0;color:#0f172a;">${escHtml(fi.baggage || '20+5 KG')}</td>
-          <td style="border-bottom:1.5px solid #e2e8f0;color:#0f172a;">${escHtml(st)}</td>
-        </tr>
-      </tbody>
+    <table class="greet">
+      <tr>
+        <td style="padding:7px 12px;">Hi ${escHtml(ctx.paxTitleDisp)}, thank you for choosing Golan International Travel &amp; Tours</td>
+        <td style="padding:7px 12px;text-align:right;white-space:nowrap;">Issued: ${escHtml(ctx.ticketedAt)}</td>
+      </tr>
     </table>
 
     ${segsHtml}
 
-    <div style="margin-top:18px;">
-      <div style="font-size:15.5px;font-weight:800;color:#134b91;margin-bottom:12px;">TERM &amp; CONDITION:</div>
-      <div style="font-size:12px;color:#0f172a;line-height:1.75;padding-left:6px;">
-        <div>1- PASSENGER SHOULD REPORT AT CHECK IN COUNTER AT LEAST 0400 HOURS PRIOR TO FLIGHT.</div>
-        <div>2- TICKETS ARE NON REFUNDABLE AND NON CHANGEABLE ANY TIME.</div>
-        ${extraRuleHtml}
-      </div>
+    <div class="sec-hdr">Farefamily &amp; Baggage Description</div>
+    <div class="sec-box">
+      <strong style="color:#0b1f44;">${escHtml(fi.cleanTitle)}</strong> &#8226; Baggage: <strong>${escHtml(fi.baggage || '20+5 KG')}</strong> &#8226; Meal: <strong>${escHtml(fi.meal || 'Included')}</strong>${fi.stay ? ` &#8226; Stay/Transit: ${escHtml(fi.stay)}` : ''}
     </div>
+
+    <div class="sec-hdr">Passenger Information</div>
+    <div class="sec-box" style="padding:0;">
+      <table class="v-tbl">
+        <thead>
+          <tr>
+            <th>Passenger Name</th>
+            <th>Segment</th>
+            <th>Doc / Passport</th>
+            <th>Baggage</th>
+            <th>Seat</th>
+            <th>Meal</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>${escHtml(ctx.paxTitleDisp)}</b></td>
+            <td>${ctx.segNames}</td>
+            <td style="font-family:monospace;">${escHtml(String(bk.PassportNo || '').toUpperCase())}</td>
+            <td>${escHtml(fi.baggage || '20+5 KG')}</td>
+            <td>${escHtml(bk.SeatPref || 'Any')}</td>
+            <td>${escHtml(fi.meal || 'Included')}</td>
+            <td><b style="color:${ctx.stCol};">${escHtml(ctx.st)}</b></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="sec-hdr">Account &amp; Price Info (In PKR)</div>
+    <div class="sec-box" style="padding:0;">
+      <table class="v-tbl">
+        <thead>
+          <tr>
+            <th>Booking Code</th>
+            <th>Agency</th>
+            <th>Email</th>
+            <th>Contact</th>
+            <th>Status</th>
+            <th style="text-align:right;">Grand Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="font-family:monospace;">${escHtml(ctx.bookingCodeText)}</td>
+            <td><b>${escHtml(ctx.agencyName)}</b></td>
+            <td>${escHtml(ctx.agencyEmail)}</td>
+            <td>${escHtml(ctx.agencyContact)}</td>
+            <td>${escHtml(ctx.st)}</td>
+            <td style="text-align:right;font-weight:900;color:#15803d;">PKR ${Number(bk.FarePKR || 0).toLocaleString()}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="font-size:10px;color:#334155;line-height:1.6;background:#f8fafc;border:1px solid #e2e8f0;border-left:4px solid #163b7a;padding:7px 10px;border-radius:5px;">
+      <strong style="color:#0b1f44;">TERM &amp; CONDITION:</strong>
+      <div>1- PASSENGER SHOULD REPORT AT CHECK IN COUNTER AT LEAST 0400 HOURS PRIOR TO FLIGHT.</div>
+      <div>2- TICKETS ARE NON REFUNDABLE AND NON CHANGEABLE ANY TIME.</div>
+      ${ctx.extraRuleHtml}
+    </div>
+
+    <table class="ft-contacts">
+      <tr>
+        <td style="padding:9px 12px;"><strong style="color:#fbbf24;">GOLAN INTERNATIONAL TRAVEL &amp; TOURS</strong> (Toba Tek Singh)</td>
+        <td style="padding:9px 12px;text-align:right;">CEO Shan Chairman: <strong>0345-3326318</strong> &nbsp;|&nbsp; Manager Tariq Mehmod: <strong>0341-6929324</strong> &nbsp;|&nbsp; Muhammad Umer: <strong>0331-6379110</strong></td>
+      </tr>
+    </table>
   </div>
 </body>
 </html>`;
 }
 
-function buildPrintableReceiptPage(d) {
+function buildPrintableReceiptPage(d, forBrowserPrint = true) {
   const st = String(d.Status || 'PENDING').toUpperCase();
   const stCol = st === 'APPROVED' ? '#10b981' : (st === 'CANCELED' ? '#ef4444' : '#f59e0b');
   const stLabel = st === 'APPROVED' ? 'Paid & Credited' : st;
@@ -666,46 +881,44 @@ function buildPrintableReceiptPage(d) {
   <title>Payment Receipt - ${escHtml(d.DepositID)}</title>
   <style>
     @page { size: A4; margin: 14mm; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box; }
     body { font-family: 'Segoe UI', Arial, sans-serif; background: #f5f3f7; color: #0f172a; margin: 0; padding: 26px 12px; }
     .rcard { max-width: 480px; margin: auto; background: #fff; border-radius: 22px; overflow: hidden; box-shadow: 0 20px 50px rgba(15,23,42,0.14); border: 1px solid #e2e8f0; }
-    .rtop { background: linear-gradient(105deg, #0b1f44 0%, #4f46e5 48%, #f59e0b 100%); color: #fff; padding: 22px 24px; }
-    .rrow { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; padding: 13px 0; border-bottom: 1px solid #eef2f6; font-size: 13.5px; }
-    .rrow:last-child { border-bottom: none; }
+    .rtop { background: #0b1f44; color: #fff; padding: 22px 24px; border-bottom: 4px solid #d97706; }
+    .rrow { padding: 12px 0; border-bottom: 1px solid #eef2f6; font-size: 13.5px; }
     .rlbl { color: #64748b; font-weight: 600; }
     .rval { text-align: right; font-weight: 800; color: #0f172a; }
     .rsub { font-size: 11.5px; color: #64748b; font-weight: 600; margin-top: 2px; }
-    .perf { position: relative; height: 22px; background: #fff; display: flex; align-items: center; }
-    .perf:before, .perf:after { content: ""; position: absolute; width: 24px; height: 24px; background: #f5f3f7; border-radius: 50%; top: -1px; }
-    .perf:before { left: -12px; } .perf:after { right: -12px; }
-    .perf-dots { width: 100%; border-top: 3px dotted #cbd5e1; margin: 0 22px; }
     .print-bar { text-align: center; margin-bottom: 14px; }
     .print-btn { background: #0b1f44; color: #fff; border: none; padding: 10px 22px; border-radius: 9px; font-weight: 800; cursor: pointer; font-size: 13px; }
-    @media print { body { background: #fff; padding: 0; } .print-bar { display: none; } .rcard { box-shadow: none; } .perf:before, .perf:after { background: #fff; border: 1px solid #cbd5e1; } }
+    @media print { body { background: #fff; padding: 0; } .print-bar { display: none !important; } .rcard { box-shadow: none; } }
   </style>
 </head>
 <body>
-  <div class="print-bar"><button class="print-btn" onclick="window.print()">🖨️ Print / Save PDF Receipt</button></div>
+  ${forBrowserPrint ? `<div class="print-bar"><button class="print-btn" onclick="window.print()">Print / Save PDF Receipt</button></div>` : ''}
   <div class="rcard">
     <div class="rtop">
-      <div style="font-size:11px;font-weight:800;letter-spacing:0.8px;opacity:0.9;">GOLAN INTERNATIONAL B2B</div>
+      <div style="font-size:11px;font-weight:800;letter-spacing:0.8px;color:#fbbf24;">GOLAN INTERNATIONAL B2B</div>
       <h2 style="margin:3px 0 0;font-size:21px;font-weight:900;">Transaction Details</h2>
-      <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:12px;opacity:0.95;font-weight:600;">
-        <span>${escHtml(d.CreatedAt || '-')}</span><span>REF: ${escHtml(d.DepositID || '-')}</span>
-      </div>
+      <table width="100%" cellpadding="0" cellspacing="0" style="font-size:12px;margin-top:12px;color:#e2e8f0;font-weight:600;">
+        <tr><td>${escHtml(d.CreatedAt || '-')}</td><td align="right">REF: ${escHtml(d.DepositID || '-')}</td></tr>
+      </table>
     </div>
     <div style="padding:10px 24px 6px;">
-      <div class="rrow"><div class="rlbl">From (Sub-Agent)</div><div class="rval">${escHtml(d.AgencyName || d.AgentEmail || 'Partner Agency')}<div class="rsub">${escHtml(d.AgentEmail || '')}</div></div></div>
-      <div class="rrow"><div class="rlbl">To (Corporate)</div><div class="rval">Golan International Travel &amp; Tours<div class="rsub">${escHtml(d.BankName || 'UBL 384263615')}</div></div></div>
-      <div class="rrow"><div class="rlbl">Transaction / Slip Ref</div><div class="rval" style="font-family:monospace;">${escHtml(d.TxRef || 'SLIP-AUTO')}</div></div>
-      <div class="rrow"><div class="rlbl">Status</div><div class="rval" style="color:${stCol};">● ${escHtml(stLabel)}</div></div>
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr><td class="rrow rlbl">From (Sub-Agent)</td><td class="rrow rval">${escHtml(d.AgencyName || d.AgentEmail || 'Partner Agency')}<div class="rsub">${escHtml(d.AgentEmail || '')}</div></td></tr>
+        <tr><td class="rrow rlbl">To (Corporate)</td><td class="rrow rval">Golan International Travel &amp; Tours<div class="rsub">${escHtml(d.BankName || 'UBL 384263615')}</div></td></tr>
+        <tr><td class="rrow rlbl">Transaction / Slip Ref</td><td class="rrow rval" style="font-family:monospace;">${escHtml(d.TxRef || 'SLIP-AUTO')}</td></tr>
+        <tr><td class="rrow rlbl" style="border-bottom:none;">Status</td><td class="rrow rval" style="border-bottom:none;color:${stCol};">&#9679; ${escHtml(stLabel)}</td></tr>
+      </table>
     </div>
-    <div class="perf"><div class="perf-dots"></div></div>
+    <div style="border-top:2px dashed #cbd5e1;margin:4px 22px;"></div>
     <div style="padding:14px 24px 22px;">
       <div style="font-size:12px;color:#64748b;font-weight:700;">Amount Deposited</div>
       <div style="font-size:28px;font-weight:900;color:#0f172a;margin-top:2px;">PKR ${Number(d.AmountPKR || 0).toLocaleString()}</div>
       <div style="margin-top:16px;padding-top:12px;border-top:1px solid #eef2f6;text-align:center;font-size:11px;color:#64748b;line-height:1.5;">
         <strong style="color:#0b1f44;">Golan International Travel &amp; Tours (Toba Tek Singh)</strong><br/>
-        CEO: 0345-3326318 • Manager Tariq Mehmod: 0341-6929324 • PTCL: 046-2512722
+        CEO Shan Chairman: 0345-3326318 &#8226; Manager Tariq Mehmod: 0341-6929324 &#8226; Muhammad Umer: 0331-6379110
       </div>
     </div>
   </div>
@@ -722,11 +935,11 @@ function buildDepositEmailHtml(d, receiptUrl) {
 <body style="margin:0;padding:0;background:#eef2f7;font-family:Arial,Helvetica,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="padding:26px 14px;background:#eef2f7;">
     <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 6px 20px rgba(0,0,0,0.08);">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #cbd5e1;">
         <tr>
-          <td style="background:linear-gradient(105deg,#0b1f44,#4f46e5,#f59e0b);padding:20px 26px;color:#ffffff;">
-            <div style="font-size:11px;font-weight:bold;letter-spacing:0.8px;">GOLAN INTERNATIONAL B2B</div>
-            <h2 style="margin:4px 0 0;font-size:20px;">${isApp ? '✅ Deposit Approved &amp; Credited' : '📎 Deposit Slip Submitted'}</h2>
+          <td style="background:#0b1f44;padding:20px 26px;color:#ffffff;border-bottom:3px solid #d97706;">
+            <div style="font-size:11px;font-weight:bold;letter-spacing:0.8px;color:#fbbf24;">GOLAN INTERNATIONAL B2B</div>
+            <h2 style="margin:4px 0 0;font-size:20px;">${isApp ? '&#10003; Deposit Approved &amp; Credited' : 'Deposit Slip Submitted'}</h2>
           </td>
         </tr>
         <tr>
@@ -740,8 +953,8 @@ function buildDepositEmailHtml(d, receiptUrl) {
               <tr><td style="border:1px solid #e2e8f0;background:#f8fafc;font-weight:bold;">Amount</td><td style="border:1px solid #e2e8f0;color:#15803d;font-weight:bold;font-size:16px;">PKR ${Number(d.AmountPKR || 0).toLocaleString()}</td></tr>
               <tr><td style="border:1px solid #e2e8f0;background:#f8fafc;font-weight:bold;">Status</td><td style="border:1px solid #e2e8f0;font-weight:bold;color:${isApp ? '#15803d' : '#b45309'};">${escHtml(st)}</td></tr>
             </table>
-            ${receiptUrl ? `<div style="text-align:center;margin:20px 0;"><a href="${escHtml(receiptUrl)}" target="_blank" style="background:#0b1f44;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:bold;font-size:13px;display:inline-block;">🧾 View / Print PDF Receipt</a></div>` : ''}
-            <p style="margin:0;font-size:12px;color:#64748b;">CEO Shan Chairman: 0345-3326318 | Manager Tariq Mehmod: 0341-6929324 | PTCL: 046-2512722</p>
+            ${receiptUrl ? `<div style="text-align:center;margin:20px 0;"><a href="${escHtml(receiptUrl)}" target="_blank" style="background:#0b1f44;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:bold;font-size:13px;display:inline-block;border:2px solid #d97706;">View / Print PDF Receipt</a></div>` : ''}
+            <p style="margin:0;font-size:12px;color:#64748b;">CEO Shan Chairman: 0345-3326318 | Manager Tariq Mehmod: 0341-6929324 | Muhammad Umer: 0331-6379110</p>
           </td>
         </tr>
       </table>
@@ -751,37 +964,89 @@ function buildDepositEmailHtml(d, receiptUrl) {
 </html>`;
 }
 
-async function sendGasEmail({ to, subject, htmlBody, pdfHtml, pdfName, bId, dtStr, agencyName, paxName, passportNo, category, itemTitle, farePKR, statusTxt, invoiceUrl }) {
-  if (!to || !GAS_URL) return '';
-  try {
-    const postRes = await fetchWithTimeout(GAS_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      redirect: 'follow',
-      body: JSON.stringify({
-        action: 'sendVoucherHtml',
-        to,
-        subject: subject || 'Golan International B2B Notification',
-        senderName: 'GOLAN INTERNATIONAL TRAVEL & TOURS',
-        htmlBody: htmlBody || '',
-        pdfHtml: pdfHtml || '',
-        pdfName: pdfName || ('ElectronicTicket-' + (bId || Date.now()) + '.pdf'),
-        invoiceUrl: invoiceUrl || '',
-        bId: bId || '',
-        dtStr: dtStr || getPKTimeStr(),
-        agencyName: agencyName || '',
-        paxName: paxName || '',
-        passportNo: passportNo || '',
-        category: category || '',
-        itemTitle: itemTitle || '',
-        farePKR: farePKR || 0,
-        statusTxt: statusTxt || ''
-      })
-    }, 15000);
-    const postTxt = await postRes.text();
-    if (postTxt.indexOf('true') !== -1 || postTxt.indexOf('"ok":true') !== -1) return ' | Email: SENT';
-  } catch (e) {}
-  return '';
+function sleepMs(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function sendGasEmail(payload) {
+  const {
+    to, subject, htmlBody, pdfHtml, pdfName, bId, dtStr,
+    agencyName, paxName, passportNo, category, itemTitle,
+    farePKR, statusTxt, invoiceUrl, adminCopy
+  } = payload || {};
+  if (!to || !GAS_URL) return { ok: false, batchHandled: false };
+
+  const bodyPayload = JSON.stringify({
+    action: 'sendVoucherHtml',
+    to,
+    subject: subject || 'Golan International B2B Notification',
+    senderName: 'GOLAN INTERNATIONAL TRAVEL & TOURS',
+    htmlBody: htmlBody || '',
+    pdfHtml: pdfHtml || '',
+    pdfName: pdfName || ('ServiceVoucher-' + (bId || Date.now()) + '.pdf'),
+    invoiceUrl: invoiceUrl || '',
+    bId: bId || '',
+    dtStr: dtStr || getPKTimeStr(),
+    agencyName: agencyName || '',
+    paxName: paxName || '',
+    passportNo: passportNo || '',
+    category: category || '',
+    itemTitle: itemTitle || '',
+    farePKR: farePKR || 0,
+    statusTxt: statusTxt || '',
+    adminCopy: adminCopy || null
+  });
+
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const postRes = await fetchWithTimeout(GAS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        redirect: 'follow',
+        body: bodyPayload
+      }, 25000);
+      const postTxt = await postRes.text();
+      if (postTxt.indexOf('"ok":true') !== -1 || postTxt.indexOf('true') !== -1) {
+        let parsed = null;
+        try { parsed = JSON.parse(postTxt); } catch (e) {}
+        return {
+          ok: true,
+          batchHandled: !!(parsed && parsed.batchHandled === true)
+        };
+      }
+      console.error(`[GAS Email Attempt ${attempt} Non-OK]`, postRes.status, postTxt.slice(0, 180));
+    } catch (e) {
+      console.error(`[GAS Email Attempt ${attempt} Error]`, e && e.message ? e.message : e);
+    }
+    if (attempt < 2) await sleepMs(450);
+  }
+  return { ok: false, batchHandled: false };
+}
+
+async function sendGasPair(primaryPayload, secondaryPayload) {
+  const hasPrimary = !!(primaryPayload && primaryPayload.to);
+  const hasSecondary = !!(secondaryPayload && secondaryPayload.to);
+  if (!hasPrimary && !hasSecondary) return false;
+
+  if (hasPrimary) {
+    const res1 = await sendGasEmail({
+      ...primaryPayload,
+      adminCopy: hasSecondary ? {
+        to: secondaryPayload.to,
+        subject: secondaryPayload.subject,
+        htmlBody: secondaryPayload.htmlBody
+      } : null
+    });
+    if (res1.ok && (!hasSecondary || res1.batchHandled)) return true;
+    if (hasSecondary) {
+      await sleepMs(300);
+      const res2 = await sendGasEmail(secondaryPayload);
+      return !!(res1.ok || res2.ok);
+    }
+    return !!res1.ok;
+  }
+  const resOnly = await sendGasEmail(secondaryPayload);
+  return !!resOnly.ok;
 }
 
 async function sendBookingEmailsSeparate({ adminEmails, subAgentEmail, paxEmail, bId, dtStr, agencyName, paxName, passportNo, category, itemTitle, farePKR, statusTxt, opts }) {
@@ -792,44 +1057,47 @@ async function sendBookingEmailsSeparate({ adminEmails, subAgentEmail, paxEmail,
   const pnr = options.pnr || 'PENDING';
   const ticketNo = options.ticketNo || '';
   const pdfHtml = options.pdfHtml || '';
+  const bk = options.bk || null;
+  const agent = options.agent || null;
+  const matchedFare = options.matchedFare || null;
 
   const agentSubject = isIssued
-    ? `Electronic Ticket CONFIRMED - ${bId} (PNR: ${pnr})`
-    : (isCanceled ? `Booking Canceled - ${bId} (PNR: ${pnr})` : `Electronic Ticket (HOLD) - ${bId} (PNR: ${pnr})`);
+    ? `Service Voucher CONFIRMED - ${bId} (PNR: ${pnr})`
+    : (isCanceled ? `Booking Canceled - ${bId} (PNR: ${pnr})` : `Service Voucher (HOLD) - ${bId} (PNR: ${pnr})`);
 
   const adminSubject = `[ADMIN COPY] ${agentSubject} | ${agencyName || 'Partner'}`;
-  const tasks = [];
-
   const subAgentTo = uniqueEmails([subAgentEmail, paxEmail]);
-  if (subAgentTo) {
-    const agentHtml = buildBookingEmailHtml({
-      agencyName, paxName, paxType: 'ADULT', farePKR, passportNo,
+  const adminTo = uniqueEmails(adminEmails || []);
+  const pdfFileName = `ServiceVoucher-${bId}.pdf`;
+
+  const primaryPayload = subAgentTo ? {
+    to: subAgentTo,
+    subject: agentSubject,
+    htmlBody: buildBookingEmailHtml({
+      bk, agent, matchedFare, agencyName, paxName, paxType: 'ADULT', farePKR, passportNo,
       invoiceUrl, isIssued, isCanceled, pnr, ticketNo, itemTitle, bId,
       isAdminCopy: false, agentEmail: subAgentEmail
-    });
-    tasks.push(sendGasEmail({
-      to: subAgentTo, subject: agentSubject, htmlBody: agentHtml, pdfHtml,
-      pdfName: `ElectronicTicket-${bId}.pdf`, invoiceUrl, bId, dtStr,
-      agencyName, paxName, passportNo, category, itemTitle, farePKR, statusTxt
-    }));
-  }
+    }),
+    pdfHtml,
+    pdfName: pdfFileName,
+    invoiceUrl, bId, dtStr, agencyName, paxName, passportNo, category, itemTitle, farePKR, statusTxt
+  } : null;
 
-  const adminTo = uniqueEmails(adminEmails || []);
-  if (adminTo) {
-    const adminHtml = buildBookingEmailHtml({
-      agencyName, paxName, paxType: 'ADULT', farePKR, passportNo,
+  const secondaryPayload = adminTo ? {
+    to: adminTo,
+    subject: adminSubject,
+    htmlBody: buildBookingEmailHtml({
+      bk, agent, matchedFare, agencyName, paxName, paxType: 'ADULT', farePKR, passportNo,
       invoiceUrl, isIssued, isCanceled, pnr, ticketNo, itemTitle, bId,
       isAdminCopy: true, agentEmail: subAgentEmail
-    });
-    tasks.push(sendGasEmail({
-      to: adminTo, subject: adminSubject, htmlBody: adminHtml, pdfHtml,
-      pdfName: `ElectronicTicket-${bId}.pdf`, invoiceUrl, bId, dtStr,
-      agencyName, paxName, passportNo, category, itemTitle, farePKR, statusTxt
-    }));
-  }
+    }),
+    pdfHtml,
+    pdfName: pdfFileName,
+    invoiceUrl, bId, dtStr, agencyName, paxName, passportNo, category, itemTitle, farePKR, statusTxt
+  } : null;
 
-  const results = await Promise.all(tasks);
-  return results.some(Boolean) ? ' | Email: SENT (Admin & Sub-Agent)' : '';
+  const sentOk = await sendGasPair(primaryPayload, secondaryPayload);
+  return sentOk ? ' | Email: SENT (Admin & Sub-Agent)' : '';
 }
 
 module.exports = async function handler(req, res) {
@@ -947,11 +1215,12 @@ module.exports = async function handler(req, res) {
       };
       await saveDB(DB);
 
-      const regBody = `<div style="font-family:Arial,sans-serif;padding:20px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;"><h2 style="color:#0b1f44;margin-top:0;">New Sub-Agent Registration</h2><p><b>Agency:</b> ${escHtml(agencyName)}</p><p><b>Email:</b> ${escHtml(email)}</p><p><b>City:</b> ${escHtml(city)}</p><p><b>Mobile:</b> ${escHtml(mobile)}</p><p><b>Status:</b> ${isSuperReg ? 'AUTO-APPROVED ADMIN' : 'PENDING HEAD OFFICE APPROVAL'}</p><p style="font-size:12px;color:#64748b;">CEO Shan Chairman: 0345-3326318 | Manager Tariq Mehmod: 0341-6929324</p></div>`;
-      await Promise.all([
-        sendGasEmail({ to: email, subject: `Registration Received: ${agencyName}`, htmlBody: regBody, bId: 'REG-' + Date.now().toString().slice(-5), agencyName, statusTxt: isSuperReg ? 'APPROVED' : 'PENDING APPROVAL' }),
-        sendGasEmail({ to: uniqueEmails(DB.admins || []), subject: `[ADMIN] New B2B Sub-Agent Registration: ${agencyName}`, htmlBody: regBody, bId: 'REG-' + Date.now().toString().slice(-5), agencyName, statusTxt: isSuperReg ? 'APPROVED' : 'PENDING APPROVAL' })
-      ]);
+      const regBody = `<div style="font-family:Arial,sans-serif;padding:20px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;"><h2 style="color:#0b1f44;margin-top:0;">New Sub-Agent Registration</h2><p><b>Agency:</b> ${escHtml(agencyName)}</p><p><b>Email:</b> ${escHtml(email)}</p><p><b>City:</b> ${escHtml(city)}</p><p><b>Mobile:</b> ${escHtml(mobile)}</p><p><b>Status:</b> ${isSuperReg ? 'AUTO-APPROVED ADMIN' : 'PENDING HEAD OFFICE APPROVAL'}</p><p style="font-size:12px;color:#64748b;">CEO Shan Chairman: 0345-3326318 | Manager Tariq Mehmod: 0341-6929324 | Muhammad Umer: 0331-6379110</p></div>`;
+      const regId = 'REG-' + Date.now().toString().slice(-5);
+      await sendGasPair(
+        { to: email, subject: `Registration Received: ${agencyName}`, htmlBody: regBody, bId: regId, agencyName, statusTxt: isSuperReg ? 'APPROVED' : 'PENDING APPROVAL' },
+        { to: uniqueEmails(DB.admins || []), subject: `[ADMIN] New B2B Sub-Agent Registration: ${agencyName}`, htmlBody: regBody, bId: regId, agencyName, statusTxt: isSuperReg ? 'APPROVED' : 'PENDING APPROVAL' }
+      );
 
       return res.json({
         ok: true,
@@ -1041,7 +1310,7 @@ module.exports = async function handler(req, res) {
       ]);
       if (!recipients) return res.json({ ok: false, message: 'No valid email recipients found.' });
       const htmlBody = String(p.htmlBody || '');
-      const sent = await sendGasEmail({
+      const gasRes = await sendGasEmail({
         to: recipients,
         subject: subj || 'Golan International B2B Notification',
         htmlBody: htmlBody || `<pre style="font-family:Arial,sans-serif;">${escHtml(p.message || '')}</pre>`,
@@ -1049,7 +1318,7 @@ module.exports = async function handler(req, res) {
         pdfName: 'Golan-Document-' + Date.now() + '.pdf',
         agencyName: a.AgencyName
       });
-      return res.json({ ok: !!sent, message: sent ? 'Gmail sent to Sub-Agent & Admins!' : 'GAS email delivery failed.' });
+      return res.json({ ok: !!gasRes.ok, message: gasRes.ok ? 'Gmail sent to Sub-Agent & Admins!' : 'GAS email delivery failed.' });
     }
 
     if (action === 'updateProfile') {
@@ -1260,11 +1529,11 @@ module.exports = async function handler(req, res) {
 
       const receiptUrl = `${getBaseUrl(req)}/api/backend?action=viewReceipt&depositId=${encodeURIComponent(depId)}&sig=${signReceipt(depId, email)}`;
       const emailHtml = buildDepositEmailHtml(depObj, receiptUrl);
-      const receiptPdfHtml = buildPrintableReceiptPage(depObj);
-      await Promise.all([
-        sendGasEmail({ to: email, subject: `Deposit Slip Submitted [${depId}] PKR ${amt.toLocaleString()}`, htmlBody: emailHtml, pdfHtml: receiptPdfHtml, pdfName: `Receipt-${depId}.pdf`, bId: depId, agencyName: a.AgencyName }),
-        sendGasEmail({ to: uniqueEmails(DB.admins || []), subject: `[ADMIN] Deposit Slip Submitted [${depId}] PKR ${amt.toLocaleString()}`, htmlBody: emailHtml, pdfHtml: receiptPdfHtml, pdfName: `Receipt-${depId}.pdf`, bId: depId, agencyName: a.AgencyName })
-      ]);
+      const receiptPdfHtml = buildPrintableReceiptPage(depObj, false);
+      await sendGasPair(
+        { to: email, subject: `Deposit Slip Submitted [${depId}] PKR ${amt.toLocaleString()}`, htmlBody: emailHtml, pdfHtml: receiptPdfHtml, pdfName: `Receipt-${depId}.pdf`, bId: depId, agencyName: a.AgencyName },
+        { to: uniqueEmails(DB.admins || []), subject: `[ADMIN] Deposit Slip Submitted [${depId}] PKR ${amt.toLocaleString()}`, htmlBody: emailHtml, pdfHtml: receiptPdfHtml, pdfName: `Receipt-${depId}.pdf`, bId: depId, agencyName: a.AgencyName }
+      );
 
       return res.json({ ok: true, depositId: depId, message: 'Deposit slip submitted! Please contact Head Office.' });
     }
@@ -1274,9 +1543,9 @@ module.exports = async function handler(req, res) {
       pruneOfferCache(DB);
 
       const paxName = String(p.passengerName || '').trim().slice(0, 100);
-      const ppNo = String(p.passportNo || '').trim().toUpperCase();
-      if (paxName.length < 2 || !/^[A-Z0-9]{6,12}$/.test(ppNo)) {
-        return res.json({ ok: false, message: 'Invalid Passenger Name or Passport Number.' });
+      const ppNo = String(p.passportNo || '').trim().toUpperCase().replace(/\s+/g, '');
+      if (paxName.length < 2 || !/^[A-Z0-9\-]{6,18}$/.test(ppNo)) {
+        return res.json({ ok: false, message: 'Invalid Passenger Name or Passport / Document Number.' });
       }
 
       const category = String(p.category || '').trim();
@@ -1356,7 +1625,12 @@ module.exports = async function handler(req, res) {
 
       const bkObj = {
         BookingID: bId, FareID: fareId, OfferID: offerId, CreatedAt: pkTime, HoldUntil: holdUntil,
-        AgentEmail: email, AgencyName: a.AgencyName, PassengerName: paxName, PassengerEmail: paxMail,
+        AgentEmail: email, AgencyName: a.AgencyName,
+        Title: String(p.title || '').trim().slice(0, 15),
+        Gender: String(p.gender || '').trim().slice(0, 15),
+        SeatPref: String(p.seatPref || 'Any').trim().slice(0, 20),
+        DocType: String(p.docType || 'Passport').trim().slice(0, 20),
+        PassengerName: paxName, PassengerEmail: paxMail,
         PassportNo: ppNo, Dob: String(p.dob || '').slice(0, 20), PassportExpiry: String(p.passportExpiry || '').slice(0, 20),
         Nationality: String(p.nationality || 'Pakistani').slice(0, 50), PaxMobile: String(p.paxMobile || '').slice(0, 30),
         Category: category, ItemTitle: itStr,
@@ -1373,24 +1647,28 @@ module.exports = async function handler(req, res) {
       DB.bookings.unshift(bkObj);
       await saveDB(DB);
 
-      const invoiceUrl = `${getBaseUrl(req)}/api/backend?action=viewInvoice&bookingId=${encodeURIComponent(bId)}&sig=${signInvoice(bId, ppNo)}`;
-      const ticketPdfHtml = buildPrintableInvoicePage(bkObj, a, matchedFare);
+      const skipEmail = p.skipEmail === true || p.skipEmail === 'true' || (p.notifyAdmin === false && p.notifySubAgent === false);
+      let mailNote = '';
+      if (!skipEmail) {
+        const invoiceUrl = `${getBaseUrl(req)}/api/backend?action=viewInvoice&bookingId=${encodeURIComponent(bId)}&sig=${signInvoice(bId, ppNo)}`;
+        const ticketPdfHtml = buildPrintableInvoicePage(bkObj, a, matchedFare, false);
 
-      const mailNote = await sendBookingEmailsSeparate({
-        adminEmails: DB.admins || [],
-        subAgentEmail: email,
-        paxEmail: paxMail,
-        bId,
-        dtStr: pkTime,
-        agencyName: a.AgencyName,
-        paxName,
-        passportNo: ppNo,
-        category,
-        itemTitle: itStr,
-        farePKR: fare,
-        statusTxt: 'HOLD / PENDING (PNR: ' + autoPnr + ')',
-        opts: { invoiceUrl, isIssued: false, pnr: autoPnr, pdfHtml: ticketPdfHtml }
-      });
+        mailNote = await sendBookingEmailsSeparate({
+          adminEmails: DB.admins || [],
+          subAgentEmail: email,
+          paxEmail: paxMail,
+          bId,
+          dtStr: pkTime,
+          agencyName: a.AgencyName,
+          paxName,
+          passportNo: ppNo,
+          category,
+          itemTitle: itStr,
+          farePKR: fare,
+          statusTxt: 'HOLD / PENDING (PNR: ' + autoPnr + ')',
+          opts: { invoiceUrl, isIssued: false, pnr: autoPnr, pdfHtml: ticketPdfHtml, bk: bkObj, agent: a, matchedFare }
+        });
+      }
 
       return res.json({ ok: true, bookingId: bId, pnr: autoPnr, holdUntil, message: 'Booking Held (PENDING)! PNR: ' + autoPnr + mailNote });
     }
@@ -1428,19 +1706,20 @@ module.exports = async function handler(req, res) {
       if (p.ticketNo && String(p.ticketNo).trim()) bk.TicketNo = String(p.ticketNo).trim().slice(0, 30);
       bk.Status = 'ISSUED';
       bk.IssuedBy = email;
+      bk.IssuedAt = getPKTimeStr();
       bk.HoldUntil = 0;
       await saveDB(DB);
 
       const matchedFare = bk.FareID ? DB.fares.find(f => String(f.ID) === String(bk.FareID)) : null;
       const invoiceUrl = `${getBaseUrl(req)}/api/backend?action=viewInvoice&bookingId=${encodeURIComponent(bk.BookingID)}&sig=${signInvoice(bk.BookingID, bk.PassportNo)}`;
-      const ticketPdfHtml = buildPrintableInvoicePage(bk, agentAcc, matchedFare);
+      const ticketPdfHtml = buildPrintableInvoicePage(bk, agentAcc, matchedFare, false);
 
       const mailNote = await sendBookingEmailsSeparate({
         adminEmails: DB.admins || [],
         subAgentEmail: bk.AgentEmail,
         paxEmail: bk.PassengerEmail,
         bId: bk.BookingID,
-        dtStr: bk.CreatedAt,
+        dtStr: bk.IssuedAt || bk.CreatedAt,
         agencyName: bk.AgencyName,
         paxName: bk.PassengerName,
         passportNo: bk.PassportNo,
@@ -1448,7 +1727,7 @@ module.exports = async function handler(req, res) {
         itemTitle: bk.ItemTitle,
         farePKR: fare,
         statusTxt: 'ISSUED / CONFIRMED (PNR: ' + (bk.PNR || '') + (bk.TicketNo ? ' | TKT: ' + bk.TicketNo : '') + ')',
-        opts: { invoiceUrl, isIssued: true, pnr: bk.PNR || '', ticketNo: bk.TicketNo || '', pdfHtml: ticketPdfHtml }
+        opts: { invoiceUrl, isIssued: true, pnr: bk.PNR || '', ticketNo: bk.TicketNo || '', pdfHtml: ticketPdfHtml, bk, agent: agentAcc, matchedFare }
       });
 
       return res.json({ ok: true, message: 'Ticket ISSUED & Confirmed! PNR: ' + bk.PNR + mailNote });
@@ -1484,7 +1763,7 @@ module.exports = async function handler(req, res) {
 
       const matchedFare = bk.FareID ? DB.fares.find(f => String(f.ID) === String(bk.FareID)) : null;
       const invoiceUrl = `${getBaseUrl(req)}/api/backend?action=viewInvoice&bookingId=${encodeURIComponent(bk.BookingID)}&sig=${signInvoice(bk.BookingID, bk.PassportNo)}`;
-      const ticketPdfHtml = buildPrintableInvoicePage(bk, agentAcc, matchedFare);
+      const ticketPdfHtml = buildPrintableInvoicePage(bk, agentAcc, matchedFare, false);
 
       await sendBookingEmailsSeparate({
         adminEmails: DB.admins || [],
@@ -1499,7 +1778,7 @@ module.exports = async function handler(req, res) {
         itemTitle: bk.ItemTitle,
         farePKR: bk.FarePKR,
         statusTxt: bk.Refunded ? 'CANCELED & REFUNDED' : 'CANCELED',
-        opts: { invoiceUrl, isCanceled: true, pnr: bk.PNR || '', pdfHtml: ticketPdfHtml }
+        opts: { invoiceUrl, isCanceled: true, pnr: bk.PNR || '', pdfHtml: ticketPdfHtml, bk, agent: agentAcc, matchedFare }
       });
 
       return res.json({ ok: true, message: bk.Refunded ? 'Booking CANCELED & Fare Refunded to Wallet!' : 'Hold Booking CANCELED!' });
@@ -1564,29 +1843,29 @@ module.exports = async function handler(req, res) {
         target.FailedAttempts = 0;
         target.TotpFailedAttempts = 0;
         await saveDB(DB);
-        const appBody = `<div style="font-family:Arial,sans-serif;padding:20px;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;"><h2 style="color:#15803d;margin-top:0;">✅ B2B Account Approved!</h2><p>Assalam-o-Alaikum <b>${escHtml(target.AgencyName)}</b>, aapka Golan International B2B account approve ho gaya hai. Ab aap portal par login karke Google Authenticator 2FA set kar sakte hain.</p></div>`;
-        await Promise.all([
-          sendGasEmail({ to: targetEmail, subject: `Account Approved - ${target.AgencyName}`, htmlBody: appBody, agencyName: target.AgencyName }),
-          sendGasEmail({ to: uniqueEmails(DB.admins || []), subject: `[ADMIN] Account Approved - ${target.AgencyName}`, htmlBody: appBody, agencyName: target.AgencyName })
-        ]);
+        const appBody = `<div style="font-family:Arial,sans-serif;padding:20px;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;"><h2 style="color:#15803d;margin-top:0;">&#10003; B2B Account Approved!</h2><p>Assalam-o-Alaikum <b>${escHtml(target.AgencyName)}</b>, aapka Golan International B2B account approve ho gaya hai. Ab aap portal par login karke Google Authenticator 2FA set kar sakte hain.</p></div>`;
+        await sendGasPair(
+          { to: targetEmail, subject: `Account Approved - ${target.AgencyName}`, htmlBody: appBody, agencyName: target.AgencyName },
+          { to: uniqueEmails(DB.admins || []), subject: `[ADMIN] Account Approved - ${target.AgencyName}`, htmlBody: appBody, agencyName: target.AgencyName }
+        );
         return res.json({ ok: true, message: 'Agent updated: APPROVE' });
       } else if (p.subAction === 'GRANT_ISSUE') {
         target.CanIssue = true;
         await saveDB(DB);
-        const authBody = `<div style="font-family:Arial,sans-serif;padding:20px;background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;"><h2 style="color:#b45309;margin-top:0;">🎫 Ticket Issue Authority Granted</h2><p>Assalam-o-Alaikum <b>${escHtml(target.AgencyName)}</b>, Head Office ne aapko Ticket Issue karne ki authority de di hai.</p></div>`;
-        await Promise.all([
-          sendGasEmail({ to: targetEmail, subject: `Ticket Issue Authority Granted - ${target.AgencyName}`, htmlBody: authBody, agencyName: target.AgencyName }),
-          sendGasEmail({ to: uniqueEmails(DB.admins || []), subject: `[ADMIN] Issue Authority Granted - ${target.AgencyName}`, htmlBody: authBody, agencyName: target.AgencyName })
-        ]);
+        const authBody = `<div style="font-family:Arial,sans-serif;padding:20px;background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;"><h2 style="color:#b45309;margin-top:0;">&#10003; Ticket Issue Authority Granted</h2><p>Assalam-o-Alaikum <b>${escHtml(target.AgencyName)}</b>, Head Office ne aapko Ticket Issue karne ki authority de di hai.</p></div>`;
+        await sendGasPair(
+          { to: targetEmail, subject: `Ticket Issue Authority Granted - ${target.AgencyName}`, htmlBody: authBody, agencyName: target.AgencyName },
+          { to: uniqueEmails(DB.admins || []), subject: `[ADMIN] Issue Authority Granted - ${target.AgencyName}`, htmlBody: authBody, agencyName: target.AgencyName }
+        );
         return res.json({ ok: true, message: '✅ Ticket Issue Authority Granted to ' + target.AgencyName });
       } else if (p.subAction === 'REVOKE_ISSUE') {
         target.CanIssue = false;
         await saveDB(DB);
-        const revBody = `<div style="font-family:Arial,sans-serif;padding:20px;background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;"><h2 style="color:#b91c1c;margin-top:0;">🚫 Ticket Issue Authority Revoked</h2><p>Assalam-o-Alaikum <b>${escHtml(target.AgencyName)}</b>, Head Office ne aapki Ticket Issue authority cancel/wapas le li hai.</p></div>`;
-        await Promise.all([
-          sendGasEmail({ to: targetEmail, subject: `Ticket Issue Authority Canceled - ${target.AgencyName}`, htmlBody: revBody, agencyName: target.AgencyName }),
-          sendGasEmail({ to: uniqueEmails(DB.admins || []), subject: `[ADMIN] Issue Authority Canceled - ${target.AgencyName}`, htmlBody: revBody, agencyName: target.AgencyName })
-        ]);
+        const revBody = `<div style="font-family:Arial,sans-serif;padding:20px;background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;"><h2 style="color:#b91c1c;margin-top:0;">Ticket Issue Authority Revoked</h2><p>Assalam-o-Alaikum <b>${escHtml(target.AgencyName)}</b>, Head Office ne aapki Ticket Issue authority cancel/wapas le li hai.</p></div>`;
+        await sendGasPair(
+          { to: targetEmail, subject: `Ticket Issue Authority Canceled - ${target.AgencyName}`, htmlBody: revBody, agencyName: target.AgencyName },
+          { to: uniqueEmails(DB.admins || []), subject: `[ADMIN] Issue Authority Canceled - ${target.AgencyName}`, htmlBody: revBody, agencyName: target.AgencyName }
+        );
         return res.json({ ok: true, message: '✅ Ticket Issue Authority Canceled for ' + target.AgencyName });
       } else if (p.subAction === 'BLOCK') {
         target.Status = 'BLOCKED';
@@ -1596,11 +1875,11 @@ module.exports = async function handler(req, res) {
         if (!Number.isFinite(amt) || amt <= 0) return res.json({ ok: false, message: 'Enter valid positive PKR amount.' });
         target.BalancePKR = Number(target.BalancePKR || 0) + amt;
         await saveDB(DB);
-        const limBody = `<div style="font-family:Arial,sans-serif;padding:20px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;"><h2 style="color:#0b1f44;margin-top:0;">💰 Wallet Limit Credited</h2><p><b>Agency:</b> ${escHtml(target.AgencyName)}</p><p><b>Added Amount:</b> PKR ${amt.toLocaleString()}</p><p><b>New Balance:</b> PKR ${Number(target.BalancePKR || 0).toLocaleString()}</p></div>`;
-        await Promise.all([
-          sendGasEmail({ to: targetEmail, subject: `Wallet Limit Added: PKR ${amt.toLocaleString()} - ${target.AgencyName}`, htmlBody: limBody, agencyName: target.AgencyName }),
-          sendGasEmail({ to: uniqueEmails(DB.admins || []), subject: `[ADMIN] Wallet Limit Added: PKR ${amt.toLocaleString()} - ${target.AgencyName}`, htmlBody: limBody, agencyName: target.AgencyName })
-        ]);
+        const limBody = `<div style="font-family:Arial,sans-serif;padding:20px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;"><h2 style="color:#0b1f44;margin-top:0;">Wallet Limit Credited</h2><p><b>Agency:</b> ${escHtml(target.AgencyName)}</p><p><b>Added Amount:</b> PKR ${amt.toLocaleString()}</p><p><b>New Balance:</b> PKR ${Number(target.BalancePKR || 0).toLocaleString()}</p></div>`;
+        await sendGasPair(
+          { to: targetEmail, subject: `Wallet Limit Added: PKR ${amt.toLocaleString()} - ${target.AgencyName}`, htmlBody: limBody, agencyName: target.AgencyName },
+          { to: uniqueEmails(DB.admins || []), subject: `[ADMIN] Wallet Limit Added: PKR ${amt.toLocaleString()} - ${target.AgencyName}`, htmlBody: limBody, agencyName: target.AgencyName }
+        );
         return res.json({ ok: true, message: 'Agent updated: ADD_LIMIT' });
       } else if (p.subAction === 'RESET_PASSWORD') {
         const np = String(p.newPassword || '');
@@ -1637,11 +1916,11 @@ module.exports = async function handler(req, res) {
 
       const receiptUrl = `${getBaseUrl(req)}/api/backend?action=viewReceipt&depositId=${encodeURIComponent(dep.DepositID)}&sig=${signReceipt(dep.DepositID, dep.AgentEmail)}`;
       const emailHtml = buildDepositEmailHtml(dep, receiptUrl);
-      const receiptPdfHtml = buildPrintableReceiptPage(dep);
-      await Promise.all([
-        sendGasEmail({ to: dep.AgentEmail, subject: `Deposit Approved [${dep.DepositID}] PKR ${Number(dep.AmountPKR || 0).toLocaleString()}`, htmlBody: emailHtml, pdfHtml: receiptPdfHtml, pdfName: `Receipt-${dep.DepositID}.pdf`, bId: dep.DepositID, agencyName: dep.AgencyName }),
-        sendGasEmail({ to: uniqueEmails(DB.admins || []), subject: `[ADMIN] Deposit Approved [${dep.DepositID}] PKR ${Number(dep.AmountPKR || 0).toLocaleString()}`, htmlBody: emailHtml, pdfHtml: receiptPdfHtml, pdfName: `Receipt-${dep.DepositID}.pdf`, bId: dep.DepositID, agencyName: dep.AgencyName })
-      ]);
+      const receiptPdfHtml = buildPrintableReceiptPage(dep, false);
+      await sendGasPair(
+        { to: dep.AgentEmail, subject: `Deposit Approved [${dep.DepositID}] PKR ${Number(dep.AmountPKR || 0).toLocaleString()}`, htmlBody: emailHtml, pdfHtml: receiptPdfHtml, pdfName: `Receipt-${dep.DepositID}.pdf`, bId: dep.DepositID, agencyName: dep.AgencyName },
+        { to: uniqueEmails(DB.admins || []), subject: `[ADMIN] Deposit Approved [${dep.DepositID}] PKR ${Number(dep.AmountPKR || 0).toLocaleString()}`, htmlBody: emailHtml, pdfHtml: receiptPdfHtml, pdfName: `Receipt-${dep.DepositID}.pdf`, bId: dep.DepositID, agencyName: dep.AgencyName }
+      );
 
       return res.json({
         ok: true,

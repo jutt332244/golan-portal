@@ -1,4 +1,4 @@
- const crypto = require('crypto');
+const crypto = require('crypto');
 
 const SB_HOST = ['https:', '', ['yxnygfbamkvzgskgoxoy', 'supabase', 'co'].join('.')].join('/');
 const SB_URL = process.env.SUPABASE_URL || process.env.STORAGE_SUPABASE_URL || SB_HOST;

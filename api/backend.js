@@ -1,4 +1,4 @@
- const crypto = require('crypto');
+const crypto = require('crypto');
 
 const SB_HOST = ['https:', '', ['yxnygfbamkvzgskgoxoy', 'supabase', 'co'].join('.')].join('/');
 const SB_URL = process.env.SUPABASE_URL || process.env.STORAGE_SUPABASE_URL || SB_HOST;
@@ -153,6 +153,8 @@ function defaultState() {
         TotpVerified: 'NO',
         Status: 'APPROVED',
         CanIssue: true,
+        CanVoid: true,
+        CanCancel: true,
         BalancePKR: 0,
         SessionToken: '',
         SessionExpiry: 0,
@@ -486,11 +488,11 @@ function resolveBackendVoucherContext(bk, agent, matchedFare) {
   const bookingCodeText = String(bk.TicketNo || bk.BookingID || '-');
   const ticketedAt = String(bk.IssuedAt || bk.CreatedAt || '-');
   const paxTitleDisp = (bk.Title ? (String(bk.Title).toUpperCase() + ' ') : '') + String(bk.PassengerName || '').toUpperCase();
-  const stLabel = st === 'PENDING' ? 'On Hold' : ((st === 'ISSUED' || st === 'CONFIRMED') ? 'Confirmed / Issued' : st);
+  const stLabel = st === 'PENDING' ? 'On Hold' : ((st === 'ISSUED' || st === 'CONFIRMED') ? 'Confirmed / Issued' : (st === 'VOIDED' ? 'Voided' : st));
   const stIcon = st === 'PENDING' ? '&#9203; ' : ((st === 'ISSUED' || st === 'CONFIRMED') ? '&#10003; ' : '');
-  const stCol = (st === 'CONFIRMED' || st === 'ISSUED') ? '#15803d' : (st === 'CANCELED' || st === 'EXPIRED' ? '#b91c1c' : '#b45309');
-  const stBg = (st === 'CONFIRMED' || st === 'ISSUED') ? '#dcfce7' : (st === 'CANCELED' || st === 'EXPIRED' ? '#fee2e2' : '#fef3c7');
-  const stBorder = (st === 'CONFIRMED' || st === 'ISSUED') ? '#86efac' : (st === 'CANCELED' || st === 'EXPIRED' ? '#fca5a5' : '#fcd34d');
+  const stCol = (st === 'CONFIRMED' || st === 'ISSUED') ? '#15803d' : (st === 'VOIDED' ? '#9a3412' : (st === 'CANCELED' || st === 'EXPIRED' ? '#b91c1c' : '#b45309'));
+  const stBg = (st === 'CONFIRMED' || st === 'ISSUED') ? '#dcfce7' : (st === 'VOIDED' ? '#ffedd5' : (st === 'CANCELED' || st === 'EXPIRED' ? '#fee2e2' : '#fef3c7'));
+  const stBorder = (st === 'CONFIRMED' || st === 'ISSUED') ? '#86efac' : (st === 'VOIDED' ? '#fdba74' : (st === 'CANCELED' || st === 'EXPIRED' ? '#fca5a5' : '#fcd34d'));
   const segNames = parsed.segments.map(sg => `${escHtml(sg.oCode)} - ${escHtml(sg.dCode)}`).join(' / ');
   const extraRuleHtml = fi.rules
     ? `<div style="margin-top:2px;">3- ${escHtml(String(fi.rules).toUpperCase())}</div>`
@@ -532,7 +534,7 @@ function buildVoucherCrestBadgeHtml(air, customLogoUrl, forEmail) {
   </tr></table>`;
 }
 
-function buildBookingEmailHtml({ bk, agent, matchedFare, agencyName, paxName, farePKR, passportNo, invoiceUrl, isIssued, isCanceled, pnr, ticketNo, itemTitle, bId, isAdminCopy, agentEmail }) {
+function buildBookingEmailHtml({ bk, agent, matchedFare, agencyName, paxName, farePKR, passportNo, invoiceUrl, isIssued, isVoided, isCanceled, pnr, ticketNo, itemTitle, bId, isAdminCopy, agentEmail }) {
   const bkData = bk || {
     BookingID: bId,
     PNR: pnr,
@@ -543,7 +545,7 @@ function buildBookingEmailHtml({ bk, agent, matchedFare, agencyName, paxName, fa
     PassportNo: passportNo,
     ItemTitle: itemTitle,
     FarePKR: farePKR,
-    Status: isIssued ? 'ISSUED' : (isCanceled ? 'CANCELED' : 'PENDING'),
+    Status: isIssued ? 'ISSUED' : (isVoided ? 'VOIDED' : (isCanceled ? 'CANCELED' : 'PENDING')),
     CreatedAt: getPKTimeStr()
   };
   const ctx = resolveBackendVoucherContext(bkData, agent || null, matchedFare || null);
@@ -615,23 +617,19 @@ function buildBookingEmailHtml({ bk, agent, matchedFare, agencyName, paxName, fa
             <td style="padding-bottom:10px;text-align:right;vertical-align:middle;">${crestBadge}</td>
           </tr>
         </table>
-
         <table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;background-color:#f1f5f9;border-radius:6px;margin-bottom:10px;">
           <tr>
             <td style="padding:8px 12px;font-size:11.5px;font-weight:700;color:#0b1f44;">Hi ${escHtml(ctx.paxTitleDisp)}, thank you for choosing Golan International Travel &amp; Tours</td>
             <td style="padding:8px 12px;font-size:11px;font-weight:700;color:#334155;text-align:right;white-space:nowrap;">Issued: ${escHtml(ctx.ticketedAt)}</td>
           </tr>
         </table>
-
         ${segCardsHtml}
-
         <table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;margin-top:10px;">
           <tr><td style="background-color:#0b1f44;color:#ffffff;font-size:12px;font-weight:800;padding:7px 12px;border-radius:6px 6px 0 0;">Farefamily &amp; Baggage Description</td></tr>
           <tr><td style="border:1px solid #cbd5e1;border-top:none;padding:9px 12px;font-size:11.5px;color:#1e293b;border-radius:0 0 6px 6px;">
             <strong style="color:#0b1f44;">${escHtml(fi.cleanTitle)}</strong> &#8226; Baggage: <strong>${escHtml(fi.baggage || '20+5 KG')}</strong> &#8226; Meal: <strong>${escHtml(fi.meal || 'Included')}</strong>${fi.stay ? ` &#8226; Stay/Transit: ${escHtml(fi.stay)}` : ''}
           </td></tr>
         </table>
-
         <table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;margin-top:10px;">
           <tr><td colspan="7" style="background-color:#0b1f44;color:#ffffff;font-size:12px;font-weight:800;padding:7px 12px;border-radius:6px 6px 0 0;">Passenger Information</td></tr>
           <tr style="background-color:#f1f5f9;">
@@ -653,7 +651,6 @@ function buildBookingEmailHtml({ bk, agent, matchedFare, agencyName, paxName, fa
             <td style="padding:7px;font-size:11px;border-bottom:1px solid #cbd5e1;border-right:1px solid #cbd5e1;"><b style="color:${ctx.stCol};">${escHtml(ctx.st)}</b></td>
           </tr>
         </table>
-
         <table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;margin-top:10px;">
           <tr><td colspan="6" style="background-color:#0b1f44;color:#ffffff;font-size:12px;font-weight:800;padding:7px 12px;border-radius:6px 6px 0 0;">Account &amp; Price Info (In PKR)</td></tr>
           <tr style="background-color:#f1f5f9;">
@@ -673,16 +670,13 @@ function buildBookingEmailHtml({ bk, agent, matchedFare, agencyName, paxName, fa
             <td style="padding:7px;font-size:11.5px;text-align:right;font-weight:900;color:#15803d;border-bottom:1px solid #cbd5e1;border-right:1px solid #cbd5e1;white-space:nowrap;">PKR ${Number(bkData.FarePKR || 0).toLocaleString()}</td>
           </tr>
         </table>
-
         <div style="margin-top:10px;font-size:10px;color:#334155;line-height:1.55;background-color:#f8fafc;border:1px solid #e2e8f0;border-left:4px solid #163b7a;padding:8px 10px;border-radius:5px;">
           <strong style="color:#0b1f44;">TERM &amp; CONDITION:</strong>
           <div>1- PASSENGER SHOULD REPORT AT CHECK IN COUNTER AT LEAST 0400 HOURS PRIOR TO FLIGHT.</div>
           <div>2- TICKETS ARE NON REFUNDABLE AND NON CHANGEABLE ANY TIME.</div>
           ${ctx.extraRuleHtml}
         </div>
-
         ${viewPdfBtn}
-
         <table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;margin-top:10px;background-color:#0b1f44;color:#ffffff;border-radius:8px;border-bottom:3px solid #d97706;">
           <tr>
             <td style="padding:10px 12px;font-size:10.5px;line-height:1.6;">
@@ -762,11 +756,7 @@ function buildPrintableInvoicePage(bk, agent, matchedFare, forBrowserPrint = tru
     .v-tbl td { padding: 7px 8px; border-bottom: 1px solid #eef2f6; }
     .ft-contacts { width: 100%; border-collapse: collapse; margin-top: 10px; background: #0b1f44; color: #ffffff; border-radius: 8px; font-size: 10.5px; border-bottom: 3px solid #d97706; }
     .no-print { text-align: center; margin-bottom: 12px; }
-    @media print {
-      body { background: #ffffff; padding: 0; }
-      .a4-page { box-shadow: none; border: none; padding: 4mm; width: 100%; }
-      .no-print { display: none !important; }
-    }
+    @media print { body { background: #ffffff; padding: 0; } .a4-page { box-shadow: none; border: none; padding: 4mm; width: 100%; } .no-print { display: none !important; } }
   </style>
 </head>
 <body>
@@ -781,82 +771,35 @@ function buildPrintableInvoicePage(bk, agent, matchedFare, forBrowserPrint = tru
         <td style="padding-bottom:10px;text-align:right;vertical-align:middle;">${rightLogoHtml}</td>
       </tr>
     </table>
-
     <table class="greet">
       <tr>
         <td style="padding:7px 12px;">Hi ${escHtml(ctx.paxTitleDisp)}, thank you for choosing Golan International Travel &amp; Tours</td>
         <td style="padding:7px 12px;text-align:right;white-space:nowrap;">Issued: ${escHtml(ctx.ticketedAt)}</td>
       </tr>
     </table>
-
     ${segsHtml}
-
     <div class="sec-hdr">Farefamily &amp; Baggage Description</div>
-    <div class="sec-box">
-      <strong style="color:#0b1f44;">${escHtml(fi.cleanTitle)}</strong> &#8226; Baggage: <strong>${escHtml(fi.baggage || '20+5 KG')}</strong> &#8226; Meal: <strong>${escHtml(fi.meal || 'Included')}</strong>${fi.stay ? ` &#8226; Stay/Transit: ${escHtml(fi.stay)}` : ''}
-    </div>
-
+    <div class="sec-box"><strong style="color:#0b1f44;">${escHtml(fi.cleanTitle)}</strong> &#8226; Baggage: <strong>${escHtml(fi.baggage || '20+5 KG')}</strong> &#8226; Meal: <strong>${escHtml(fi.meal || 'Included')}</strong>${fi.stay ? ` &#8226; Stay/Transit: ${escHtml(fi.stay)}` : ''}</div>
     <div class="sec-hdr">Passenger Information</div>
     <div class="sec-box" style="padding:0;">
       <table class="v-tbl">
-        <thead>
-          <tr>
-            <th>Passenger Name</th>
-            <th>Segment</th>
-            <th>Doc / Passport</th>
-            <th>Baggage</th>
-            <th>Seat</th>
-            <th>Meal</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><b>${escHtml(ctx.paxTitleDisp)}</b></td>
-            <td>${ctx.segNames}</td>
-            <td style="font-family:monospace;">${escHtml(String(bk.PassportNo || '').toUpperCase())}</td>
-            <td>${escHtml(fi.baggage || '20+5 KG')}</td>
-            <td>${escHtml(bk.SeatPref || 'Any')}</td>
-            <td>${escHtml(fi.meal || 'Included')}</td>
-            <td><b style="color:${ctx.stCol};">${escHtml(ctx.st)}</b></td>
-          </tr>
-        </tbody>
+        <thead><tr><th>Passenger Name</th><th>Segment</th><th>Doc / Passport</th><th>Baggage</th><th>Seat</th><th>Meal</th><th>Status</th></tr></thead>
+        <tbody><tr><td><b>${escHtml(ctx.paxTitleDisp)}</b></td><td>${ctx.segNames}</td><td style="font-family:monospace;">${escHtml(String(bk.PassportNo || '').toUpperCase())}</td><td>${escHtml(fi.baggage || '20+5 KG')}</td><td>${escHtml(bk.SeatPref || 'Any')}</td><td>${escHtml(fi.meal || 'Included')}</td><td><b style="color:${ctx.stCol};">${escHtml(ctx.st)}</b></td></tr></tbody>
       </table>
     </div>
-
     <div class="sec-hdr">Account &amp; Price Info (In PKR)</div>
     <div class="sec-box" style="padding:0;">
       <table class="v-tbl">
-        <thead>
-          <tr>
-            <th>Booking Code</th>
-            <th>Agency</th>
-            <th>Email</th>
-            <th>Contact</th>
-            <th>Status</th>
-            <th style="text-align:right;">Grand Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td style="font-family:monospace;">${escHtml(ctx.bookingCodeText)}</td>
-            <td><b>${escHtml(ctx.agencyName)}</b></td>
-            <td>${escHtml(ctx.agencyEmail)}</td>
-            <td>${escHtml(ctx.agencyContact)}</td>
-            <td>${escHtml(ctx.st)}</td>
-            <td style="text-align:right;font-weight:900;color:#15803d;">PKR ${Number(bk.FarePKR || 0).toLocaleString()}</td>
-          </tr>
-        </tbody>
+        <thead><tr><th>Booking Code</th><th>Agency</th><th>Email</th><th>Contact</th><th>Status</th><th style="text-align:right;">Grand Total</th></tr></thead>
+        <tbody><tr><td style="font-family:monospace;">${escHtml(ctx.bookingCodeText)}</td><td><b>${escHtml(ctx.agencyName)}</b></td><td>${escHtml(ctx.agencyEmail)}</td><td>${escHtml(ctx.agencyContact)}</td><td>${escHtml(ctx.st)}</td><td style="text-align:right;font-weight:900;color:#15803d;">PKR ${Number(bk.FarePKR || 0).toLocaleString()}</td></tr></tbody>
       </table>
     </div>
-
     <div style="font-size:10px;color:#334155;line-height:1.6;background:#f8fafc;border:1px solid #e2e8f0;border-left:4px solid #163b7a;padding:7px 10px;border-radius:5px;">
       <strong style="color:#0b1f44;">TERM &amp; CONDITION:</strong>
       <div>1- PASSENGER SHOULD REPORT AT CHECK IN COUNTER AT LEAST 0400 HOURS PRIOR TO FLIGHT.</div>
       <div>2- TICKETS ARE NON REFUNDABLE AND NON CHANGEABLE ANY TIME.</div>
       ${ctx.extraRuleHtml}
     </div>
-
     <table class="ft-contacts">
       <tr>
         <td style="padding:9px 12px;"><strong style="color:#fbbf24;">GOLAN INTERNATIONAL TRAVEL &amp; TOURS</strong> (Toba Tek Singh)</td>
@@ -1053,6 +996,7 @@ async function sendBookingEmailsSeparate({ adminEmails, subAgentEmail, paxEmail,
   const options = opts || {};
   const invoiceUrl = options.invoiceUrl || '';
   const isIssued = !!options.isIssued;
+  const isVoided = !!options.isVoided;
   const isCanceled = !!options.isCanceled;
   const pnr = options.pnr || 'PENDING';
   const ticketNo = options.ticketNo || '';
@@ -1063,7 +1007,9 @@ async function sendBookingEmailsSeparate({ adminEmails, subAgentEmail, paxEmail,
 
   const agentSubject = isIssued
     ? `Service Voucher CONFIRMED - ${bId} (PNR: ${pnr})`
-    : (isCanceled ? `Booking Canceled - ${bId} (PNR: ${pnr})` : `Service Voucher (HOLD) - ${bId} (PNR: ${pnr})`);
+    : (isVoided
+      ? `Ticket Voided - ${bId} (PNR: ${pnr})`
+      : (isCanceled ? `Booking Canceled - ${bId} (PNR: ${pnr})` : `Service Voucher (HOLD) - ${bId} (PNR: ${pnr})`));
 
   const adminSubject = `[ADMIN COPY] ${agentSubject} | ${agencyName || 'Partner'}`;
   const subAgentTo = uniqueEmails([subAgentEmail, paxEmail]);
@@ -1075,7 +1021,7 @@ async function sendBookingEmailsSeparate({ adminEmails, subAgentEmail, paxEmail,
     subject: agentSubject,
     htmlBody: buildBookingEmailHtml({
       bk, agent, matchedFare, agencyName, paxName, paxType: 'ADULT', farePKR, passportNo,
-      invoiceUrl, isIssued, isCanceled, pnr, ticketNo, itemTitle, bId,
+      invoiceUrl, isIssued, isVoided, isCanceled, pnr, ticketNo, itemTitle, bId,
       isAdminCopy: false, agentEmail: subAgentEmail
     }),
     pdfHtml,
@@ -1088,7 +1034,7 @@ async function sendBookingEmailsSeparate({ adminEmails, subAgentEmail, paxEmail,
     subject: adminSubject,
     htmlBody: buildBookingEmailHtml({
       bk, agent, matchedFare, agencyName, paxName, paxType: 'ADULT', farePKR, passportNo,
-      invoiceUrl, isIssued, isCanceled, pnr, ticketNo, itemTitle, bId,
+      invoiceUrl, isIssued, isVoided, isCanceled, pnr, ticketNo, itemTitle, bId,
       isAdminCopy: true, agentEmail: subAgentEmail
     }),
     pdfHtml,
@@ -1147,6 +1093,8 @@ module.exports = async function handler(req, res) {
           TotpVerified: 'NO',
           Status: 'APPROVED',
           CanIssue: true,
+          CanVoid: true,
+          CanCancel: true,
           BalancePKR: 0,
           SessionToken: '',
           SessionExpiry: 0,
@@ -1155,9 +1103,11 @@ module.exports = async function handler(req, res) {
         };
         adminSynced = true;
       } else {
-        if (DB.agents[adm].Status !== 'APPROVED' || !DB.agents[adm].CanIssue) {
+        if (DB.agents[adm].Status !== 'APPROVED' || !DB.agents[adm].CanIssue || !DB.agents[adm].CanVoid || !DB.agents[adm].CanCancel) {
           DB.agents[adm].Status = 'APPROVED';
           DB.agents[adm].CanIssue = true;
+          DB.agents[adm].CanVoid = true;
+          DB.agents[adm].CanCancel = true;
           adminSynced = true;
         }
       }
@@ -1210,8 +1160,9 @@ module.exports = async function handler(req, res) {
         Email: email, AgencyName: agencyName, City: city, Mobile: mobile,
         ContactPerson: '', Address: '', VoucherBranding: 'custom', LogoDataUrl: '',
         PasswordHash: hashPwd(pwd), TotpSecret: generateSecret(), TotpVerified: 'NO',
-        Status: isSuperReg ? 'APPROVED' : 'PENDING', CanIssue: isSuperReg, BalancePKR: 0,
-        SessionToken: '', SessionExpiry: 0, FailedAttempts: 0, TotpFailedAttempts: 0
+        Status: isSuperReg ? 'APPROVED' : 'PENDING',
+        CanIssue: isSuperReg, CanVoid: isSuperReg, CanCancel: isSuperReg,
+        BalancePKR: 0, SessionToken: '', SessionExpiry: 0, FailedAttempts: 0, TotpFailedAttempts: 0
       };
       await saveDB(DB);
 
@@ -1234,7 +1185,7 @@ module.exports = async function handler(req, res) {
       const a = DB.agents[email];
       if (!a) return res.json({ ok: false, message: 'Agent email not found. Please register first.' });
       const isSuper = DB.admins.includes(email);
-      if (isSuper) { a.Status = 'APPROVED'; a.CanIssue = true; a.FailedAttempts = 0; a.TotpFailedAttempts = 0; }
+      if (isSuper) { a.Status = 'APPROVED'; a.CanIssue = true; a.CanVoid = true; a.CanCancel = true; a.FailedAttempts = 0; a.TotpFailedAttempts = 0; }
       if (a.Status === 'BLOCKED') return res.json({ ok: false, message: 'Account BLOCKED by Head Office.' });
       if (a.Status !== 'APPROVED') return res.json({ ok: false, message: 'Account PENDING approval from Admin.' });
 
@@ -1275,7 +1226,12 @@ module.exports = async function handler(req, res) {
       a.SessionToken = token;
       a.SessionExpiry = expiry;
       await saveDB(DB);
-      return res.json({ ok: true, token, expiry, agencyName: a.AgencyName, isAdmin: isSuper, canIssue: isSuper || !!a.CanIssue });
+      return res.json({
+        ok: true, token, expiry, agencyName: a.AgencyName, isAdmin: isSuper,
+        canIssue: isSuper || !!a.CanIssue,
+        canVoid: isSuper || !!a.CanVoid,
+        canCancel: isSuper || !!a.CanCancel
+      });
     }
 
     const a = DB.agents[email];
@@ -1288,15 +1244,17 @@ module.exports = async function handler(req, res) {
     if (!validSess) return res.json({ ok: false, message: 'Session expired at 12:00 AM. Please verify 2FA again.' });
     const isAdmin = DB.admins.includes(email);
     const canIssue = isAdmin || !!a.CanIssue;
+    const canVoid = isAdmin || !!a.CanVoid;
+    const canCancel = isAdmin || !!a.CanCancel;
 
     if (action === 'checkSession') {
-      return res.json({ ok: true, agencyName: a.AgencyName, isAdmin, canIssue, expiry: a.SessionExpiry });
+      return res.json({ ok: true, agencyName: a.AgencyName, isAdmin, canIssue, canVoid, canCancel, expiry: a.SessionExpiry });
     }
 
     if (action === 'sendEmailNotification') {
       const subj = String(p.subject || '');
       const autoPrefixes = [
-        'New Booking Hold [', 'Ticket Issued [', 'Booking Canceled [',
+        'New Booking Hold [', 'Ticket Issued [', 'Booking Canceled [', 'Ticket Voided [',
         'New Deposit Slip Submitted [', 'Deposit Approved [', 'New B2B Sub-Agent Registration:'
       ];
       if (autoPrefixes.some(pref => subj.startsWith(pref))) {
@@ -1381,7 +1339,8 @@ module.exports = async function handler(req, res) {
       const agents = isAdmin
         ? Object.values(DB.agents).map(x => ({
             Email: x.Email, AgencyName: x.AgencyName, City: x.City, Mobile: x.Mobile,
-            Status: x.Status, TotpVerified: x.TotpVerified, CanIssue: !!x.CanIssue,
+            Status: x.Status, TotpVerified: x.TotpVerified,
+            CanIssue: !!x.CanIssue, CanVoid: !!x.CanVoid, CanCancel: !!x.CanCancel,
             BalancePKR: Number(x.BalancePKR || 0)
           }))
         : [];
@@ -1393,7 +1352,7 @@ module.exports = async function handler(req, res) {
         contactPerson: a.ContactPerson || '', address: a.Address || '',
         voucherBranding: a.VoucherBranding || 'custom', logoDataUrl: a.LogoDataUrl || ''
       };
-      return res.json({ ok: true, isAdmin, canIssue, balancePKR: Number(a.BalancePKR || 0), profile, fares: safeFares, banks: DB.banks, bookings, deposits, agents });
+      return res.json({ ok: true, isAdmin, canIssue, canVoid, canCancel, balancePKR: Number(a.BalancePKR || 0), profile, fares: safeFares, banks: DB.banks, bookings, deposits, agents });
     }
 
     if (action === 'adminGetAttachment' && isAdmin) {
@@ -1684,7 +1643,7 @@ module.exports = async function handler(req, res) {
       }
       const curSt = String(bk.Status || '').toUpperCase();
       if (curSt === 'ISSUED') return res.json({ ok: false, message: 'Booking is already ISSUED.' });
-      if (curSt === 'CANCELED') return res.json({ ok: false, message: 'Cannot issue a CANCELED booking.' });
+      if (curSt === 'CANCELED' || curSt === 'VOIDED') return res.json({ ok: false, message: 'Cannot issue a CANCELED or VOIDED booking.' });
 
       const agentAcc = DB.agents[bk.AgentEmail];
       const fare = Number(bk.FarePKR || 0);
@@ -1733,6 +1692,59 @@ module.exports = async function handler(req, res) {
       return res.json({ ok: true, message: 'Ticket ISSUED & Confirmed! PNR: ' + bk.PNR + mailNote });
     }
 
+    if (action === 'adminVoidBooking') {
+      if (!canVoid) {
+        return res.json({ ok: false, message: '⛔ Access Denied: Ticket Voiding Authority is required.' });
+      }
+      const bk = DB.bookings.find(b => b.BookingID === p.bookingId);
+      if (!bk) return res.json({ ok: false, message: 'Booking not found.' });
+      if (!isAdmin && String(bk.AgentEmail || '').toLowerCase() !== email) {
+        return res.json({ ok: false, message: '⛔ Unauthorized: You can only void your own agency bookings.' });
+      }
+      const prevSt = String(bk.Status || '').toUpperCase();
+      if (prevSt === 'VOIDED') return res.json({ ok: false, message: 'Booking is already VOIDED.' });
+      if (prevSt === 'CANCELED') return res.json({ ok: false, message: 'Cannot void an already CANCELED booking.' });
+
+      const agentAcc = DB.agents[bk.AgentEmail];
+      if ((bk.WasPaid || prevSt === 'CONFIRMED' || prevSt === 'ISSUED') && !bk.Refunded) {
+        if (agentAcc && !DB.admins.includes(bk.AgentEmail)) {
+          agentAcc.BalancePKR = Number(agentAcc.BalancePKR || 0) + Number(bk.FarePKR || 0);
+        }
+        bk.Refunded = true;
+      }
+      if (bk.FareID && bk.Category !== 'Visit Visa') {
+        const matchedFare = DB.fares.find(f => String(f.ID) === String(bk.FareID));
+        if (matchedFare) matchedFare.Seats = Number(matchedFare.Seats || 0) + 1;
+      }
+      bk.Status = 'VOIDED';
+      bk.VoidedBy = email;
+      bk.VoidedAt = getPKTimeStr();
+      bk.HoldUntil = 0;
+      await saveDB(DB);
+
+      const matchedFare = bk.FareID ? DB.fares.find(f => String(f.ID) === String(bk.FareID)) : null;
+      const invoiceUrl = `${getBaseUrl(req)}/api/backend?action=viewInvoice&bookingId=${encodeURIComponent(bk.BookingID)}&sig=${signInvoice(bk.BookingID, bk.PassportNo)}`;
+      const ticketPdfHtml = buildPrintableInvoicePage(bk, agentAcc, matchedFare, false);
+
+      await sendBookingEmailsSeparate({
+        adminEmails: DB.admins || [],
+        subAgentEmail: bk.AgentEmail,
+        paxEmail: bk.PassengerEmail,
+        bId: bk.BookingID,
+        dtStr: bk.VoidedAt || bk.CreatedAt,
+        agencyName: bk.AgencyName,
+        paxName: bk.PassengerName,
+        passportNo: bk.PassportNo,
+        category: bk.Category,
+        itemTitle: bk.ItemTitle,
+        farePKR: bk.FarePKR,
+        statusTxt: bk.Refunded ? 'VOIDED & REFUNDED' : 'VOIDED',
+        opts: { invoiceUrl, isVoided: true, pnr: bk.PNR || '', ticketNo: bk.TicketNo || '', pdfHtml: ticketPdfHtml, bk, agent: agentAcc, matchedFare }
+      });
+
+      return res.json({ ok: true, message: bk.Refunded ? 'Ticket VOIDED & Fare Refunded to Wallet!' : 'Ticket / Booking VOIDED!' });
+    }
+
     if (action === 'adminDeleteBooking' && isAdmin) {
       const before = DB.bookings.length;
       DB.bookings = DB.bookings.filter(b => b.BookingID !== p.bookingId);
@@ -1741,11 +1753,18 @@ module.exports = async function handler(req, res) {
       return res.json({ ok: true, message: 'Booking deleted permanently!' });
     }
 
-    if (action === 'adminCancelBooking' && isAdmin) {
+    if (action === 'adminCancelBooking') {
+      if (!canCancel) {
+        return res.json({ ok: false, message: '⛔ Access Denied: Booking Cancel Authority is required.' });
+      }
       const bk = DB.bookings.find(b => b.BookingID === p.bookingId);
       if (!bk) return res.json({ ok: false, message: 'Booking not found.' });
+      if (!isAdmin && String(bk.AgentEmail || '').toLowerCase() !== email) {
+        return res.json({ ok: false, message: '⛔ Unauthorized: You can only cancel your own agency bookings.' });
+      }
       const prevSt = String(bk.Status || '').toUpperCase();
       if (prevSt === 'CANCELED') return res.json({ ok: false, message: 'Booking is already CANCELED.' });
+      if (prevSt === 'VOIDED') return res.json({ ok: false, message: 'Booking is already VOIDED.' });
 
       const agentAcc = DB.agents[bk.AgentEmail];
       if ((bk.WasPaid || prevSt === 'CONFIRMED' || prevSt === 'ISSUED') && !bk.Refunded) {
@@ -1759,6 +1778,9 @@ module.exports = async function handler(req, res) {
         if (matchedFare) matchedFare.Seats = Number(matchedFare.Seats || 0) + 1;
       }
       bk.Status = 'CANCELED';
+      bk.CanceledBy = email;
+      bk.CanceledAt = getPKTimeStr();
+      bk.HoldUntil = 0;
       await saveDB(DB);
 
       const matchedFare = bk.FareID ? DB.fares.find(f => String(f.ID) === String(bk.FareID)) : null;
@@ -1770,7 +1792,7 @@ module.exports = async function handler(req, res) {
         subAgentEmail: bk.AgentEmail,
         paxEmail: bk.PassengerEmail,
         bId: bk.BookingID,
-        dtStr: bk.CreatedAt,
+        dtStr: bk.CanceledAt || bk.CreatedAt,
         agencyName: bk.AgencyName,
         paxName: bk.PassengerName,
         passportNo: bk.PassportNo,
@@ -1861,12 +1883,48 @@ module.exports = async function handler(req, res) {
       } else if (p.subAction === 'REVOKE_ISSUE') {
         target.CanIssue = false;
         await saveDB(DB);
-        const revBody = `<div style="font-family:Arial,sans-serif;padding:20px;background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;"><h2 style="color:#b91c1c;margin-top:0;">Ticket Issue Authority Revoked</h2><p>Assalam-o-Alaikum <b>${escHtml(target.AgencyName)}</b>, Head Office ne aapki Ticket Issue authority cancel/wapas le li hai.</p></div>`;
+        const revBody = `<div style="font-family:Arial,sans-serif;padding:20px;background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;"><h2 style="color:#b91c1c;margin-top:0;">Ticket Issue Authority Revoked</h2><p>Assalam-o-Alaikum <b>${escHtml(target.AgencyName)}</b>, Head Office ne aapki Ticket Issue authority wapas le li hai.</p></div>`;
         await sendGasPair(
           { to: targetEmail, subject: `Ticket Issue Authority Canceled - ${target.AgencyName}`, htmlBody: revBody, agencyName: target.AgencyName },
           { to: uniqueEmails(DB.admins || []), subject: `[ADMIN] Issue Authority Canceled - ${target.AgencyName}`, htmlBody: revBody, agencyName: target.AgencyName }
         );
-        return res.json({ ok: true, message: '✅ Ticket Issue Authority Canceled for ' + target.AgencyName });
+        return res.json({ ok: true, message: '✅ Ticket Issue Authority Revoked for ' + target.AgencyName });
+      } else if (p.subAction === 'GRANT_VOID') {
+        target.CanVoid = true;
+        await saveDB(DB);
+        const vBody = `<div style="font-family:Arial,sans-serif;padding:20px;background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;"><h2 style="color:#b45309;margin-top:0;">&#10003; Ticket Voiding Authority Granted</h2><p>Assalam-o-Alaikum <b>${escHtml(target.AgencyName)}</b>, Head Office ne aapko Ticket Void karne ki authority de di hai.</p></div>`;
+        await sendGasPair(
+          { to: targetEmail, subject: `Ticket Voiding Authority Granted - ${target.AgencyName}`, htmlBody: vBody, agencyName: target.AgencyName },
+          { to: uniqueEmails(DB.admins || []), subject: `[ADMIN] Voiding Authority Granted - ${target.AgencyName}`, htmlBody: vBody, agencyName: target.AgencyName }
+        );
+        return res.json({ ok: true, message: '✅ Ticket Voiding Authority Granted to ' + target.AgencyName });
+      } else if (p.subAction === 'REVOKE_VOID') {
+        target.CanVoid = false;
+        await saveDB(DB);
+        const rvBody = `<div style="font-family:Arial,sans-serif;padding:20px;background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;"><h2 style="color:#b91c1c;margin-top:0;">Ticket Voiding Authority Revoked</h2><p>Assalam-o-Alaikum <b>${escHtml(target.AgencyName)}</b>, Head Office ne aapki Ticket Voiding authority wapas le li hai.</p></div>`;
+        await sendGasPair(
+          { to: targetEmail, subject: `Ticket Voiding Authority Revoked - ${target.AgencyName}`, htmlBody: rvBody, agencyName: target.AgencyName },
+          { to: uniqueEmails(DB.admins || []), subject: `[ADMIN] Voiding Authority Revoked - ${target.AgencyName}`, htmlBody: rvBody, agencyName: target.AgencyName }
+        );
+        return res.json({ ok: true, message: '✅ Ticket Voiding Authority Revoked for ' + target.AgencyName });
+      } else if (p.subAction === 'GRANT_CANCEL') {
+        target.CanCancel = true;
+        await saveDB(DB);
+        const cBody = `<div style="font-family:Arial,sans-serif;padding:20px;background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;"><h2 style="color:#b45309;margin-top:0;">&#10003; Booking Cancel Authority Granted</h2><p>Assalam-o-Alaikum <b>${escHtml(target.AgencyName)}</b>, Head Office ne aapko Booking Cancel karne ki authority de di hai.</p></div>`;
+        await sendGasPair(
+          { to: targetEmail, subject: `Booking Cancel Authority Granted - ${target.AgencyName}`, htmlBody: cBody, agencyName: target.AgencyName },
+          { to: uniqueEmails(DB.admins || []), subject: `[ADMIN] Cancel Authority Granted - ${target.AgencyName}`, htmlBody: cBody, agencyName: target.AgencyName }
+        );
+        return res.json({ ok: true, message: '✅ Booking Cancel Authority Granted to ' + target.AgencyName });
+      } else if (p.subAction === 'REVOKE_CANCEL') {
+        target.CanCancel = false;
+        await saveDB(DB);
+        const rcBody = `<div style="font-family:Arial,sans-serif;padding:20px;background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;"><h2 style="color:#b91c1c;margin-top:0;">Booking Cancel Authority Revoked</h2><p>Assalam-o-Alaikum <b>${escHtml(target.AgencyName)}</b>, Head Office ne aapki Booking Cancel authority wapas le li hai.</p></div>`;
+        await sendGasPair(
+          { to: targetEmail, subject: `Booking Cancel Authority Revoked - ${target.AgencyName}`, htmlBody: rcBody, agencyName: target.AgencyName },
+          { to: uniqueEmails(DB.admins || []), subject: `[ADMIN] Cancel Authority Revoked - ${target.AgencyName}`, htmlBody: rcBody, agencyName: target.AgencyName }
+        );
+        return res.json({ ok: true, message: '✅ Booking Cancel Authority Revoked for ' + target.AgencyName });
       } else if (p.subAction === 'BLOCK') {
         target.Status = 'BLOCKED';
         target.SessionToken = '';

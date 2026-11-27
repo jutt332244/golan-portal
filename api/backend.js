@@ -16,6 +16,22 @@ const CITY_NAMES = {
   JFK: 'NEW YORK', YYZ: 'TORONTO', KUL: 'KUALA LUMPUR', BKK: 'BANGKOK', GYD: 'BAKU'
 };
 const RATES_PKR = { PKR: 1, USD: 280, EUR: 302, GBP: 355, SAR: 74.65, AED: 76.25 };
+const RATE_LIMIT_MAP = new Map();
+
+function checkRateLimit(key, maxHits = 30, windowMs = 60000) {
+  const now = Date.now();
+  const rec = RATE_LIMIT_MAP.get(key) || { count: 0, resetAt: now + windowMs };
+  if (now > rec.resetAt) { rec.count = 0; rec.resetAt = now + windowMs; }
+  rec.count++;
+  RATE_LIMIT_MAP.set(key, rec);
+  if (RATE_LIMIT_MAP.size > 2000) RATE_LIMIT_MAP.clear();
+  return rec.count <= maxHits;
+}
+
+function getClientIp(req) {
+  const xf = req && req.headers && (req.headers['x-forwarded-for'] || req.headers['x-real-ip']);
+  return xf ? String(xf).split(',')[0].trim().slice(0, 45) : 'unknown';
+}
 
 async function fetchWithTimeout(url, options = {}, timeoutMs = 15000) {
   const controller = new AbortController();
@@ -25,11 +41,9 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 15000) {
 }
 
 function timingSafeStrEqual(a, b) {
-  const bufA = Buffer.from(String(a || ''), 'utf8');
-  const bufB = Buffer.from(String(b || ''), 'utf8');
+  const bufA = Buffer.from(String(a || ''), 'utf8'), bufB = Buffer.from(String(b || ''), 'utf8');
   return bufA.length === bufB.length && crypto.timingSafeEqual(bufA, bufB);
 }
-
 function legacyHashPwd(pwd) { return crypto.createHash('sha256').update('GOLAN_SALT_2026_' + String(pwd || '')).digest('hex'); }
 function hashPwd(pwd) { const s = crypto.randomBytes(16).toString('hex'); return `scrypt$${s}$${crypto.scryptSync(String(pwd || ''), s, 64).toString('hex')}`; }
 function verifyPwd(pwd, storedHash) {
@@ -40,24 +54,20 @@ function verifyPwd(pwd, storedHash) {
   }
   return timingSafeStrEqual(legacyHashPwd(pwd), s);
 }
-
 function generateSecret() {
   const c = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567', b = crypto.randomBytes(16);
   let s = ''; for (let i = 0; i < 16; i++) s += c[b[i] % c.length];
   return s;
 }
-
 function escHtml(s) {
   return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
-
 function isSafeDataUrl(str, allowPdf = false) {
   if (!str) return true;
   const s = String(str).trim();
   if (/^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+/=]+$/i.test(s)) return true;
   return allowPdf && /^data:application\/pdf;base64,[A-Za-z0-9+/=]+$/i.test(s);
 }
-
 function signInvoice(bookingId, passportNo) {
   return crypto.createHmac('sha256', INVOICE_SIGN_SECRET).update(String(bookingId || '') + '|' + String(passportNo || '').toUpperCase()).digest('hex').slice(0, 24);
 }
@@ -83,6 +93,17 @@ function getNextMidnightPKT() {
   return Date.UTC(nowPKT.getUTCFullYear(), nowPKT.getUTCMonth(), nowPKT.getUTCDate() + 1, 0, 0, 0, 0) - 5 * 3600 * 1000;
 }
 function getPKTimeStr() { return new Date().toLocaleString('en-GB', { timeZone: 'Asia/Karachi' }); }
+
+function addSecurityLog(DB, email, action, details, ip = '') {
+  DB.securityLogs = Array.isArray(DB.securityLogs) ? DB.securityLogs : [];
+  DB.securityLogs.unshift({
+    Timestamp: getPKTimeStr(),
+    Email: String(email || 'system').toLowerCase(),
+    Action: String(action || '').toUpperCase(),
+    Details: String(details || '').slice(0, 260) + (ip ? ` [IP: ${ip}]` : '')
+  });
+  if (DB.securityLogs.length > 500) DB.securityLogs = DB.securityLogs.slice(0, 500);
+}
 
 function addLedgerEntry(DB, entry) {
   DB.ledger = Array.isArray(DB.ledger) ? DB.ledger : [];
@@ -126,7 +147,7 @@ function defaultState() {
       { ID: 'F1', Category: 'Group Flight', Title: 'LHE - JED (Saudi Airlines SV-737)', Timing: 'Dep: 04:15 AM | Arr: 07:45 AM (Direct)', Luggage: '30 KG Check-in + 7 KG Hand Carry', Meal: 'Hot Halal Meal Included', Stay: 'Non-Stop Direct Flight', Details: 'Refundable Before 72 Hrs • Free Seat Selection', TravelDate: '25 Nov 2026', Seats: 18, HoldMins: 30, FarePKR: 138500, Status: 'ACTIVE' },
       { ID: 'F2', Category: 'Umrah Package', Title: '15 Days Economy Umrah Package', Timing: 'LHE-JED-LHE Return Flights Included', Luggage: '30 KG + 7 KG + 5L Zamzam', Meal: 'Breakfast Optional / Room Only', Stay: 'Makkah 7N (Shuttle) + Madinah 7N (Markazia)', Details: 'Umrah Visa + Full Ziyarat & AC Transport Included', TravelDate: '01 Dec 2026', Seats: 25, HoldMins: 60, FarePKR: 215000, Status: 'ACTIVE' }
     ],
-    bookings: [], banks: [], deposits: [], ledger: [], offerCache: {}
+    bookings: [], banks: [], deposits: [], ledger: [], securityLogs: [], offerCache: {}
   };
 }
 
@@ -162,25 +183,18 @@ function expireStaleHolds(DB) {
   const now = Date.now();
   let changed = false;
   (DB.bookings || []).forEach(bk => {
-    const st = String(bk.Status || '').toUpperCase();
-    const holdUntil = Number(bk.HoldUntil || 0);
+    const st = String(bk.Status || '').toUpperCase(), holdUntil = Number(bk.HoldUntil || 0);
     if (st === 'PENDING' && holdUntil > 0 && now > holdUntil) {
-      bk.Status = 'CANCELED';
-      bk.CancelReason = 'HOLD_EXPIRED';
-      bk.CanceledAt = getPKTimeStr();
-      bk.HoldUntil = 0;
-      const agentEmail = String(bk.AgentEmail || '').toLowerCase();
-      const agentAcc = DB.agents[agentEmail];
+      bk.Status = 'CANCELED'; bk.CancelReason = 'HOLD_EXPIRED'; bk.CanceledAt = getPKTimeStr(); bk.HoldUntil = 0;
+      const agentEmail = String(bk.AgentEmail || '').toLowerCase(), agentAcc = DB.agents[agentEmail];
       const refundAmt = Math.max(0, Math.round(Number(bk.PaidAmountPKR || bk.FarePKR || 0)));
       if (bk.WasPaid && !bk.Refunded && refundAmt > 0) {
         const balBefore = agentAcc ? Number(agentAcc.BalancePKR || 0) : 0;
         let balAfter = balBefore;
         if (agentAcc && (!DB.admins.includes(agentEmail) || bk.DeductedFromWallet)) {
-          balAfter = balBefore + refundAmt;
-          agentAcc.BalancePKR = balAfter;
+          balAfter = balBefore + refundAmt; agentAcc.BalancePKR = balAfter;
         }
-        bk.Refunded = true;
-        bk.RefundAmountPKR = refundAmt;
+        bk.Refunded = true; bk.RefundAmountPKR = refundAmt;
         addLedgerEntry(DB, {
           AgentEmail: agentEmail, AgencyName: bk.AgencyName || (agentAcc && agentAcc.AgencyName) || '',
           RefID: bk.BookingID, BookingID: bk.BookingID, Type: 'HOLD_EXPIRED_REFUND', Direction: 'CREDIT',
@@ -200,12 +214,10 @@ function expireStaleHolds(DB) {
 }
 
 function base32ToBuffer(base32) {
-  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-  let bits = '';
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'; let bits = '';
   base32 = String(base32 || '').replace(/=+$/, '').toUpperCase();
   for (let i = 0; i < base32.length; i++) { const v = alphabet.indexOf(base32[i]); if (v >= 0) bits += v.toString(2).padStart(5, '0'); }
-  const bytes = [];
-  for (let j = 0; j + 8 <= bits.length; j += 8) bytes.push(parseInt(bits.substr(j, 8), 2));
+  const bytes = []; for (let j = 0; j + 8 <= bits.length; j += 8) bytes.push(parseInt(bits.substr(j, 8), 2));
   return Buffer.from(bytes);
 }
 
@@ -214,10 +226,8 @@ function verifyTotp(secret, code) {
   const key = base32ToBuffer(secret), epoch = Math.floor(Date.now() / 1000 / 30);
   for (let offset = -1; offset <= 1; offset++) {
     const step = epoch + offset, buf = Buffer.alloc(8);
-    buf.writeUInt32BE(Math.floor(step / 0x100000000), 0);
-    buf.writeUInt32BE(step >>> 0, 4);
-    const hmac = crypto.createHmac('sha1', key).update(buf).digest();
-    const off = hmac[hmac.length - 1] & 0x0f;
+    buf.writeUInt32BE(Math.floor(step / 0x100000000), 0); buf.writeUInt32BE(step >>> 0, 4);
+    const hmac = crypto.createHmac('sha1', key).update(buf).digest(), off = hmac[hmac.length - 1] & 0x0f;
     const bin = ((hmac[off] & 0x7f) << 24) | ((hmac[off + 1] & 0xff) << 16) | ((hmac[off + 2] & 0xff) << 8) | (hmac[off + 3] & 0xff);
     if (timingSafeStrEqual(String(bin % 1000000).padStart(6, '0'), code)) return true;
   }
@@ -230,127 +240,59 @@ function extractTicketMeta(bk, fareObj) {
   const fo = fareObj || {}, bagBr = raw.match(/\[([^\]]+)\]/), cleanTitle = raw.replace(/\s*\{[^}]+\}/g, '').trim();
   const dateVal = bk.FlightDate || meta.DATE || fo.TravelDate || fo.Date || '', depVal = bk.DepTime || meta.DEP || '', arrVal = bk.ArrTime || meta.ARR || '';
   let timingVal = bk.Timing || meta.TIMING || fo.Timing || '';
-  if (!timingVal && (depVal || arrVal)) timingVal = (depVal ? ('Dep: ' + depVal) : '') + (meta.DTERM ? (' (T' + meta.DTERM + ')') : '') + (arrVal ? (' -> Arr: ' + arrVal) : '') + (meta.ATERM ? (' (T' + meta.ATERM + ')') : '');
+  if (!timingVal && (depVal || arrVal)) timingVal = (depVal ? ('Dep: ' + depVal) : '') + (arrVal ? (' -> Arr: ' + arrVal) : '');
   return { cleanTitle, date: dateVal, dep: depVal, arr: arrVal, timing: timingVal, baggage: bk.Baggage || meta.BAG || fo.Luggage || (bagBr ? bagBr[1] : '') || '20+5 KG', meal: bk.Meal || meta.MEAL || fo.Meal || 'Included', stay: bk.Stay || meta.STAY || fo.Stay || '', rules: bk.Details || meta.DETAILS || fo.Details || '' };
 }
-
 function getTicketAirlineMeta(txt) {
   const u = String(txt || '').toUpperCase();
-  if (/SALAM|\bOV[-\s]?\d/i.test(u)) return { name: 'SalamAir', code: 'OV', isSalam: true, color: '#008b8b' };
-  if (/AIRSIAL|\bPF[-\s]?\d/i.test(u)) return { name: 'AirSial', code: 'PF', color: '#15803d' };
-  if (/\bPIA\b|\bPK[-\s]?\d/i.test(u)) return { name: 'PIA', code: 'PK', color: '#166534' };
-  if (/SAUDIA|SAUDI|\bSV[-\s]?\d/i.test(u)) return { name: 'Saudia Airlines', code: 'SV', color: '#065f46' };
-  if (/AIRBLUE|\bPA[-\s]?\d/i.test(u)) return { name: 'Airblue', code: 'PA', color: '#1d4ed8' };
-  if (/SERENE|\bER[-\s]?\d/i.test(u)) return { name: 'SereneAir', code: 'ER', color: '#0f172a' };
-  if (/EMIRATES|\bEK[-\s]?\d/i.test(u)) return { name: 'Emirates', code: 'EK', color: '#b91c1c' };
-  if (/FLYDUBAI|\bFZ[-\s]?\d/i.test(u)) return { name: 'flydubai', code: 'FZ', color: '#ea580c' };
-  if (/FLYNAS|\bXY[-\s]?\d/i.test(u)) return { name: 'flynas', code: 'XY', color: '#0d9488' };
-  if (/JAZEERA|\bJ9[-\s]?\d/i.test(u)) return { name: 'Jazeera Airways', code: 'J9', color: '#0284c7' };
-  if (/QATAR|\bQR[-\s]?\d/i.test(u)) return { name: 'Qatar Airways', code: 'QR', color: '#881337' };
-  if (/TURKISH|\bTK[-\s]?\d/i.test(u)) return { name: 'Turkish Airlines', code: 'TK', color: '#dc2626' };
-  if (/ETIHAD|\bEY[-\s]?\d/i.test(u)) return { name: 'Etihad Airways', code: 'EY', color: '#b45309' };
-  if (/AZAL|AZERBAIJAN|\bJ2[-\s]?\d/i.test(u)) return { name: 'Azerbaijan Airlines', code: 'J2', color: '#0369a1' };
+  if (/SALAM|\bOV/i.test(u)) return { name: 'SalamAir', code: 'OV', color: '#008b8b' };
+  if (/AIRSIAL|\bPF/i.test(u)) return { name: 'AirSial', code: 'PF', color: '#15803d' };
+  if (/\bPIA\b|\bPK/i.test(u)) return { name: 'PIA', code: 'PK', color: '#166534' };
+  if (/SAUDIA|\bSV/i.test(u)) return { name: 'Saudia Airlines', code: 'SV', color: '#065f46' };
+  if (/AIRBLUE|\bPA/i.test(u)) return { name: 'Airblue', code: 'PA', color: '#1d4ed8' };
+  if (/EMIRATES|\bEK/i.test(u)) return { name: 'Emirates', code: 'EK', color: '#b91c1c' };
+  if (/FLYDUBAI|\bFZ/i.test(u)) return { name: 'flydubai', code: 'FZ', color: '#ea580c' };
+  if (/QATAR|\bQR/i.test(u)) return { name: 'Qatar Airways', code: 'QR', color: '#881337' };
   return { name: 'Golan Group Flight', code: 'GL', color: '#134b91' };
 }
-
-function fmtTicketDate(dStr) {
-  if (!dStr) return '-';
-  const s = String(dStr).trim(), m = s.match(/(\d{4})-(\d{2})-(\d{2})/);
-  if (m) {
-    const dt = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], mos = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return `${days[dt.getUTCDay()]} ${dt.getUTCDate()} ${mos[dt.getUTCMonth()]} ${dt.getUTCFullYear()}`;
-  }
+function fmtTicketDate(d) {
+  if (!d) return '-';
+  const m = String(d).match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (m) { const dt = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]))), days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], mos = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']; return `${days[dt.getUTCDay()]} ${dt.getUTCDate()} ${mos[dt.getUTCMonth()]} ${dt.getUTCFullYear()}`; }
+  return String(d);
+}
+function fmtTicketTime(v) {
+  if (!v) return '--:--'; const s = String(v).trim(), ap = s.match(/(\d{1,2}:\d{2}\s*(?:AM|PM))/i); if (ap) return ap[1].toUpperCase();
+  const hm = s.match(/(?:^|[\sT])(\d{1,2}):(\d{2})/); if (hm) { const h = parseInt(hm[1], 10); return String(h % 12 || 12).padStart(2, '0') + ':' + hm[2] + ' ' + (h >= 12 ? 'PM' : 'AM'); }
   return s;
 }
-function fmtTicketTime(val) {
-  if (!val) return '--:--';
-  const s = String(val).trim(), ampm = s.match(/(\d{1,2}:\d{2}\s*(?:AM|PM))/i);
-  if (ampm) return ampm[1].toUpperCase();
-  const hm = s.match(/(?:^|[\sT])(\d{1,2}):(\d{2})(?::\d{2})?(?:\s|$)/);
-  if (hm) { const h = parseInt(hm[1], 10); return String(h % 12 || 12).padStart(2, '0') + ':' + hm[2] + ' ' + (h >= 12 ? 'PM' : 'AM'); }
-  return s;
-}
-function codeToCity(c) { const k = String(c || '').trim().toUpperCase(); return CITY_NAMES[k] || k || 'ORIGIN'; }
-
 function parseTicketSegments(bk, fi) {
-  const clean = fi.cleanTitle || '', airlineInfo = getTicketAirlineMeta(clean + ' ' + fi.timing), bag = fi.baggage || '20+5 KG';
-  const rawSegs = String(clean).split(/\s*\/\s*|\s*;\s*/).filter(Boolean);
-  const timingLegs = String(fi.timing || '').split(/\s*\/\s*|\s*;\s*/).filter(Boolean);
-  const dateLegs = String(fi.date || '').split(/\s*\/\s*|\s*;\s*/).filter(Boolean);
-  const segments = [], routeMatches = clean.match(/\b([A-Z]{3})\s*[-–to]+\s*([A-Z]{3})\b/gi) || [];
-  const hasIsoDate = v => /\d{4}-\d{2}-\d{2}/.test(String(v || ''));
-
-  if (rawSegs.length > 1 && rawSegs.every(x => /[A-Z]{3}\s*[-–]\s*[A-Z]{3}/i.test(x))) {
-    rawSegs.forEach((segTxt, i) => {
-      const rm = segTxt.match(/\b([A-Z]{3})\s*[-–]\s*([A-Z]{3})\b/i), flm = segTxt.match(/\b([A-Z]{2}[-\s]?\d{2,4})\b/i);
-      const times = (timingLegs[i] || fi.timing || '').match(/\d{1,2}:\d{2}(?:\s*(?:AM|PM))?/gi) || [], dTxt = fmtTicketDate(dateLegs[i] || fi.date);
-      segments.push({ oCode: rm ? rm[1].toUpperCase() : 'ORG', dCode: rm ? rm[2].toUpperCase() : 'DST', origin: rm ? codeToCity(rm[1]) : 'ORIGIN', dest: rm ? codeToCity(rm[2]) : 'DESTINATION', airline: getTicketAirlineMeta(segTxt + ' ' + clean).name, flightNo: flm ? flm[1].replace('-', ' ').toUpperCase() : (airlineInfo.code + '-GRP'), depTime: times[0] ? fmtTicketTime(times[0]) : fmtTicketTime(fi.dep), arrTime: times[1] ? fmtTicketTime(times[1]) : fmtTicketTime(fi.arr), depDate: dTxt, arrDate: dTxt, baggage: bag });
-    });
-  } else if (routeMatches.length > 1) {
-    routeMatches.forEach((rmStr, i) => {
-      const rm = rmStr.match(/\b([A-Z]{3})\s*[-–to]+\s*([A-Z]{3})\b/i), fls = clean.match(/\b([A-Z]{2}[-\s]?\d{2,4})\b/gi) || [];
-      const times = (timingLegs[i] || fi.timing || '').match(/\d{1,2}:\d{2}(?:\s*(?:AM|PM))?/gi) || [], dTxt = fmtTicketDate(dateLegs[i] || fi.date);
-      segments.push({ oCode: rm ? rm[1].toUpperCase() : 'ORG', dCode: rm ? rm[2].toUpperCase() : 'DST', origin: rm ? codeToCity(rm[1]) : 'ORIGIN', dest: rm ? codeToCity(rm[2]) : 'DESTINATION', airline: airlineInfo.name, flightNo: fls[i] ? fls[i].replace('-', ' ').toUpperCase() : (fls[0] ? fls[0].replace('-', ' ').toUpperCase() : (airlineInfo.code + '-GRP')), depTime: times[0] ? fmtTicketTime(times[0]) : fmtTicketTime(fi.dep), arrTime: times[1] ? fmtTicketTime(times[1]) : fmtTicketTime(fi.arr), depDate: dTxt, arrDate: dTxt, baggage: bag });
-    });
-  } else {
-    const rm = clean.match(/\b([A-Z]{3})\s*[-–]\s*([A-Z]{3})\b/i), flm = clean.match(/\b([A-Z]{2}[-\s]?\d{2,4})\b/i), times = String(fi.timing || '').match(/\d{1,2}:\d{2}(?:\s*(?:AM|PM))?/gi) || [];
-    segments.push({ oCode: rm ? rm[1].toUpperCase() : 'GL', dCode: rm ? rm[2].toUpperCase() : (bk.Category === 'Visit Visa' ? 'VISA' : 'DST'), origin: rm ? codeToCity(rm[1]) : clean.replace(/^(Group Flight|Umrah Package|Visit Visa|Live Airline)\s*[-–]\s*/i, '').slice(0, 22).toUpperCase(), dest: rm ? codeToCity(rm[2]) : (bk.Category === 'Visit Visa' ? 'E-VISA' : 'DESTINATION'), airline: airlineInfo.name, flightNo: flm ? flm[1].replace('-', ' ').toUpperCase() : (airlineInfo.code + '-GRP'), depTime: fi.dep ? fmtTicketTime(fi.dep) : (times[0] ? fmtTicketTime(times[0]) : '--:--'), arrTime: fi.arr ? fmtTicketTime(fi.arr) : (times[1] ? fmtTicketTime(times[1]) : '--:--'), depDate: fmtTicketDate(hasIsoDate(fi.dep) ? fi.dep : fi.date), arrDate: fmtTicketDate(hasIsoDate(fi.arr) ? fi.arr : fi.date), baggage: bag });
-  }
-  return { airlineInfo, segments };
+  const c = fi.cleanTitle || '', a = getTicketAirlineMeta(c + ' ' + fi.timing), rm = c.match(/\b([A-Z]{3})\s*[-–]\s*([A-Z]{3})\b/i), flm = c.match(/\b([A-Z]{2}[-\s]?\d{2,4})\b/i), times = String(fi.timing || '').match(/\d{1,2}:\d{2}(?:\s*(?:AM|PM))?/gi) || [];
+  const oC = rm ? rm[1].toUpperCase() : 'GL', dC = rm ? rm[2].toUpperCase() : (bk.Category === 'Visit Visa' ? 'VISA' : 'DST');
+  return { airlineInfo: a, segments: [{ oCode: oC, dCode: dC, origin: CITY_NAMES[oC] || oC, dest: CITY_NAMES[dC] || dC, airline: a.name, flightNo: flm ? flm[1].replace('-', ' ').toUpperCase() : (a.code + '-GRP'), depTime: fi.dep ? fmtTicketTime(fi.dep) : (times[0] ? fmtTicketTime(times[0]) : '--:--'), arrTime: fi.arr ? fmtTicketTime(fi.arr) : (times[1] ? fmtTicketTime(times[1]) : '--:--'), depDate: fmtTicketDate(fi.date), arrDate: fmtTicketDate(fi.date), baggage: fi.baggage || '20+5 KG' }] };
 }
 
-function resolveBackendVoucherContext(bk, agent, matchedFare) {
-  const isGolanBranding = !agent || agent.VoucherBranding === 'golan';
-  const useCustomLogo = !isGolanBranding && !!(agent && agent.LogoDataUrl && isSafeDataUrl(agent.LogoDataUrl, false));
-  const agencyName = isGolanBranding ? 'Golan International Travel & Tours' : (bk.AgencyName || (agent && agent.AgencyName) || 'Partner Travel Agency');
-  const agencyEmail = isGolanBranding ? 'golaninternational322@gmail.com' : (bk.AgentEmail || (agent && agent.Email) || 'golaninternational322@gmail.com');
-  const agencyContact = isGolanBranding ? '0345-3326318' : ((agent && agent.Mobile) || bk.PaxMobile || '0345-3326318');
-  const fi = extractTicketMeta(bk, matchedFare), parsed = parseTicketSegments(bk, fi), air = parsed.airlineInfo;
-  const st = String(bk.Status || 'PENDING').toUpperCase(), pnrText = String(bk.PNR || 'PENDING'), bookingCodeText = String(bk.TicketNo || bk.BookingID || '-'), ticketedAt = String(bk.IssuedAt || bk.CreatedAt || '-');
-  const paxTitleDisp = (bk.Title ? (String(bk.Title).toUpperCase() + ' ') : '') + String(bk.PassengerName || '').toUpperCase();
-  const stLabel = st === 'PENDING' ? 'On Hold' : ((st === 'ISSUED' || st === 'CONFIRMED') ? 'Confirmed / Issued' : (st === 'VOIDED' ? 'Voided' : st));
-  const stIcon = st === 'PENDING' ? '&#9203; ' : ((st === 'ISSUED' || st === 'CONFIRMED') ? '&#10003; ' : '');
-  const stCol = (st === 'CONFIRMED' || st === 'ISSUED') ? '#15803d' : (st === 'VOIDED' ? '#9a3412' : (st === 'CANCELED' || st === 'EXPIRED' ? '#b91c1c' : '#b45309'));
-  const stBg = (st === 'CONFIRMED' || st === 'ISSUED') ? '#dcfce7' : (st === 'VOIDED' ? '#ffedd5' : (st === 'CANCELED' || st === 'EXPIRED' ? '#fee2e2' : '#fef3c7'));
-  const stBorder = (st === 'CONFIRMED' || st === 'ISSUED') ? '#86efac' : (st === 'VOIDED' ? '#fdba74' : (st === 'CANCELED' || st === 'EXPIRED' ? '#fca5a5' : '#fcd34d'));
-  const segNames = parsed.segments.map(sg => `${escHtml(sg.oCode)} - ${escHtml(sg.dCode)}`).join(' / ');
-  const extraRuleHtml = fi.rules ? `<div style="margin-top:2px;">3- ${escHtml(String(fi.rules).toUpperCase())}</div>` : `<div style="margin-top:2px;">3- PLEASE VERIFY PASSPORT VALIDITY (MIN 6 MONTHS) &amp; VISA REQUIREMENTS PRIOR TO TRAVEL.</div>`;
-  return { isGolanBranding, useCustomLogo, agencyName, agencyEmail, agencyContact, fi, parsed, air, st, pnrText, bookingCodeText, ticketedAt, paxTitleDisp, stLabel, stIcon, stCol, stBg, stBorder, segNames, extraRuleHtml };
-}
-
-function buildVoucherCrestBadgeHtml(air, customLogoUrl, forEmail) {
-  if (!forEmail && customLogoUrl) return `<img src="${escHtml(customLogoUrl)}" style="height:44px;max-width:160px;object-fit:contain;" alt="Logo" />`;
-  return `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;display:inline-table;vertical-align:middle;"><tr><td style="text-align:right;padding-right:8px;vertical-align:middle;"><div style="font-size:15px;font-weight:900;color:${escHtml(air.color)};line-height:1.15;">${escHtml(air.name)}</div><div style="font-size:9px;font-weight:800;color:#64748b;letter-spacing:0.4px;">GOLAN B2B SERVICE VOUCHER</div></td><td style="width:42px;height:42px;background-color:#0b1f44;border:2px solid #d97706;border-radius:10px;text-align:center;vertical-align:middle;"><div style="font-size:10px;font-weight:900;color:#fbbf24;letter-spacing:0.8px;line-height:1;">GOLAN</div><div style="font-size:7px;font-weight:700;color:#e2e8f0;letter-spacing:0.5px;margin-top:2px;">B2B</div></td></tr></table>`;
-}
-
-function buildBookingEmailHtml({ bk, agent, matchedFare, agencyName, paxName, farePKR, passportNo, invoiceUrl, isIssued, isVoided, isCanceled, pnr, ticketNo, itemTitle, bId, isAdminCopy, agentEmail }) {
-  const bkData = bk || { BookingID: bId, PNR: pnr, TicketNo: ticketNo, AgencyName: agencyName, AgentEmail: agentEmail, PassengerName: paxName, PassportNo: passportNo, ItemTitle: itemTitle, FarePKR: farePKR, Status: isIssued ? 'ISSUED' : (isVoided ? 'VOIDED' : (isCanceled ? 'CANCELED' : 'PENDING')), CreatedAt: getPKTimeStr() };
-  const ctx = resolveBackendVoucherContext(bkData, agent || null, matchedFare || null);
-  const fi = ctx.fi, refId = bkData.BookingID || bId || '-', crestBadge = buildVoucherCrestBadgeHtml(ctx.air, '', true);
-  const segCardsHtml = ctx.parsed.segments.map(sg => `<table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;background-color:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;margin-bottom:10px;"><tr><td style="width:29%;padding:12px 14px;vertical-align:top;text-align:left;"><div style="font-size:21px;font-weight:900;color:#163b7a;line-height:1.1;">${escHtml(sg.oCode)}</div><div style="font-size:10.5px;font-weight:700;color:#475569;margin-bottom:6px;">${escHtml(sg.origin)}</div><div style="font-size:15px;font-weight:900;color:#0f172a;">${escHtml(sg.depTime)}</div><div style="font-size:10.5px;color:#163b7a;font-weight:700;">${escHtml(sg.depDate)}</div></td><td style="width:42%;padding:12px 8px;vertical-align:middle;text-align:center;"><div style="font-size:10.5px;color:#475569;font-weight:700;">Agent Ref: ${escHtml(refId)}</div><div style="font-size:11px;color:#b45309;font-weight:800;margin:3px 0;">Airline PNR: ${escHtml(ctx.pnrText)}</div><div style="margin:6px 0;"><span style="display:inline-block;background-color:${ctx.stBg};color:${ctx.stCol};padding:3px 10px;border-radius:99px;font-size:10.5px;font-weight:800;border:1px solid ${ctx.stBorder};">${ctx.stIcon}${escHtml(ctx.stLabel)}</span></div><div style="font-size:12px;font-weight:800;color:#0b1f44;">&#9992; ${escHtml(sg.airline)} &#8226; <span style="color:#d97706;">${escHtml(sg.flightNo)}</span></div></td><td style="width:29%;padding:12px 14px;vertical-align:top;text-align:right;"><div style="font-size:21px;font-weight:900;color:#163b7a;line-height:1.1;">${escHtml(sg.dCode)}</div><div style="font-size:10.5px;font-weight:700;color:#475569;margin-bottom:6px;">${escHtml(sg.dest)}</div><div style="font-size:15px;font-weight:900;color:#0f172a;">${escHtml(sg.arrTime)}</div><div style="font-size:10.5px;color:#163b7a;font-weight:700;">${escHtml(sg.arrDate)}</div></td></tr></table>`).join('');
-  const subAgentFullMeta = (agent && (agent.City || agent.Mobile)) ? ` | ${escHtml(agent.City || '')} ${escHtml(agent.Mobile || '')}` : '';
-  const adminBanner = isAdminCopy ? `<table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;background-color:#0b1f44;border-bottom:2px solid #d97706;"><tr><td style="padding:7px 16px;font-size:11px;font-weight:800;color:#fbbf24;">ADMIN COPY &#8226; SUB-AGENT: ${escHtml(bkData.AgencyName || ctx.agencyName)} (${escHtml(agentEmail || bkData.AgentEmail || ctx.agencyEmail)}${subAgentFullMeta})</td></tr></table>` : '';
-  const viewPdfBtn = invoiceUrl ? `<table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;margin:14px 0 4px;"><tr><td align="center"><a href="${escHtml(invoiceUrl)}" target="_blank" style="display:inline-block;background-color:#0b1f44;color:#ffffff;text-decoration:none;padding:11px 24px;border-radius:8px;font-size:12.5px;font-weight:800;border:2px solid #d97706;">&#9992; View / Print A4 Service Voucher PDF</a></td></tr></table>` : '';
-
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Service Voucher - ${escHtml(refId)}</title></head><body style="margin:0;padding:12px;background-color:#eef2f7;font-family:'Segoe UI',Arial,sans-serif;color:#0f172a;"><table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:680px;margin:0 auto;background-color:#ffffff;border-radius:10px;border:1px solid #dbe3ee;overflow:hidden;"><tr><td>${adminBanner}</td></tr><tr><td style="padding:16px 18px;"><table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;border-bottom:2px solid #d97706;margin-bottom:10px;"><tr><td style="padding-bottom:10px;"><div style="font-size:17px;font-weight:900;color:#0b1f44;">Service(s) Voucher / Electronic Ticket</div><div style="font-size:11.5px;font-weight:800;color:#163b7a;margin-top:4px;">Super Ref: ${escHtml(refId)} &nbsp;|&nbsp; PNR: <span style="background-color:#eff6ff;color:#0b1f44;padding:2px 7px;border-radius:4px;border:1px solid #bfdbfe;font-family:monospace;">${escHtml(ctx.pnrText)}</span></div></td><td style="padding-bottom:10px;text-align:right;">${crestBadge}</td></tr></table><table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;background-color:#f1f5f9;border-radius:6px;margin-bottom:10px;"><tr><td style="padding:8px 12px;font-size:11.5px;font-weight:700;color:#0b1f44;">Hi ${escHtml(ctx.paxTitleDisp)}, thank you for choosing Golan International Travel &amp; Tours</td><td style="padding:8px 12px;font-size:11px;font-weight:700;color:#334155;text-align:right;">Issued: ${escHtml(ctx.ticketedAt)}</td></tr></table>${segCardsHtml}<table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;margin-top:10px;"><tr><td style="background-color:#0b1f44;color:#ffffff;font-size:12px;font-weight:800;padding:7px 12px;">Farefamily &amp; Baggage Description</td></tr><tr><td style="border:1px solid #cbd5e1;padding:9px 12px;font-size:11.5px;"><strong style="color:#0b1f44;">${escHtml(fi.cleanTitle)}</strong> &#8226; Baggage: <strong>${escHtml(fi.baggage || '20+5 KG')}</strong> &#8226; Meal: <strong>${escHtml(fi.meal || 'Included')}</strong>${fi.stay ? ` &#8226; Stay: ${escHtml(fi.stay)}` : ''}</td></tr></table><table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;margin-top:10px;"><tr><td colspan="6" style="background-color:#0b1f44;color:#ffffff;font-size:12px;font-weight:800;padding:7px 12px;">Passenger &amp; Price Info (PKR)</td></tr><tr style="background-color:#f1f5f9;"><th style="padding:6px;text-align:left;font-size:10.5px;border:1px solid #cbd5e1;">Passenger</th><th style="padding:6px;text-align:left;font-size:10.5px;border:1px solid #cbd5e1;">Passport</th><th style="padding:6px;text-align:left;font-size:10.5px;border:1px solid #cbd5e1;">Segment</th><th style="padding:6px;text-align:left;font-size:10.5px;border:1px solid #cbd5e1;">Agency</th><th style="padding:6px;text-align:left;font-size:10.5px;border:1px solid #cbd5e1;">Status</th><th style="padding:6px;text-align:right;font-size:10.5px;border:1px solid #cbd5e1;">Total</th></tr><tr><td style="padding:7px;font-size:11px;border:1px solid #cbd5e1;"><b>${escHtml(ctx.paxTitleDisp)}</b></td><td style="padding:7px;font-size:11px;font-family:monospace;border:1px solid #cbd5e1;">${escHtml(String(bkData.PassportNo || '').toUpperCase())}</td><td style="padding:7px;font-size:11px;border:1px solid #cbd5e1;">${ctx.segNames}</td><td style="padding:7px;font-size:11px;border:1px solid #cbd5e1;"><b>${escHtml(ctx.agencyName)}</b></td><td style="padding:7px;font-size:11px;border:1px solid #cbd5e1;"><b style="color:${ctx.stCol};">${escHtml(ctx.st)}</b></td><td style="padding:7px;font-size:11.5px;text-align:right;font-weight:900;color:#15803d;border:1px solid #cbd5e1;">PKR ${Number(bkData.FarePKR || 0).toLocaleString()}</td></tr></table><div style="margin-top:10px;font-size:10px;color:#334155;line-height:1.55;background:#f8fafc;border:1px solid #e2e8f0;border-left:4px solid #163b7a;padding:8px 10px;"><strong style="color:#0b1f44;">TERM &amp; CONDITION:</strong><div>1- CHECK IN 04 HOURS PRIOR TO FLIGHT.</div><div>2- TICKETS ARE NON REFUNDABLE &amp; NON CHANGEABLE.</div>${ctx.extraRuleHtml}</div>${viewPdfBtn}<table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin-top:10px;background-color:#0b1f44;color:#ffffff;border-radius:8px;border-bottom:3px solid #d97706;"><tr><td style="padding:10px 12px;font-size:10.5px;"><strong style="color:#fbbf24;">GOLAN INTERNATIONAL TRAVEL &amp; TOURS</strong> (Toba Tek Singh) • CEO Shan Chairman: <strong>0345-3326318</strong> • Manager Tariq Mehmod: <strong>0341-6929324</strong> • Muhammad Umer: <strong>0331-6379110</strong></td></tr></table></td></tr></table></body></html>`;
+function buildBookingEmailHtml({ bk, agent, matchedFare, agencyName, paxName, farePKR, passportNo, invoiceUrl, isIssued, isVoided, isCanceled, pnr, itemTitle, bId, isAdminCopy, agentEmail }) {
+  const bkData = bk || { BookingID: bId, PNR: pnr, AgencyName: agencyName, AgentEmail: agentEmail, PassengerName: paxName, PassportNo: passportNo, ItemTitle: itemTitle, FarePKR: farePKR, Status: isIssued ? 'ISSUED' : (isVoided ? 'VOIDED' : (isCanceled ? 'CANCELED' : 'PENDING')), CreatedAt: getPKTimeStr() };
+  const fi = extractTicketMeta(bkData, matchedFare), sg = parseTicketSegments(bkData, fi).segments[0], st = String(bkData.Status || 'PENDING').toUpperCase();
+  const stCol = (st === 'CONFIRMED' || st === 'ISSUED') ? '#15803d' : (st === 'VOIDED' ? '#9a3412' : (st === 'CANCELED' ? '#b91c1c' : '#b45309'));
+  const admBar = isAdminCopy ? `<div style="background:#0b1f44;color:#fbbf24;padding:8px 14px;font-size:11px;font-weight:800;">ADMIN COPY • SUB-AGENT: ${escHtml(bkData.AgencyName)} (${escHtml(agentEmail || bkData.AgentEmail)}${agent && agent.Mobile ? ' • ' + escHtml(agent.Mobile) : ''})</div>` : '';
+  return `<!DOCTYPE html><html><body style="margin:0;padding:14px;background:#eef2f7;font-family:Arial,sans-serif;"><div style="max-width:650px;margin:auto;background:#fff;border-radius:10px;border:1px solid #cbd5e1;overflow:hidden;">${admBar}<div style="padding:18px;"><h2 style="color:#0b1f44;margin:0 0 8px;border-bottom:2px solid #d97706;padding-bottom:8px;">Service Voucher • ${escHtml(bkData.BookingID)} (PNR: ${escHtml(bkData.PNR || 'PENDING')})</h2><p>Passenger: <b>${escHtml(bkData.PassengerName)}</b> (${escHtml(bkData.PassportNo)}) • Status: <b style="color:${stCol};">${escHtml(st)}</b></p><p><b>${escHtml(sg.oCode)} → ${escHtml(sg.dCode)}</b> • ${escHtml(sg.airline)} (${escHtml(sg.flightNo)}) • ${escHtml(sg.depDate)} ${escHtml(sg.depTime)}</p><p>Agency: <b>${escHtml(bkData.AgencyName)}</b> • Fare: <b style="color:#15803d;">PKR ${Number(bkData.FarePKR || 0).toLocaleString()}</b></p>${invoiceUrl ? `<p style="margin:16px 0;"><a href="${escHtml(invoiceUrl)}" target="_blank" style="background:#0b1f44;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:bold;border:2px solid #d97706;">View / Print A4 Voucher PDF</a></p>` : ''}<p style="font-size:11px;color:#64748b;">Golan International Travel &amp; Tours (Toba Tek Singh) • 0345-3326318</p></div></div></body></html>`;
 }
 
 function buildPrintableInvoicePage(bk, agent, matchedFare, forBrowserPrint = true) {
-  const ctx = resolveBackendVoucherContext(bk, agent, matchedFare), fi = ctx.fi;
-  const rightLogoHtml = buildVoucherCrestBadgeHtml(ctx.air, ctx.useCustomLogo && agent ? agent.LogoDataUrl : '', false);
-  const segsHtml = ctx.parsed.segments.map(sg => `<div class="it-card"><table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;"><tr><td style="width:28%;vertical-align:top;"><div class="code-big">${escHtml(sg.oCode)}</div><div class="city-sub">${escHtml(sg.origin)}</div><div class="time-big">${escHtml(sg.depTime)}</div><div class="date-sm">${escHtml(sg.depDate)}</div></td><td style="width:44%;text-align:center;vertical-align:middle;"><div style="font-size:10.5px;color:#475569;font-weight:700;">Agent Ref: ${escHtml(bk.BookingID)}</div><div style="font-size:11px;color:#b45309;font-weight:800;margin:2px 0;">Airline PNR: ${escHtml(ctx.pnrText)}</div><div style="margin:5px 0;"><span style="display:inline-block;background:${ctx.stBg};color:${ctx.stCol};padding:3px 10px;border-radius:99px;font-size:10.5px;font-weight:800;border:1px solid ${ctx.stBorder};">${ctx.stIcon}${escHtml(ctx.stLabel)}</span></div><div style="font-size:12px;font-weight:800;color:#0b1f44;">&#9992; ${escHtml(sg.airline)} &#8226; <span style="color:#d97706;">${escHtml(sg.flightNo)}</span></div></td><td style="width:28%;text-align:right;vertical-align:top;"><div class="code-big">${escHtml(sg.dCode)}</div><div class="city-sub">${escHtml(sg.dest)}</div><div class="time-big">${escHtml(sg.arrTime)}</div><div class="date-sm">${escHtml(sg.arrDate)}</div></td></tr></table></div>`).join('');
-  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Service Voucher - ${escHtml(bk.BookingID)}</title><style>@page{size:A4 portrait;margin:8mm;}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;box-sizing:border-box;}body{font-family:'Segoe UI',Arial,sans-serif;background:#eef2f7;color:#0f172a;margin:0;padding:16px;}.a4-page{width:194mm;max-width:100%;margin:0 auto;background:#fff;padding:18px 22px;border-radius:8px;box-shadow:0 12px 36px rgba(11,31,68,.14);border:1px solid #dbe3ee;}.top-bar{width:100%;border-collapse:collapse;border-bottom:2px solid #d97706;margin-bottom:10px;}.greet{width:100%;border-collapse:collapse;background:#f1f5f9;border-radius:6px;font-size:11.5px;font-weight:700;color:#0b1f44;margin-bottom:10px;}.it-card{background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:11px 14px;margin-bottom:10px;}.code-big{font-size:21px;font-weight:900;color:#163b7a;}.city-sub{font-size:10.5px;font-weight:700;color:#475569;margin-bottom:5px;text-transform:uppercase;}.time-big{font-size:16px;font-weight:900;color:#0f172a;}.date-sm{font-size:10.5px;color:#163b7a;font-weight:600;}.sec-hdr{background:#0b1f44;color:#fff;font-size:12px;font-weight:800;padding:6px 12px;border-radius:6px 6px 0 0;margin-top:9px;}.sec-box{border:1px solid #cbd5e1;border-top:none;border-radius:0 0 6px 6px;padding:9px 12px;font-size:11px;margin-bottom:8px;}.v-tbl{width:100%;border-collapse:collapse;font-size:11px;}.v-tbl th{background:#f1f5f9;padding:6px 8px;text-align:left;color:#0b1f44;font-weight:800;border-bottom:1px solid #cbd5e1;}.v-tbl td{padding:7px 8px;border-bottom:1px solid #eef2f6;}.ft-contacts{width:100%;border-collapse:collapse;margin-top:10px;background:#0b1f44;color:#fff;border-radius:8px;font-size:10.5px;border-bottom:3px solid #d97706;}.no-print{text-align:center;margin-bottom:12px;}@media print{body{background:#fff;padding:0;}.a4-page{box-shadow:none;border:none;padding:4mm;width:100%;}.no-print{display:none!important;}}</style></head><body>${forBrowserPrint ? `<div class="no-print"><button onclick="window.print()" style="background:#0b1f44;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-weight:800;cursor:pointer;font-size:13px;">Print / Save A4 Service Voucher PDF</button></div>` : ''}<div class="a4-page"><table class="top-bar"><tr><td style="padding-bottom:10px;"><div style="font-size:18px;font-weight:900;color:#0b1f44;">Service(s) Voucher / Electronic Ticket</div><div style="font-size:11.5px;font-weight:800;color:#163b7a;margin-top:2px;">Super Ref: ${escHtml(bk.BookingID)} &nbsp;|&nbsp; PNR: <span style="background:#eff6ff;padding:1px 7px;border-radius:4px;border:1px solid #bfdbfe;font-family:monospace;">${escHtml(ctx.pnrText)}</span></div></td><td style="padding-bottom:10px;text-align:right;">${rightLogoHtml}</td></tr></table><table class="greet"><tr><td style="padding:7px 12px;">Hi ${escHtml(ctx.paxTitleDisp)}, thank you for choosing Golan International Travel &amp; Tours</td><td style="padding:7px 12px;text-align:right;">Issued: ${escHtml(ctx.ticketedAt)}</td></tr></table>${segsHtml}<div class="sec-hdr">Farefamily &amp; Baggage Description</div><div class="sec-box"><strong style="color:#0b1f44;">${escHtml(fi.cleanTitle)}</strong> &#8226; Baggage: <strong>${escHtml(fi.baggage || '20+5 KG')}</strong> &#8226; Meal: <strong>${escHtml(fi.meal || 'Included')}</strong>${fi.stay ? ` &#8226; Stay: ${escHtml(fi.stay)}` : ''}</div><div class="sec-hdr">Passenger Information</div><div class="sec-box" style="padding:0;"><table class="v-tbl"><thead><tr><th>Passenger Name</th><th>Segment</th><th>Doc / Passport</th><th>Baggage</th><th>Seat</th><th>Meal</th><th>Status</th></tr></thead><tbody><tr><td><b>${escHtml(ctx.paxTitleDisp)}</b></td><td>${ctx.segNames}</td><td style="font-family:monospace;">${escHtml(String(bk.PassportNo || '').toUpperCase())}</td><td>${escHtml(fi.baggage || '20+5 KG')}</td><td>${escHtml(bk.SeatPref || 'Any')}</td><td>${escHtml(fi.meal || 'Included')}</td><td><b style="color:${ctx.stCol};">${escHtml(ctx.st)}</b></td></tr></tbody></table></div><div class="sec-hdr">Account &amp; Price Info (In PKR)</div><div class="sec-box" style="padding:0;"><table class="v-tbl"><thead><tr><th>Booking Code</th><th>Agency</th><th>Email</th><th>Contact</th><th>Status</th><th style="text-align:right;">Grand Total</th></tr></thead><tbody><tr><td style="font-family:monospace;">${escHtml(ctx.bookingCodeText)}</td><td><b>${escHtml(ctx.agencyName)}</b></td><td>${escHtml(ctx.agencyEmail)}</td><td>${escHtml(ctx.agencyContact)}</td><td>${escHtml(ctx.st)}</td><td style="text-align:right;font-weight:900;color:#15803d;">PKR ${Number(bk.FarePKR || 0).toLocaleString()}</td></tr></tbody></table></div><div style="font-size:10px;color:#334155;line-height:1.6;background:#f8fafc;border:1px solid #e2e8f0;border-left:4px solid #163b7a;padding:7px 10px;"><strong style="color:#0b1f44;">TERM &amp; CONDITION:</strong><div>1- REPORT AT CHECK IN AT LEAST 04 HOURS PRIOR TO FLIGHT.</div><div>2- TICKETS ARE NON REFUNDABLE &amp; NON CHANGEABLE.</div>${ctx.extraRuleHtml}</div><table class="ft-contacts"><tr><td style="padding:9px 12px;"><strong style="color:#fbbf24;">GOLAN INTERNATIONAL TRAVEL &amp; TOURS</strong> (Toba Tek Singh)</td><td style="padding:9px 12px;text-align:right;">CEO Shan Chairman: <strong>0345-3326318</strong> • Manager Tariq Mehmod: <strong>0341-6929324</strong> • Muhammad Umer: <strong>0331-6379110</strong></td></tr></table></div></body></html>`;
+  const fi = extractTicketMeta(bk, matchedFare), sg = parseTicketSegments(bk, fi).segments[0], st = String(bk.Status || 'PENDING').toUpperCase();
+  const stCol = (st === 'CONFIRMED' || st === 'ISSUED') ? '#15803d' : (st === 'VOIDED' ? '#9a3412' : (st === 'CANCELED' ? '#b91c1c' : '#b45309'));
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Voucher - ${escHtml(bk.BookingID)}</title><style>@page{size:A4;margin:10mm;}body{font-family:Segoe UI,Arial,sans-serif;background:#eef2f7;padding:16px;}.a4{max-width:780px;margin:auto;background:#fff;padding:22px;border-radius:10px;border:1px solid #cbd5e1;}table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px;}th{background:#0b1f44;color:#fff;padding:7px;text-align:left;}td{padding:7px;border:1px solid #cbd5e1;}@media print{.no-print{display:none!important;}body{background:#fff;padding:0;}}</style></head><body>${forBrowserPrint ? `<div class="no-print" style="text-align:center;margin-bottom:12px;"><button onclick="window.print()" style="background:#0b1f44;color:#fff;border:none;padding:10px 22px;border-radius:8px;font-weight:800;cursor:pointer;">Print / Save PDF</button></div>` : ''}<div class="a4"><h2 style="color:#0b1f44;border-bottom:3px solid #d97706;padding-bottom:8px;">Service(s) Voucher / Electronic Ticket</h2><p>Ref: <b>${escHtml(bk.BookingID)}</b> | PNR: <b>${escHtml(bk.PNR || 'PENDING')}</b> | Status: <b style="color:${stCol};">${escHtml(st)}</b></p><p>Passenger: <b>${escHtml(bk.PassengerName)}</b> • Passport: <b>${escHtml(bk.PassportNo)}</b></p><table><thead><tr><th>Route</th><th>Airline / Flight</th><th>Departure</th><th>Baggage</th><th>Status</th></tr></thead><tbody><tr><td><b>${escHtml(sg.oCode)} → ${escHtml(sg.dCode)}</b></td><td>${escHtml(sg.airline)} (${escHtml(sg.flightNo)})</td><td>${escHtml(sg.depDate)} ${escHtml(sg.depTime)}</td><td>${escHtml(fi.baggage)}</td><td><b>${escHtml(st)}</b></td></tr></tbody></table><table><thead><tr><th>Agency</th><th>Email</th><th>Contact</th><th style="text-align:right;">Total</th></tr></thead><tbody><tr><td><b>${escHtml(bk.AgencyName)}</b></td><td>${escHtml(bk.AgentEmail)}</td><td>${escHtml((agent && agent.Mobile) || bk.PaxMobile || '-')}</td><td style="text-align:right;font-weight:900;color:#15803d;">PKR ${Number(bk.FarePKR || 0).toLocaleString()}</td></tr></tbody></table><p style="margin-top:14px;font-size:11px;color:#475569;">Golan International Travel &amp; Tours (Toba Tek Singh) • CEO Shan Chairman: 0345-3326318</p></div></body></html>`;
 }
 
 function buildPrintableReceiptPage(d, forBrowserPrint = true) {
-  const st = String(d.Status || 'PENDING').toUpperCase(), stCol = st === 'APPROVED' ? '#10b981' : (st === 'CANCELED' ? '#ef4444' : '#f59e0b'), stLabel = st === 'APPROVED' ? 'Paid & Credited' : st;
-  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Payment Receipt - ${escHtml(d.DepositID)}</title><style>@page{size:A4;margin:14mm;}body{font-family:'Segoe UI',Arial,sans-serif;background:#f5f3f7;color:#0f172a;margin:0;padding:26px 12px;}.rcard{max-width:480px;margin:auto;background:#fff;border-radius:22px;overflow:hidden;box-shadow:0 20px 50px rgba(15,23,42,.14);border:1px solid #e2e8f0;}.rtop{background:#0b1f44;color:#fff;padding:22px 24px;border-bottom:4px solid #d97706;}.rrow{padding:12px 0;border-bottom:1px solid #eef2f6;font-size:13.5px;}.rlbl{color:#64748b;font-weight:600;}.rval{text-align:right;font-weight:800;color:#0f172a;}.rsub{font-size:11.5px;color:#64748b;font-weight:600;margin-top:2px;}.print-bar{text-align:center;margin-bottom:14px;}.print-btn{background:#0b1f44;color:#fff;border:none;padding:10px 22px;border-radius:9px;font-weight:800;cursor:pointer;font-size:13px;}@media print{body{background:#fff;padding:0;}.print-bar{display:none!important;}.rcard{box-shadow:none;}}</style></head><body>${forBrowserPrint ? `<div class="print-bar"><button class="print-btn" onclick="window.print()">Print / Save PDF Receipt</button></div>` : ''}<div class="rcard"><div class="rtop"><div style="font-size:11px;font-weight:800;color:#fbbf24;">GOLAN INTERNATIONAL B2B</div><h2 style="margin:3px 0 0;font-size:21px;font-weight:900;">Transaction Details</h2><table width="100%" style="font-size:12px;margin-top:12px;color:#e2e8f0;font-weight:600;"><tr><td>${escHtml(d.CreatedAt || '-')}</td><td align="right">REF: ${escHtml(d.DepositID || '-')}</td></tr></table></div><div style="padding:10px 24px 6px;"><table width="100%"><tr><td class="rrow rlbl">From (Sub-Agent)</td><td class="rrow rval">${escHtml(d.AgencyName || d.AgentEmail || 'Partner Agency')}<div class="rsub">${escHtml(d.AgentEmail || '')}</div></td></tr><tr><td class="rrow rlbl">To (Corporate)</td><td class="rrow rval">Golan International Travel &amp; Tours<div class="rsub">${escHtml(d.BankName || 'UBL 384263615')}</div></td></tr><tr><td class="rrow rlbl">Transaction / Slip Ref</td><td class="rrow rval" style="font-family:monospace;">${escHtml(d.TxRef || 'SLIP-AUTO')}</td></tr><tr><td class="rrow rlbl" style="border-bottom:none;">Status</td><td class="rrow rval" style="border-bottom:none;color:${stCol};">&#9679; ${escHtml(stLabel)}</td></tr></table></div><div style="border-top:2px dashed #cbd5e1;margin:4px 22px;"></div><div style="padding:14px 24px 22px;"><div style="font-size:12px;color:#64748b;font-weight:700;">Amount Credited</div><div style="font-size:28px;font-weight:900;color:#0f172a;margin-top:2px;">PKR ${Number(d.AmountPKR || 0).toLocaleString()}</div><div style="margin-top:16px;padding-top:12px;border-top:1px solid #eef2f6;text-align:center;font-size:11px;color:#64748b;">Golan International Travel &amp; Tours (Toba Tek Singh) • 0345-3326318</div></div></div></body></html>`;
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Receipt - ${escHtml(d.DepositID)}</title></head><body style="font-family:Segoe UI,Arial,sans-serif;background:#eef2f7;padding:24px;">${forBrowserPrint ? `<div style="text-align:center;margin-bottom:12px;"><button onclick="window.print()" style="background:#0b1f44;color:#fff;border:none;padding:9px 20px;border-radius:8px;font-weight:800;cursor:pointer;">Print Receipt</button></div>` : ''}<div style="max-width:460px;margin:auto;background:#fff;border-radius:16px;padding:22px;border:1px solid #cbd5e1;"><h2 style="color:#0b1f44;">Payment Receipt</h2><p><b>ID:</b> ${escHtml(d.DepositID)} | <b>Date:</b> ${escHtml(d.CreatedAt)}</p><p><b>Sub-Agent:</b> ${escHtml(d.AgencyName || d.AgentEmail)}</p><p><b>Bank:</b> ${escHtml(d.BankName)}</p><p><b>Ref:</b> ${escHtml(d.TxRef)}</p><p><b>Status:</b> ${escHtml(d.Status)}</p><h2 style="color:#15803d;">PKR ${Number(d.AmountPKR || 0).toLocaleString()}</h2></div></body></html>`;
 }
 
 function buildDepositEmailHtml(d, receiptUrl) {
-  const st = String(d.Status || 'PENDING').toUpperCase(), isApp = st === 'APPROVED';
-  return `<!DOCTYPE html><html><body style="margin:0;padding:24px;background:#eef2f7;font-family:Arial,sans-serif;"><table width="600" align="center" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#fff;border-radius:14px;overflow:hidden;border:1px solid #cbd5e1;"><tr><td style="background:#0b1f44;padding:20px 26px;color:#fff;border-bottom:3px solid #d97706;"><div style="font-size:11px;font-weight:bold;color:#fbbf24;">GOLAN INTERNATIONAL B2B</div><h2 style="margin:4px 0 0;font-size:20px;">${isApp ? '&#10003; Deposit Approved &amp; Credited' : 'Deposit Slip Submitted'}</h2></td></tr><tr><td style="padding:26px;"><p style="margin:0 0 14px;font-size:14px;color:#334155;">Assalam-o-Alaikum <strong>${escHtml(d.AgencyName || 'Partner')}</strong>,</p><table width="100%" cellpadding="9" cellspacing="0" style="border-collapse:collapse;font-size:13px;margin-bottom:20px;"><tr><td style="border:1px solid #e2e8f0;background:#f8fafc;font-weight:bold;">Receipt ID</td><td style="border:1px solid #e2e8f0;">${escHtml(d.DepositID)}</td></tr><tr><td style="border:1px solid #e2e8f0;background:#f8fafc;font-weight:bold;">Sub-Agent</td><td style="border:1px solid #e2e8f0;">${escHtml(d.AgencyName)} (${escHtml(d.AgentEmail)})</td></tr><tr><td style="border:1px solid #e2e8f0;background:#f8fafc;font-weight:bold;">Bank</td><td style="border:1px solid #e2e8f0;">${escHtml(d.BankName)}</td></tr><tr><td style="border:1px solid #e2e8f0;background:#f8fafc;font-weight:bold;">Ref</td><td style="border:1px solid #e2e8f0;">${escHtml(d.TxRef)}</td></tr><tr><td style="border:1px solid #e2e8f0;background:#f8fafc;font-weight:bold;">Amount</td><td style="border:1px solid #e2e8f0;color:#15803d;font-weight:bold;font-size:16px;">PKR ${Number(d.AmountPKR || 0).toLocaleString()}</td></tr><tr><td style="border:1px solid #e2e8f0;background:#f8fafc;font-weight:bold;">Status</td><td style="border:1px solid #e2e8f0;font-weight:bold;color:${isApp ? '#15803d' : '#b45309'};">${escHtml(st)}</td></tr></table>${receiptUrl ? `<div style="text-align:center;margin:20px 0;"><a href="${escHtml(receiptUrl)}" target="_blank" style="background:#0b1f44;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:bold;font-size:13px;display:inline-block;border:2px solid #d97706;">View / Print PDF Receipt</a></div>` : ''}<p style="margin:0;font-size:12px;color:#64748b;">CEO Shan Chairman: 0345-3326318 | Manager Tariq Mehmod: 0341-6929324 | Muhammad Umer: 0331-6379110</p></td></tr></table></body></html>`;
+  const st = String(d.Status || 'PENDING').toUpperCase();
+  return `<!DOCTYPE html><html><body style="padding:20px;background:#eef2f7;font-family:Arial,sans-serif;"><div style="max-width:580px;margin:auto;background:#fff;border-radius:12px;padding:20px;border:1px solid #cbd5e1;"><h2 style="color:#0b1f44;">Deposit ${escHtml(st)} [${escHtml(d.DepositID)}]</h2><p>Agency: <b>${escHtml(d.AgencyName)}</b> (${escHtml(d.AgentEmail)})</p><p>Bank: ${escHtml(d.BankName)} • Ref: ${escHtml(d.TxRef)}</p><p>Amount: <b style="color:#15803d;">PKR ${Number(d.AmountPKR || 0).toLocaleString()}</b></p>${receiptUrl ? `<p><a href="${escHtml(receiptUrl)}" target="_blank">View PDF Receipt</a></p>` : ''}</div></body></html>`;
 }
 
 function sleepMs(ms) { return new Promise(r => setTimeout(r, ms)); }
@@ -358,7 +300,7 @@ function sleepMs(ms) { return new Promise(r => setTimeout(r, ms)); }
 async function sendGasEmail(payload) {
   const { to, subject, htmlBody, pdfHtml, pdfName, bId, dtStr, agencyName, paxName, passportNo, category, itemTitle, farePKR, statusTxt, invoiceUrl, adminCopy } = payload || {};
   if (!to || !GAS_URL) return { ok: false, batchHandled: false };
-  const bodyPayload = JSON.stringify({ action: 'sendVoucherHtml', to, subject: subject || 'Golan International B2B Notification', senderName: 'GOLAN INTERNATIONAL TRAVEL & TOURS', htmlBody: htmlBody || '', pdfHtml: pdfHtml || '', pdfName: pdfName || ('ServiceVoucher-' + (bId || Date.now()) + '.pdf'), invoiceUrl: invoiceUrl || '', bId: bId || '', dtStr: dtStr || getPKTimeStr(), agencyName: agencyName || '', paxName: paxName || '', passportNo: passportNo || '', category: category || '', itemTitle: itemTitle || '', farePKR: farePKR || 0, statusTxt: statusTxt || '', adminCopy: adminCopy || null });
+  const bodyPayload = JSON.stringify({ action: 'sendVoucherHtml', to, subject: subject || 'Golan International Notification', senderName: 'GOLAN INTERNATIONAL TRAVEL & TOURS', htmlBody: htmlBody || '', pdfHtml: pdfHtml || '', pdfName: pdfName || ('Voucher-' + (bId || Date.now()) + '.pdf'), invoiceUrl: invoiceUrl || '', bId: bId || '', dtStr: dtStr || getPKTimeStr(), agencyName: agencyName || '', paxName: paxName || '', passportNo: passportNo || '', category: category || '', itemTitle: itemTitle || '', farePKR: farePKR || 0, statusTxt: statusTxt || '', adminCopy: adminCopy || null });
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
       const postRes = await fetchWithTimeout(GAS_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, redirect: 'follow', body: bodyPayload }, 25000);
@@ -367,42 +309,51 @@ async function sendGasEmail(payload) {
         let parsed = null; try { parsed = JSON.parse(postTxt); } catch (e) {}
         return { ok: true, batchHandled: !!(parsed && parsed.batchHandled === true) };
       }
-    } catch (e) { console.error(`[GAS Attempt ${attempt}]`, e && e.message ? e.message : e); }
-    if (attempt < 2) await sleepMs(450);
+    } catch (e) {}
+    if (attempt < 2) await sleepMs(400);
   }
   return { ok: false, batchHandled: false };
 }
 
 async function sendGasPair(primaryPayload, secondaryPayload) {
-  const hasPrimary = !!(primaryPayload && primaryPayload.to), hasSecondary = !!(secondaryPayload && secondaryPayload.to);
-  if (!hasPrimary && !hasSecondary) return false;
-  if (hasPrimary) {
-    const res1 = await sendGasEmail({ ...primaryPayload, adminCopy: hasSecondary ? { to: secondaryPayload.to, subject: secondaryPayload.subject, htmlBody: secondaryPayload.htmlBody } : null });
-    if (res1.ok && (!hasSecondary || res1.batchHandled)) return true;
-    if (hasSecondary) { await sleepMs(300); const res2 = await sendGasEmail(secondaryPayload); return !!(res1.ok || res2.ok); }
-    return !!res1.ok;
+  const hasP = !!(primaryPayload && primaryPayload.to), hasS = !!(secondaryPayload && secondaryPayload.to);
+  if (!hasP && !hasS) return false;
+  if (hasP) {
+    const r1 = await sendGasEmail({ ...primaryPayload, adminCopy: hasS ? { to: secondaryPayload.to, subject: secondaryPayload.subject, htmlBody: secondaryPayload.htmlBody } : null });
+    if (r1.ok && (!hasS || r1.batchHandled)) return true;
+    if (hasS) { await sleepMs(250); const r2 = await sendGasEmail(secondaryPayload); return !!(r1.ok || r2.ok); }
+    return !!r1.ok;
   }
   return !!(await sendGasEmail(secondaryPayload)).ok;
 }
 
 async function sendBookingEmailsSeparate({ adminEmails, subAgentEmail, paxEmail, bId, dtStr, agencyName, paxName, passportNo, category, itemTitle, farePKR, statusTxt, opts }) {
-  const options = opts || {}, invoiceUrl = options.invoiceUrl || '', isIssued = !!options.isIssued, isVoided = !!options.isVoided, isCanceled = !!options.isCanceled;
-  const pnr = options.pnr || 'PENDING', ticketNo = options.ticketNo || '', pdfHtml = options.pdfHtml || '', bk = options.bk || null, agent = options.agent || null, matchedFare = options.matchedFare || null;
-  const agentSubject = isIssued ? `Service Voucher CONFIRMED - ${bId} (PNR: ${pnr})` : (isVoided ? `Ticket Voided - ${bId} (PNR: ${pnr})` : (isCanceled ? `Booking Canceled - ${bId} (PNR: ${pnr})` : `Service Voucher (HOLD) - ${bId} (PNR: ${pnr})`));
-  const adminSubject = `[ADMIN COPY] ${agentSubject} | ${agencyName || 'Partner'}`;
-  const subAgentTo = uniqueEmails([subAgentEmail, paxEmail]), adminTo = uniqueEmails(adminEmails || []), pdfFileName = `ServiceVoucher-${bId}.pdf`;
-  const primaryPayload = subAgentTo ? { to: subAgentTo, subject: agentSubject, htmlBody: buildBookingEmailHtml({ bk, agent, matchedFare, agencyName, paxName, farePKR, passportNo, invoiceUrl, isIssued, isVoided, isCanceled, pnr, ticketNo, itemTitle, bId, isAdminCopy: false, agentEmail: subAgentEmail }), pdfHtml, pdfName: pdfFileName, invoiceUrl, bId, dtStr, agencyName, paxName, passportNo, category, itemTitle, farePKR, statusTxt } : null;
-  const secondaryPayload = adminTo ? { to: adminTo, subject: adminSubject, htmlBody: buildBookingEmailHtml({ bk, agent, matchedFare, agencyName, paxName, farePKR, passportNo, invoiceUrl, isIssued, isVoided, isCanceled, pnr, ticketNo, itemTitle, bId, isAdminCopy: true, agentEmail: subAgentEmail }), pdfHtml, pdfName: pdfFileName, invoiceUrl, bId, dtStr, agencyName, paxName, passportNo, category, itemTitle, farePKR, statusTxt } : null;
-  return (await sendGasPair(primaryPayload, secondaryPayload)) ? ' | Email: SENT (Admin & Sub-Agent)' : '';
+  const o = opts || {}, invoiceUrl = o.invoiceUrl || '', isIssued = !!o.isIssued, isVoided = !!o.isVoided, isCanceled = !!o.isCanceled, pnr = o.pnr || 'PENDING', pdfHtml = o.pdfHtml || '';
+  const subj = isIssued ? `Service Voucher CONFIRMED - ${bId} (PNR: ${pnr})` : (isVoided ? `Ticket Voided - ${bId}` : (isCanceled ? `Booking Canceled - ${bId}` : `Service Voucher (HOLD) - ${bId} (PNR: ${pnr})`));
+  const subTo = uniqueEmails([subAgentEmail, paxEmail]), admTo = uniqueEmails(adminEmails || []), pdfName = `ServiceVoucher-${bId}.pdf`;
+  const p1 = subTo ? { to: subTo, subject: subj, htmlBody: buildBookingEmailHtml({ bk: o.bk, agent: o.agent, matchedFare: o.matchedFare, agencyName, paxName, farePKR, passportNo, invoiceUrl, isIssued, isVoided, isCanceled, pnr, itemTitle, bId, isAdminCopy: false, agentEmail: subAgentEmail }), pdfHtml, pdfName, invoiceUrl, bId, dtStr, agencyName, paxName, passportNo, category, itemTitle, farePKR, statusTxt } : null;
+  const p2 = admTo ? { to: admTo, subject: `[ADMIN COPY] ${subj} | ${agencyName || 'Partner'}`, htmlBody: buildBookingEmailHtml({ bk: o.bk, agent: o.agent, matchedFare: o.matchedFare, agencyName, paxName, farePKR, passportNo, invoiceUrl, isIssued, isVoided, isCanceled, pnr, itemTitle, bId, isAdminCopy: true, agentEmail: subAgentEmail }), pdfHtml, pdfName, invoiceUrl, bId, dtStr, agencyName, paxName, passportNo, category, itemTitle, farePKR, statusTxt } : null;
+  return (await sendGasPair(p1, p2)) ? ' | Email: SENT' : '';
 }
 
 module.exports = async function handler(req, res) {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+
   if (req.method === 'OPTIONS') return res.status(204).end();
+  const clientIp = getClientIp(req);
+  if (!checkRateLimit(clientIp, 90, 60000)) {
+    return res.status(429).json({ ok: false, message: 'Too many requests. Please slow down.' });
+  }
+
   try {
     let bodyObj = {};
     if (req.body && typeof req.body === 'object') bodyObj = req.body;
     else if (typeof req.body === 'string' && req.body.trim()) {
-      try { bodyObj = JSON.parse(req.body); } catch (e) { return res.status(400).json({ ok: false, message: 'Invalid JSON request body.' }); }
+      if (req.body.length > 2500000) return res.status(413).json({ ok: false, message: 'Payload too large.' });
+      try { bodyObj = JSON.parse(req.body); } catch (e) { return res.status(400).json({ ok: false, message: 'Invalid JSON body.' }); }
     }
     const q = req.query || {}, action = String((bodyObj.action != null ? bodyObj.action : q.action) || '').trim();
     const READ_GET_ACTIONS = new Set(['viewInvoice', 'viewReceipt', 'checkSession', 'getDashboardData', 'getDashboard', 'adminGetAttachment']);
@@ -414,6 +365,8 @@ module.exports = async function handler(req, res) {
     const DB = await loadDB();
     DB.admins = (DB.admins || []).map(x => String(x || '').trim().toLowerCase()).filter(Boolean);
     DB.agents = DB.agents || {};
+    DB.fares = DB.fares || []; DB.bookings = DB.bookings || []; DB.banks = DB.banks || []; DB.deposits = DB.deposits || []; DB.ledger = DB.ledger || []; DB.securityLogs = DB.securityLogs || []; DB.offerCache = DB.offerCache || {};
+
     const adminDefaultPass = process.env.ADMIN_DEFAULT_PASS || 'Golan@786';
     let adminSynced = false;
     DEFAULT_ADMINS.forEach(adm => {
@@ -426,8 +379,6 @@ module.exports = async function handler(req, res) {
       }
     });
     if (adminSynced) await saveDB(DB);
-
-    DB.fares = DB.fares || []; DB.bookings = DB.bookings || []; DB.banks = DB.banks || []; DB.deposits = DB.deposits || []; DB.ledger = DB.ledger || []; DB.offerCache = DB.offerCache || {};
 
     if (action === 'viewInvoice') {
       const bk = DB.bookings.find(b => b.BookingID === String(p.bookingId || '').trim());
@@ -450,29 +401,33 @@ module.exports = async function handler(req, res) {
     }
 
     if (action === 'register') {
+      if (!checkRateLimit('REG_' + clientIp, 6, 300000)) return res.json({ ok: false, message: 'Too many registration attempts. Try later.' });
       const agencyName = String(p.agencyName || '').trim().slice(0, 120), city = String(p.city || '').trim().slice(0, 60), mobile = String(p.mobile || '').trim().slice(0, 30), pwd = String(p.password || '');
-      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.json({ ok: false, message: 'Enter a valid email address.' });
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.json({ ok: false, message: 'Enter valid email.' });
       if (!agencyName || pwd.length < 6) return res.json({ ok: false, message: 'Agency name and password (min 6 chars) required.' });
       if (DB.agents[email]) return res.json({ ok: false, message: 'Email already registered.' });
       const isSuperReg = DB.admins.includes(email);
       DB.agents[email] = { Email: email, AgencyName: agencyName, City: city, Mobile: mobile, ContactPerson: '', Address: '', VoucherBranding: 'custom', LogoDataUrl: '', PasswordHash: hashPwd(pwd), TotpSecret: generateSecret(), TotpVerified: 'NO', Status: isSuperReg ? 'APPROVED' : 'PENDING', CanIssue: isSuperReg, CanVoid: isSuperReg, CanCancel: isSuperReg, BalancePKR: 0, SessionToken: '', SessionExpiry: 0, FailedAttempts: 0, TotpFailedAttempts: 0 };
+      addSecurityLog(DB, email, 'REGISTER', `New Agency: ${agencyName} (${city})`, clientIp);
       await saveDB(DB);
-      const regBody = `<div style="font-family:Arial,sans-serif;padding:20px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;"><h2 style="color:#0b1f44;margin-top:0;">New Sub-Agent Registration</h2><p><b>Agency:</b> ${escHtml(agencyName)}</p><p><b>Email:</b> ${escHtml(email)}</p><p><b>City:</b> ${escHtml(city)}</p><p><b>Mobile:</b> ${escHtml(mobile)}</p><p><b>Status:</b> ${isSuperReg ? 'AUTO-APPROVED ADMIN' : 'PENDING APPROVAL'}</p></div>`;
-      const regId = 'REG-' + Date.now().toString().slice(-5);
-      await sendGasPair({ to: email, subject: `Registration Received: ${agencyName}`, htmlBody: regBody, bId: regId, agencyName }, { to: uniqueEmails(DB.admins || []), subject: `[ADMIN] New B2B Sub-Agent: ${agencyName}`, htmlBody: regBody, bId: regId, agencyName });
-      return res.json({ ok: true, message: isSuperReg ? 'Admin account approved! Login and scan your 2FA QR code.' : 'Please contact Head Quarters to activate your account: CEO Shan Chairman (0345-3326318) | Muhammad Umer (0331-6379110).' });
+      const regBody = `<div style="font-family:Arial,sans-serif;padding:20px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;"><h2>New Sub-Agent Registration</h2><p><b>Agency:</b> ${escHtml(agencyName)}</p><p><b>Email:</b> ${escHtml(email)}</p><p><b>City:</b> ${escHtml(city)} | <b>Mobile:</b> ${escHtml(mobile)}</p></div>`;
+      await sendGasPair({ to: email, subject: `Registration Received: ${agencyName}`, htmlBody: regBody, agencyName }, { to: uniqueEmails(DB.admins || []), subject: `[ADMIN] New Sub-Agent: ${agencyName}`, htmlBody: regBody, agencyName });
+      return res.json({ ok: true, message: isSuperReg ? 'Admin approved! Login & scan 2FA QR.' : 'Submitted! Contact CEO Shan Chairman (0345-3326318) for approval.' });
     }
 
     if (action === 'loginStep1') {
+      if (!checkRateLimit('L1_' + clientIp + '_' + email, 12, 300000)) return res.json({ ok: false, message: 'Too many login attempts. Wait 5 minutes.' });
       const a = DB.agents[email];
-      if (!a) return res.json({ ok: false, message: 'Agent email not found. Please register first.' });
+      if (!a) return res.json({ ok: false, message: 'Agent email not found.' });
       const isSuper = DB.admins.includes(email);
       if (isSuper) { a.Status = 'APPROVED'; a.CanIssue = true; a.CanVoid = true; a.CanCancel = true; a.FailedAttempts = 0; a.TotpFailedAttempts = 0; }
       if (a.Status === 'BLOCKED') return res.json({ ok: false, message: 'Account BLOCKED by Head Office.' });
       if (a.Status !== 'APPROVED') return res.json({ ok: false, message: 'Account PENDING approval from Admin.' });
       const pwd = String(p.password || '');
       if (!verifyPwd(pwd, a.PasswordHash)) {
-        if (!isSuper) { a.FailedAttempts = (a.FailedAttempts || 0) + 1; if (a.FailedAttempts >= 5) a.Status = 'BLOCKED'; await saveDB(DB); }
+        if (!isSuper) { a.FailedAttempts = (a.FailedAttempts || 0) + 1; if (a.FailedAttempts >= 5) a.Status = 'BLOCKED'; }
+        addSecurityLog(DB, email, 'LOGIN_FAIL', `Wrong password (Attempt ${a.FailedAttempts || 1})`, clientIp);
+        await saveDB(DB);
         return res.json({ ok: false, message: 'Invalid password.' });
       }
       if (!String(a.PasswordHash || '').startsWith('scrypt$')) a.PasswordHash = hashPwd(pwd);
@@ -481,55 +436,49 @@ module.exports = async function handler(req, res) {
     }
 
     if (action === 'verifyTotp') {
+      if (!checkRateLimit('2FA_' + clientIp + '_' + email, 12, 300000)) return res.json({ ok: false, message: 'Too many 2FA attempts. Wait 5 minutes.' });
       const a = DB.agents[email], isSuper = DB.admins.includes(email);
       if (!a || a.Status !== 'APPROVED') return res.json({ ok: false, message: 'Account not approved or blocked.' });
       if (!verifyTotp(a.TotpSecret, String(p.code || '').trim())) {
-        if (!isSuper) { a.TotpFailedAttempts = (a.TotpFailedAttempts || 0) + 1; if (a.TotpFailedAttempts >= 5) a.Status = 'BLOCKED'; await saveDB(DB); }
+        if (!isSuper) { a.TotpFailedAttempts = (a.TotpFailedAttempts || 0) + 1; if (a.TotpFailedAttempts >= 5) a.Status = 'BLOCKED'; }
+        addSecurityLog(DB, email, '2FA_FAIL', `Invalid 2FA code (Attempt ${a.TotpFailedAttempts || 1})`, clientIp);
+        await saveDB(DB);
         return res.json({ ok: false, message: 'Invalid 6-digit Google Authenticator code.' });
       }
       const token = crypto.randomUUID(), expiry = getNextMidnightPKT();
-      a.TotpVerified = 'YES'; a.TotpFailedAttempts = 0; a.SessionToken = token; a.SessionExpiry = expiry;
+      a.TotpVerified = 'YES'; a.TotpFailedAttempts = 0; a.SessionToken = token; a.SessionExpiry = expiry; a.LastLoginAt = getPKTimeStr();
+      addSecurityLog(DB, email, 'LOGIN_OK', `2FA Verified (${a.AgencyName})`, clientIp);
       await saveDB(DB);
       return res.json({ ok: true, token, expiry, agencyName: a.AgencyName, isAdmin: isSuper, canIssue: isSuper || !!a.CanIssue, canVoid: isSuper || !!a.CanVoid, canCancel: isSuper || !!a.CanCancel });
     }
 
     const a = DB.agents[email];
     if (!a || a.Status !== 'APPROVED' || !a.SessionToken || !timingSafeStrEqual(a.SessionToken, p.token) || Date.now() >= Number(a.SessionExpiry || 0)) {
-      return res.json({ ok: false, message: 'Session expired at 12:00 AM. Please verify 2FA again.' });
+      return res.json({ ok: false, message: 'Session expired or revoked. Please login with 2FA again.' });
     }
     const isAdmin = DB.admins.includes(email), canIssue = isAdmin || !!a.CanIssue, canVoid = isAdmin || !!a.CanVoid, canCancel = isAdmin || !!a.CanCancel;
 
     if (action === 'checkSession') return res.json({ ok: true, agencyName: a.AgencyName, isAdmin, canIssue, canVoid, canCancel, expiry: a.SessionExpiry });
 
-    if (action === 'sendEmailNotification') {
-      const subj = String(p.subject || '');
-      if (['New Booking Hold [', 'Ticket Issued [', 'Booking Canceled [', 'Ticket Voided [', 'New Deposit Slip Submitted [', 'Deposit Approved [', 'New B2B Sub-Agent Registration:'].some(pref => subj.startsWith(pref))) {
-        return res.json({ ok: true, message: 'Notification already dispatched automatically.' });
-      }
-      const recipients = uniqueEmails([...String(p.to || '').split(','), p.subAgentEmail, ...String(p.adminEmails || '').split(','), ...(DB.admins || [])]);
-      if (!recipients) return res.json({ ok: false, message: 'No valid email recipients found.' });
-      const htmlBody = String(p.htmlBody || '');
-      const gasRes = await sendGasEmail({ to: recipients, subject: subj || 'Golan International B2B Notification', htmlBody: htmlBody || `<pre>${escHtml(p.message || '')}</pre>`, pdfHtml: htmlBody, pdfName: 'Golan-Document-' + Date.now() + '.pdf', agencyName: a.AgencyName });
-      return res.json({ ok: !!gasRes.ok, message: gasRes.ok ? 'Gmail sent to Sub-Agent & Admins!' : 'GAS email delivery failed.' });
-    }
-
     if (action === 'updateProfile') {
       const agencyName = String(p.agencyName || '').trim().slice(0, 120), logoDataUrl = String(p.logoDataUrl || '').trim();
-      if (!agencyName) return res.json({ ok: false, message: 'Travel Agency Name is required.' });
-      if (logoDataUrl.length > 350000 || !isSafeDataUrl(logoDataUrl, false)) return res.json({ ok: false, message: 'Invalid or oversized logo image.' });
+      if (!agencyName) return res.json({ ok: false, message: 'Agency Name required.' });
+      if (logoDataUrl.length > 350000 || !isSafeDataUrl(logoDataUrl, false)) return res.json({ ok: false, message: 'Invalid or oversized logo.' });
       a.AgencyName = agencyName; a.City = String(p.city || a.City || '').trim().slice(0, 60); a.Mobile = String(p.mobile || a.Mobile || '').trim().slice(0, 30);
       a.ContactPerson = String(p.contactPerson || '').trim().slice(0, 80); a.Address = String(p.address || '').trim().slice(0, 200);
       a.VoucherBranding = p.voucherBranding === 'golan' ? 'golan' : 'custom'; a.LogoDataUrl = logoDataUrl;
       await saveDB(DB);
-      return res.json({ ok: true, message: '✅ Profile & Agency Logo saved!', profile: { agencyName: a.AgencyName, city: a.City, mobile: a.Mobile, contactPerson: a.ContactPerson, address: a.Address, voucherBranding: a.VoucherBranding, logoDataUrl: a.LogoDataUrl } });
+      return res.json({ ok: true, message: '✅ Profile & Logo saved!', profile: { agencyName: a.AgencyName, city: a.City, mobile: a.Mobile, contactPerson: a.ContactPerson, address: a.Address, voucherBranding: a.VoucherBranding, logoDataUrl: a.LogoDataUrl } });
     }
 
     if (action === 'changePassword') {
       const curPwd = String(p.currentPassword || ''), newPwd = String(p.newPassword || '');
       if (!curPwd || !verifyPwd(curPwd, a.PasswordHash)) return res.json({ ok: false, message: 'Current password is incorrect.' });
       if (newPwd.length < 6 || curPwd === newPwd) return res.json({ ok: false, message: 'New password must be min 6 chars and different.' });
-      a.PasswordHash = hashPwd(newPwd); await saveDB(DB);
-      return res.json({ ok: true, message: '✅ Password updated successfully!' });
+      a.PasswordHash = hashPwd(newPwd);
+      addSecurityLog(DB, email, 'PASSWORD_CHANGE', 'User updated password', clientIp);
+      await saveDB(DB);
+      return res.json({ ok: true, message: '✅ Password updated!' });
     }
 
     if (action === 'getDashboardData' || action === 'getDashboard') {
@@ -538,37 +487,33 @@ module.exports = async function handler(req, res) {
 
       const rawBookings = isAdmin ? DB.bookings : DB.bookings.filter(b => String(b.AgentEmail || '').toLowerCase() === email);
       const bookings = rawBookings.map(b => {
-        const c = Object.assign({}, b);
-        const ag = DB.agents[String(b.AgentEmail || '').toLowerCase()] || null;
-        if (ag) {
-          c.AgencyName = c.AgencyName || ag.AgencyName || '';
-          c.AgentCity = ag.City || '';
-          c.AgentMobile = ag.Mobile || '';
-          c.AgentContactPerson = ag.ContactPerson || '';
-          c.AgentBalancePKR = Number(ag.BalancePKR || 0);
-          c.AgentStatus = ag.Status || '';
-        }
-        c.HasDocs = !!(b.PassportDoc || b.PhotoDoc);
-        delete c.PassportDoc; delete c.PhotoDoc;
+        const c = Object.assign({}, b), ag = DB.agents[String(b.AgentEmail || '').toLowerCase()] || null;
+        if (ag) { c.AgencyName = c.AgencyName || ag.AgencyName || ''; c.AgentCity = ag.City || ''; c.AgentMobile = ag.Mobile || ''; c.AgentContactPerson = ag.ContactPerson || ''; c.AgentBalancePKR = Number(ag.BalancePKR || 0); }
+        c.HasDocs = !!(b.PassportDoc || b.PhotoDoc); delete c.PassportDoc; delete c.PhotoDoc;
         return c;
       });
       const rawDeposits = isAdmin ? DB.deposits : DB.deposits.filter(d => String(d.AgentEmail || '').toLowerCase() === email);
       const deposits = rawDeposits.map(d => { const c = Object.assign({}, d); c.HasSlip = !!d.SlipImage; delete c.SlipImage; return c; });
       const ledger = isAdmin ? (DB.ledger || []) : (DB.ledger || []).filter(l => String(l.AgentEmail || '').toLowerCase() === email);
-      const agents = isAdmin ? Object.values(DB.agents).map(x => ({ Email: x.Email, AgencyName: x.AgencyName, City: x.City, Mobile: x.Mobile, Status: x.Status, TotpVerified: x.TotpVerified, CanIssue: !!x.CanIssue, CanVoid: !!x.CanVoid, CanCancel: !!x.CanCancel, BalancePKR: Number(x.BalancePKR || 0) })) : [];
+      const agents = isAdmin ? Object.values(DB.agents).map(x => {
+        const em = String(x.Email || '').toLowerCase();
+        const agBks = DB.bookings.filter(b => String(b.AgentEmail || '').toLowerCase() === em).length;
+        const agDeps = DB.deposits.filter(d => String(d.AgentEmail || '').toLowerCase() === em && String(d.Status || '').toUpperCase() === 'APPROVED').reduce((s, d) => s + Number(d.AmountPKR || 0), 0);
+        return { Email: x.Email, AgencyName: x.AgencyName, City: x.City, Mobile: x.Mobile, ContactPerson: x.ContactPerson || '', Status: x.Status, TotpVerified: x.TotpVerified, CanIssue: !!x.CanIssue, CanVoid: !!x.CanVoid, CanCancel: !!x.CanCancel, BalancePKR: Number(x.BalancePKR || 0), TotalBookings: agBks, TotalDepositsPKR: agDeps, LastLoginAt: x.LastLoginAt || '' };
+      }) : [];
       const safeFares = isAdmin ? DB.fares : DB.fares.map(f => ({ ...f, Seats: Number(f.Seats) > 0 ? 'Available' : 'Sold Out' }));
       const profile = { agencyName: a.AgencyName || '', city: a.City || '', mobile: a.Mobile || '', contactPerson: a.ContactPerson || '', address: a.Address || '', voucherBranding: a.VoucherBranding || 'custom', logoDataUrl: a.LogoDataUrl || '' };
-      return res.json({ ok: true, isAdmin, canIssue, canVoid, canCancel, balancePKR: Number(a.BalancePKR || 0), profile, fares: safeFares, banks: DB.banks, bookings, deposits, ledger, agents });
+      return res.json({ ok: true, isAdmin, canIssue, canVoid, canCancel, balancePKR: Number(a.BalancePKR || 0), profile, fares: safeFares, banks: DB.banks, bookings, deposits, ledger, agents, securityLogs: isAdmin ? (DB.securityLogs || []).slice(0, 200) : [] });
     }
 
     if (action === 'adminGetAttachment' && isAdmin) {
       if (p.kind === 'deposit') {
         const dep = DB.deposits.find(d => d.DepositID === p.id);
-        return (!dep || !dep.SlipImage) ? res.json({ ok: false, message: 'Deposit slip not found.' }) : res.json({ ok: true, slipImage: dep.SlipImage });
+        return (!dep || !dep.SlipImage) ? res.json({ ok: false, message: 'Slip not found.' }) : res.json({ ok: true, slipImage: dep.SlipImage });
       }
       if (p.kind === 'booking') {
         const bk = DB.bookings.find(b => b.BookingID === p.id);
-        return (!bk || (!bk.PassportDoc && !bk.PhotoDoc)) ? res.json({ ok: false, message: 'Documents not found.' }) : res.json({ ok: true, passportDoc: bk.PassportDoc || '', photoDoc: bk.PhotoDoc || '' });
+        return (!bk || (!bk.PassportDoc && !bk.PhotoDoc)) ? res.json({ ok: false, message: 'Docs not found.' }) : res.json({ ok: true, passportDoc: bk.PassportDoc || '', photoDoc: bk.PhotoDoc || '' });
       }
       return res.json({ ok: false, message: 'Invalid attachment request.' });
     }
@@ -585,15 +530,12 @@ module.exports = async function handler(req, res) {
       if (tripType === 'roundtrip' && /^\d{4}-\d{2}-\d{2}$/.test(returnDate)) slices.push({ origin: dest, destination: origin, departure_date: returnDate });
       else if (tripType === 'multicity' && /^[A-Z]{3}$/.test(origin2) && /^[A-Z]{3}$/.test(dest2) && /^\d{4}-\d{2}-\d{2}$/.test(date2)) slices.push({ origin: origin2, destination: dest2, departure_date: date2 });
 
-      const duffelUrl = ['https:', '', ['api', 'duffel', 'com'].join('.'), 'air', 'offer_requests?return_offers=true'].join('/');
-      const r = await fetchWithTimeout(duffelUrl, { method: 'POST', headers: { Authorization: 'Bearer ' + DUFFEL_KEY, 'Duffel-Version': 'v2', 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ data: { slices, passengers: [{ type: 'adult' }], cabin_class: cabin } }) }, 20000);
-      const rawTxt = await r.text();
-      let json = {}; try { json = JSON.parse(rawTxt); } catch (e) { return res.json({ ok: false, message: 'GDS Error (' + r.status + ')' }); }
+      const r = await fetchWithTimeout(['https:', '', ['api', 'duffel', 'com'].join('.'), 'air', 'offer_requests?return_offers=true'].join('/'), { method: 'POST', headers: { Authorization: 'Bearer ' + DUFFEL_KEY, 'Duffel-Version': 'v2', 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ data: { slices, passengers: [{ type: 'adult' }], cabin_class: cabin } }) }, 20000);
+      const rawTxt = await r.text(); let json = {}; try { json = JSON.parse(rawTxt); } catch (e) { return res.json({ ok: false, message: 'GDS Error (' + r.status + ')' }); }
       if (!r.ok || !json.data || !Array.isArray(json.data.offers) || !json.data.offers.length) return res.json({ ok: false, message: (json.errors && json.errors[0] && json.errors[0].message) || 'No live flights found.' });
 
-      const POOL = [{ name: 'Emirates', code: 'EK', num: '623' }, { name: 'flydubai', code: 'FZ', num: '392' }, { name: 'Pakistan International Airlines (PIA)', code: 'PK', num: '221' }, { name: 'Saudi Arabian Airlines', code: 'SV', num: '737' }, { name: 'Qatar Airways', code: 'QR', num: '629' }];
-      pruneOfferCache(DB);
-      const nowTs = Date.now();
+      const POOL = [{ name: 'Emirates', code: 'EK', num: '623' }, { name: 'flydubai', code: 'FZ', num: '392' }, { name: 'PIA', code: 'PK', num: '221' }, { name: 'Saudia', code: 'SV', num: '737' }, { name: 'Qatar Airways', code: 'QR', num: '629' }];
+      pruneOfferCache(DB); const nowTs = Date.now();
       const offers = json.data.offers.slice(0, 15).map((o, idx) => {
         const slice = o.slices && o.slices[0], seg0 = slice && slice.segments && slice.segments[0], segLast = slice && slice.segments && slice.segments[slice.segments.length - 1];
         const stops = slice && slice.segments ? slice.segments.length - 1 : 0, sim = POOL[idx % POOL.length];
@@ -604,7 +546,7 @@ module.exports = async function handler(req, res) {
         const arrTime = segLast && segLast.arriving_at ? segLast.arriving_at.replace('T', ' ').slice(0, 16) : (date + ' 07:45');
         const farePKR = Math.round(Number(o.total_amount || 0) * (RATES_PKR[o.total_currency] || 280));
         if (o.id && farePKR > 0) DB.offerCache[o.id] = { farePKR, ts: nowTs };
-        return { OfferID: o.id, Airline: airline, FlightNo: flightNo, Origin: origin, Dest: dest, Route: tripType === 'roundtrip' ? `${origin} ⇄ ${dest}` : (tripType === 'multicity' ? `${origin}→${dest} / ${origin2}→${dest2}` : `${origin} → ${dest}`), Stops: stops === 0 ? 'Non-Stop Direct' : stops + ' Stop(s)', DepTime: depTime, ArrTime: arrTime, Baggage: '23-30 KG Checked + 7 KG Hand Carry', Luggage: '23-30 KG Checked + 7 KG Hand Carry', FarePKR: farePKR };
+        return { OfferID: o.id, Airline: airline, FlightNo: flightNo, Origin: origin, Dest: dest, Route: tripType === 'roundtrip' ? `${origin} ⇄ ${dest}` : `${origin} → ${dest}`, Stops: stops === 0 ? 'Non-Stop Direct' : stops + ' Stop(s)', DepTime: depTime, ArrTime: arrTime, Baggage: '30 KG + 7 KG', FarePKR: farePKR };
       });
       await saveDB(DB);
       return res.json({ ok: true, offers });
@@ -615,36 +557,35 @@ module.exports = async function handler(req, res) {
       if (!Number.isFinite(amt) || amt < 100 || amt > 50000000) return res.json({ ok: false, message: 'Deposit must be between PKR 100 and 50,000,000.' });
       if (slipImg.length > 450000 || !isSafeDataUrl(slipImg, true)) return res.json({ ok: false, message: 'Invalid or oversized deposit slip.' });
       const depId = 'DEP-' + crypto.randomInt(10000, 99999);
-      const depObj = { DepositID: depId, CreatedAt: getPKTimeStr(), AgentEmail: email, AgencyName: a.AgencyName, BankName: String(p.bankName || 'UBL').trim().slice(0, 80), AmountPKR: amt, TxRef: String(p.txRef || p.refNo || ('SLIP-' + Date.now().toString().slice(-6))).trim().slice(0, 60), SlipImage: slipImg, Status: 'PENDING' };
+      const depObj = { DepositID: depId, CreatedAt: getPKTimeStr(), AgentEmail: email, AgencyName: a.AgencyName, BankName: String(p.bankName || 'UBL').trim().slice(0, 80), AmountPKR: amt, TxRef: String(p.txRef || ('SLIP-' + Date.now().toString().slice(-6))).trim().slice(0, 60), SlipImage: slipImg, Status: 'PENDING' };
       DB.deposits.unshift(depObj);
+      addSecurityLog(DB, email, 'DEPOSIT_SUBMIT', `Submitted ${depId} for PKR ${amt.toLocaleString()}`, clientIp);
       await saveDB(DB);
       const receiptUrl = `${getBaseUrl(req)}/api/backend?action=viewReceipt&depositId=${encodeURIComponent(depId)}&sig=${signReceipt(depId, email)}`;
       const emailHtml = buildDepositEmailHtml(depObj, receiptUrl), receiptPdfHtml = buildPrintableReceiptPage(depObj, false);
-      await sendGasPair({ to: email, subject: `Deposit Slip Submitted [${depId}] PKR ${amt.toLocaleString()}`, htmlBody: emailHtml, pdfHtml: receiptPdfHtml, pdfName: `Receipt-${depId}.pdf`, bId: depId, agencyName: a.AgencyName }, { to: uniqueEmails(DB.admins || []), subject: `[ADMIN] Deposit Slip Submitted [${depId}] PKR ${amt.toLocaleString()}`, htmlBody: emailHtml, pdfHtml: receiptPdfHtml, pdfName: `Receipt-${depId}.pdf`, bId: depId, agencyName: a.AgencyName });
+      await sendGasPair({ to: email, subject: `Deposit Slip Submitted [${depId}] PKR ${amt.toLocaleString()}`, htmlBody: emailHtml, pdfHtml: receiptPdfHtml, pdfName: `Receipt-${depId}.pdf`, bId: depId, agencyName: a.AgencyName }, { to: uniqueEmails(DB.admins || []), subject: `[ADMIN] Deposit Slip [${depId}] PKR ${amt.toLocaleString()}`, htmlBody: emailHtml, pdfHtml: receiptPdfHtml, pdfName: `Receipt-${depId}.pdf`, bId: depId, agencyName: a.AgencyName });
       return res.json({ ok: true, depositId: depId, message: 'Deposit slip submitted! Please contact Head Office.' });
     }
 
     if (action === 'addBooking') {
       expireStaleHolds(DB); pruneOfferCache(DB);
       const paxName = String(p.passengerName || '').trim().slice(0, 100), ppNo = String(p.passportNo || '').trim().toUpperCase().replace(/\s+/g, '');
-      if (paxName.length < 2 || !/^[A-Z0-9\-]{6,18}$/.test(ppNo)) return res.json({ ok: false, message: 'Invalid Passenger Name or Passport / Document Number.' });
+      if (paxName.length < 2 || !/^[A-Z0-9\-]{6,18}$/.test(ppNo)) return res.json({ ok: false, message: 'Invalid Passenger Name or Passport Number.' });
 
       const category = String(p.category || '').trim(), fareId = String(p.fareId || '').trim(), offerId = String(p.offerId || p.OfferID || '').trim();
       let fare = 0, holdMins = 0, matchedFare = null;
-
       if (fareId) {
         matchedFare = DB.fares.find(f => String(f.ID) === fareId);
-        if (!matchedFare) return res.json({ ok: false, message: 'Selected fare/package is no longer available.' });
-        if (matchedFare.Category !== 'Visit Visa' && Number(matchedFare.Seats || 0) <= 0) return res.json({ ok: false, message: 'Sorry, no seats left in this group.' });
-        fare = Number(matchedFare.FarePKR || 0);
-        holdMins = clampInt(matchedFare.HoldMins, 5, 4320, 30);
+        if (!matchedFare) return res.json({ ok: false, message: 'Fare no longer available.' });
+        if (matchedFare.Category !== 'Visit Visa' && Number(matchedFare.Seats || 0) <= 0) return res.json({ ok: false, message: 'No seats left.' });
+        fare = Number(matchedFare.FarePKR || 0); holdMins = clampInt(matchedFare.HoldMins, 5, 4320, 30);
       } else if (offerId) {
         if (DB.offerCache[offerId] && Number(DB.offerCache[offerId].farePKR) > 0) fare = Number(DB.offerCache[offerId].farePKR);
         else if (DUFFEL_KEY) {
           const rOffer = await fetchWithTimeout(['https:', '', ['api', 'duffel', 'com'].join('.'), 'air', 'offers', encodeURIComponent(offerId)].join('/'), { headers: { Authorization: 'Bearer ' + DUFFEL_KEY, 'Duffel-Version': 'v2', Accept: 'application/json' } }, 12000);
           if (rOffer.ok) { const oj = await rOffer.json().catch(() => ({})); if (oj.data && oj.data.total_amount) fare = Math.round(Number(oj.data.total_amount) * (RATES_PKR[oj.data.total_currency] || 280)); }
         }
-        if (!Number.isFinite(fare) || fare <= 0) return res.json({ ok: false, message: 'Live flight offer expired. Please search again.' });
+        if (!Number.isFinite(fare) || fare <= 0) return res.json({ ok: false, message: 'Offer expired. Search again.' });
       } else {
         fare = Math.round(Number(p.farePKR || 0));
         if (!Number.isFinite(fare) || fare < (category === 'Visit Visa' ? 1000 : 5000)) return res.json({ ok: false, message: 'Invalid fare amount.' });
@@ -652,39 +593,17 @@ module.exports = async function handler(req, res) {
       if (!Number.isFinite(fare) || fare <= 0) return res.json({ ok: false, message: 'Invalid fare amount.' });
 
       const passportDoc = String(p.passportDoc || '').trim(), photoDoc = String(p.photoDoc || '').trim();
-      if (passportDoc.length > 500000 || photoDoc.length > 500000 || !isSafeDataUrl(passportDoc, true) || !isSafeDataUrl(photoDoc, false)) {
-        return res.json({ ok: false, message: 'Invalid or oversized uploaded document.' });
-      }
+      if (passportDoc.length > 500000 || photoDoc.length > 500000 || !isSafeDataUrl(passportDoc, true) || !isSafeDataUrl(photoDoc, false)) return res.json({ ok: false, message: 'Invalid document file.' });
 
-      // ✅ WALLET BALANCE CHECK & AUTO-DEDUCT (-) ON BOOKING
       const balBefore = Number(a.BalancePKR || 0);
-      if (!isAdmin && balBefore < fare) {
-        return res.json({ ok: false, message: `❌ Insufficient Wallet Balance! Available: PKR ${balBefore.toLocaleString()} | Ticket Fare: PKR ${fare.toLocaleString()}. Please deposit funds first.` });
-      }
+      if (!isAdmin && balBefore < fare) return res.json({ ok: false, message: `❌ Insufficient Wallet! Available: PKR ${balBefore.toLocaleString()} | Fare: PKR ${fare.toLocaleString()}` });
+      if (matchedFare && matchedFare.Category !== 'Visit Visa') matchedFare.Seats = Number(matchedFare.Seats || 0) - 1;
 
-      if (matchedFare && matchedFare.Category !== 'Visit Visa') {
-        matchedFare.Seats = Number(matchedFare.Seats || 0) - 1;
-      }
-
-      let deductedFromWallet = false;
-      let balAfter = balBefore;
-      if (!isAdmin || balBefore >= fare) {
-        balAfter = balBefore - fare;
-        a.BalancePKR = balAfter;
-        deductedFromWallet = true;
-      }
+      let deductedFromWallet = false, balAfter = balBefore;
+      if (!isAdmin || balBefore >= fare) { balAfter = balBefore - fare; a.BalancePKR = balAfter; deductedFromWallet = true; }
 
       const itStr = String(p.itemTitle || '').trim().slice(0, 300);
-      if (!holdMins) {
-        const dMatch = itStr.match(/\{DATE:(\d{4}-\d{2}-\d{2})/), depMs = (dMatch && dMatch[1]) ? Date.parse(dMatch[1] + 'T12:00:00Z') : (Date.now() + 10 * 86400000), hrsToDep = (depMs - Date.now()) / 3600000;
-        holdMins = 1440;
-        if (hrsToDep <= 6) holdMins = 30;
-        else if (hrsToDep <= 24) holdMins = 120;
-        else if (/flyjinnah|airsial|airblue|serene|flydubai|airarabia|jazeera|salam/i.test(itStr)) holdMins = hrsToDep <= 72 ? 120 : 360;
-        else if (hrsToDep <= 72) holdMins = 720;
-        if (isAdmin && p.holdMins) holdMins = clampInt(p.holdMins, 5, 4320, holdMins);
-      }
-
+      if (!holdMins) holdMins = 1440;
       const bId = 'GI-' + crypto.randomInt(100000, 999999), chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
       let autoPnr = ''; for (let i = 0; i < 6; i++) autoPnr += chars[crypto.randomInt(0, chars.length)];
       const holdUntil = Date.now() + (holdMins * 60 * 1000), pkTime = getPKTimeStr();
@@ -707,165 +626,122 @@ module.exports = async function handler(req, res) {
       };
       DB.bookings.unshift(bkObj);
 
-      // ✅ AUTO-LEDGER ENTRY (-)
       addLedgerEntry(DB, {
-        CreatedAt: pkTime, AgentEmail: email, AgencyName: a.AgencyName,
-        RefID: bId, BookingID: bId, Type: 'BOOKING_DEBIT', Direction: 'DEBIT',
-        DebitPKR: fare, CreditPKR: 0, BalanceBefore: balBefore, BalanceAfter: balAfter,
+        CreatedAt: pkTime, AgentEmail: email, AgencyName: a.AgencyName, RefID: bId, BookingID: bId,
+        Type: 'BOOKING_DEBIT', Direction: 'DEBIT', DebitPKR: fare, CreditPKR: 0, BalanceBefore: balBefore, BalanceAfter: balAfter,
         Description: `Ticket Booking (${autoPnr}): ${itStr.replace(/\s*\{[^}]+\}/g, '')} — ${paxName}`,
         Status: 'DEDUCTED', PerformedBy: email
       });
-
+      addSecurityLog(DB, email, 'BOOKING_DEBIT', `${bId} (${autoPnr}) - PKR ${fare.toLocaleString()} deducted`, clientIp);
       await saveDB(DB);
 
-      const skipEmail = p.skipEmail === true || p.skipEmail === 'true' || (p.notifyAdmin === false && p.notifySubAgent === false);
+      const skipEmail = p.skipEmail === true || p.skipEmail === 'true';
       let mailNote = '';
       if (!skipEmail) {
         const invoiceUrl = `${getBaseUrl(req)}/api/backend?action=viewInvoice&bookingId=${encodeURIComponent(bId)}&sig=${signInvoice(bId, ppNo)}`;
-        const ticketPdfHtml = buildPrintableInvoicePage(bkObj, a, matchedFare, false);
-        mailNote = await sendBookingEmailsSeparate({ adminEmails: DB.admins || [], subAgentEmail: email, paxEmail: paxMail, bId, dtStr: pkTime, agencyName: a.AgencyName, paxName, passportNo: ppNo, category, itemTitle: itStr, farePKR: fare, statusTxt: 'HOLD / PAID (PNR: ' + autoPnr + ')', opts: { invoiceUrl, isIssued: false, pnr: autoPnr, pdfHtml: ticketPdfHtml, bk: bkObj, agent: a, matchedFare } });
+        mailNote = await sendBookingEmailsSeparate({ adminEmails: DB.admins || [], subAgentEmail: email, paxEmail: paxMail, bId, dtStr: pkTime, agencyName: a.AgencyName, paxName, passportNo: ppNo, category, itemTitle: itStr, farePKR: fare, statusTxt: 'HOLD / PAID', opts: { invoiceUrl, isIssued: false, pnr: autoPnr, pdfHtml: buildPrintableInvoicePage(bkObj, a, matchedFare, false), bk: bkObj, agent: a, matchedFare } });
       }
-
       return res.json({ ok: true, bookingId: bId, pnr: autoPnr, holdUntil, newBalancePKR: Number(a.BalancePKR || 0), message: `Booking Created & PKR ${fare.toLocaleString()} Deducted! PNR: ${autoPnr}${mailNote}` });
     }
 
     if (action === 'adminIssueBooking') {
-      if (!canIssue) return res.json({ ok: false, message: '⛔ Access Denied: Ticket Issue Authority is required.' });
+      if (!canIssue) return res.json({ ok: false, message: '⛔ Issue Authority required.' });
       const bk = DB.bookings.find(b => b.BookingID === p.bookingId);
       if (!bk) return res.json({ ok: false, message: 'Booking not found.' });
-      const bkAgentEmail = String(bk.AgentEmail || '').toLowerCase();
-      if (!isAdmin && bkAgentEmail !== email) return res.json({ ok: false, message: '⛔ Unauthorized: Only own agency bookings.' });
+      const bkAg = String(bk.AgentEmail || '').toLowerCase();
+      if (!isAdmin && bkAg !== email) return res.json({ ok: false, message: '⛔ Unauthorized booking.' });
       const curSt = String(bk.Status || '').toUpperCase();
-      if (curSt === 'ISSUED') return res.json({ ok: false, message: 'Booking is already ISSUED.' });
-      if (curSt === 'CANCELED' || curSt === 'VOIDED') return res.json({ ok: false, message: 'Cannot issue a CANCELED or VOIDED booking.' });
+      if (curSt === 'ISSUED' || curSt === 'CANCELED' || curSt === 'VOIDED') return res.json({ ok: false, message: 'Cannot issue this booking.' });
 
-      const agentAcc = DB.agents[bkAgentEmail];
-      const fare = Number(bk.FarePKR || 0);
+      const agentAcc = DB.agents[bkAg], fare = Number(bk.FarePKR || 0);
       if (!bk.WasPaid) {
         const balBefore = agentAcc ? Number(agentAcc.BalancePKR || 0) : 0;
-        if (agentAcc && !DB.admins.includes(bkAgentEmail)) {
-          if (balBefore < fare) return res.json({ ok: false, message: `Cannot Issue: Agent wallet (PKR ${balBefore.toLocaleString()}) < Fare (PKR ${fare.toLocaleString()}).` });
-          agentAcc.BalancePKR = balBefore - fare;
-          bk.DeductedFromWallet = true;
+        if (agentAcc && !DB.admins.includes(bkAg)) {
+          if (balBefore < fare) return res.json({ ok: false, message: 'Insufficient wallet balance.' });
+          agentAcc.BalancePKR = balBefore - fare; bk.DeductedFromWallet = true;
         }
-        bk.WasPaid = true;
-        bk.PaidAmountPKR = fare;
-        addLedgerEntry(DB, {
-          AgentEmail: bkAgentEmail, AgencyName: bk.AgencyName || (agentAcc && agentAcc.AgencyName) || '',
-          RefID: bk.BookingID, BookingID: bk.BookingID, Type: 'TICKET_ISSUE_DEBIT', Direction: 'DEBIT',
-          DebitPKR: fare, CreditPKR: 0, BalanceBefore: balBefore, BalanceAfter: agentAcc ? Number(agentAcc.BalancePKR || 0) : 0,
-          Description: `Ticket Issued (${bk.PNR}): ${bk.ItemTitle} — ${bk.PassengerName}`,
-          Status: 'ISSUED', PerformedBy: email
-        });
+        bk.WasPaid = true; bk.PaidAmountPKR = fare;
+        addLedgerEntry(DB, { AgentEmail: bkAg, AgencyName: bk.AgencyName, RefID: bk.BookingID, BookingID: bk.BookingID, Type: 'TICKET_ISSUE_DEBIT', Direction: 'DEBIT', DebitPKR: fare, CreditPKR: 0, BalanceBefore: balBefore, BalanceAfter: agentAcc ? Number(agentAcc.BalancePKR || 0) : 0, Description: `Ticket Issued (${bk.PNR}): ${bk.ItemTitle}`, Status: 'ISSUED', PerformedBy: email });
       }
-
       if (p.pnr && String(p.pnr).trim()) bk.PNR = String(p.pnr).trim().toUpperCase().slice(0, 12);
       if (p.ticketNo && String(p.ticketNo).trim()) bk.TicketNo = String(p.ticketNo).trim().slice(0, 30);
       bk.Status = 'ISSUED'; bk.IssuedBy = email; bk.IssuedAt = getPKTimeStr(); bk.HoldUntil = 0;
+      addSecurityLog(DB, email, 'TICKET_ISSUED', `${bk.BookingID} (${bk.PNR}) for ${bkAg}`, clientIp);
       await saveDB(DB);
 
       const matchedFare = bk.FareID ? DB.fares.find(f => String(f.ID) === String(bk.FareID)) : null;
       const invoiceUrl = `${getBaseUrl(req)}/api/backend?action=viewInvoice&bookingId=${encodeURIComponent(bk.BookingID)}&sig=${signInvoice(bk.BookingID, bk.PassportNo)}`;
-      const ticketPdfHtml = buildPrintableInvoicePage(bk, agentAcc, matchedFare, false);
-      const mailNote = await sendBookingEmailsSeparate({ adminEmails: DB.admins || [], subAgentEmail: bk.AgentEmail, paxEmail: bk.PassengerEmail, bId: bk.BookingID, dtStr: bk.IssuedAt || bk.CreatedAt, agencyName: bk.AgencyName, paxName: bk.PassengerName, passportNo: bk.PassportNo, category: bk.Category, itemTitle: bk.ItemTitle, farePKR: fare, statusTxt: `ISSUED / CONFIRMED (PNR: ${bk.PNR || ''}${bk.TicketNo ? ' | TKT: ' + bk.TicketNo : ''})`, opts: { invoiceUrl, isIssued: true, pnr: bk.PNR || '', ticketNo: bk.TicketNo || '', pdfHtml: ticketPdfHtml, bk, agent: agentAcc, matchedFare } });
-      return res.json({ ok: true, message: 'Ticket ISSUED & Confirmed! PNR: ' + bk.PNR + mailNote });
+      const mailNote = await sendBookingEmailsSeparate({ adminEmails: DB.admins || [], subAgentEmail: bk.AgentEmail, paxEmail: bk.PassengerEmail, bId: bk.BookingID, dtStr: bk.IssuedAt, agencyName: bk.AgencyName, paxName: bk.PassengerName, passportNo: bk.PassportNo, category: bk.Category, itemTitle: bk.ItemTitle, farePKR: fare, statusTxt: 'ISSUED', opts: { invoiceUrl, isIssued: true, pnr: bk.PNR, ticketNo: bk.TicketNo, pdfHtml: buildPrintableInvoicePage(bk, agentAcc, matchedFare, false), bk, agent: agentAcc, matchedFare } });
+      return res.json({ ok: true, message: 'Ticket ISSUED! PNR: ' + bk.PNR + mailNote });
     }
 
     if (action === 'adminVoidBooking' || action === 'adminCancelBooking') {
       const isVoid = action === 'adminVoidBooking';
-      if (isVoid && !canVoid) return res.json({ ok: false, message: '⛔ Access Denied: Ticket Voiding Authority is required.' });
-      if (!isVoid && !canCancel) return res.json({ ok: false, message: '⛔ Access Denied: Booking Cancel Authority is required.' });
-
+      if (isVoid && !canVoid) return res.json({ ok: false, message: '⛔ Void Authority required.' });
+      if (!isVoid && !canCancel) return res.json({ ok: false, message: '⛔ Cancel Authority required.' });
       const bk = DB.bookings.find(b => b.BookingID === p.bookingId);
       if (!bk) return res.json({ ok: false, message: 'Booking not found.' });
-      const bkAgentEmail = String(bk.AgentEmail || '').toLowerCase();
-      if (!isAdmin && bkAgentEmail !== email) return res.json({ ok: false, message: '⛔ Unauthorized: Only own agency bookings.' });
-
+      const bkAg = String(bk.AgentEmail || '').toLowerCase();
+      if (!isAdmin && bkAg !== email) return res.json({ ok: false, message: '⛔ Unauthorized.' });
       const prevSt = String(bk.Status || '').toUpperCase();
-      if (prevSt === 'VOIDED') return res.json({ ok: false, message: 'Booking is already VOIDED.' });
-      if (prevSt === 'CANCELED') return res.json({ ok: false, message: 'Booking is already CANCELED.' });
+      if (prevSt === 'VOIDED' || prevSt === 'CANCELED') return res.json({ ok: false, message: 'Already ' + prevSt });
 
       const fare = Math.max(0, Math.round(Number(bk.PaidAmountPKR || bk.FarePKR || 0)));
       const fee = isAdmin ? clampInt(p.cancellationFee || 0, 0, fare, 0) : 0;
-      const refundAmt = Math.max(0, fare - fee);
-      const agentAcc = DB.agents[bkAgentEmail];
-      const actionTime = getPKTimeStr();
+      const refundAmt = Math.max(0, fare - fee), agentAcc = DB.agents[bkAg], nowStr = getPKTimeStr();
 
       if ((bk.WasPaid || prevSt === 'CONFIRMED' || prevSt === 'ISSUED') && !bk.Refunded) {
         const balBefore = agentAcc ? Number(agentAcc.BalancePKR || 0) : 0;
         let balAfter = balBefore;
-        if (agentAcc && (!DB.admins.includes(bkAgentEmail) || bk.DeductedFromWallet)) {
-          balAfter = balBefore + refundAmt;
-          agentAcc.BalancePKR = balAfter;
-        }
-        bk.Refunded = true;
-        bk.RefundAmountPKR = refundAmt;
-        bk.CancellationFeePKR = fee;
-        addLedgerEntry(DB, {
-          CreatedAt: actionTime, AgentEmail: bkAgentEmail, AgencyName: bk.AgencyName || (agentAcc && agentAcc.AgencyName) || '',
-          RefID: bk.BookingID, BookingID: bk.BookingID, Type: isVoid ? 'VOID_REFUND' : 'CANCEL_REFUND', Direction: 'CREDIT',
-          DebitPKR: 0, CreditPKR: refundAmt, BalanceBefore: balBefore, BalanceAfter: balAfter,
-          Description: `${isVoid ? 'Void Refund' : 'Cancel Refund'}${fee > 0 ? ` (Fee PKR ${fee.toLocaleString()})` : ''}: ${String(bk.ItemTitle || '').replace(/\s*\{[^}]+\}/g, '')} — ${bk.PassengerName}`,
-          Status: 'REFUNDED', PerformedBy: email
-        });
+        if (agentAcc && (!DB.admins.includes(bkAg) || bk.DeductedFromWallet)) { balAfter = balBefore + refundAmt; agentAcc.BalancePKR = balAfter; }
+        bk.Refunded = true; bk.RefundAmountPKR = refundAmt; bk.CancellationFeePKR = fee;
+        addLedgerEntry(DB, { CreatedAt: nowStr, AgentEmail: bkAg, AgencyName: bk.AgencyName, RefID: bk.BookingID, BookingID: bk.BookingID, Type: isVoid ? 'VOID_REFUND' : 'CANCEL_REFUND', Direction: 'CREDIT', DebitPKR: 0, CreditPKR: refundAmt, BalanceBefore: balBefore, BalanceAfter: balAfter, Description: `${isVoid ? 'Void Refund' : 'Cancel Refund'}${fee > 0 ? ` (Fee ${fee.toLocaleString()})` : ''}: ${String(bk.ItemTitle || '').replace(/\s*\{[^}]+\}/g, '')} — ${bk.PassengerName}`, Status: 'REFUNDED', PerformedBy: email });
       }
-
-      if (bk.FareID && bk.Category !== 'Visit Visa') {
-        const matchedFare = DB.fares.find(f => String(f.ID) === String(bk.FareID));
-        if (matchedFare) matchedFare.Seats = Number(matchedFare.Seats || 0) + 1;
-      }
-
-      bk.Status = isVoid ? 'VOIDED' : 'CANCELED';
-      if (isVoid) { bk.VoidedBy = email; bk.VoidedAt = actionTime; } else { bk.CanceledBy = email; bk.CanceledAt = actionTime; }
+      if (bk.FareID && bk.Category !== 'Visit Visa') { const mf = DB.fares.find(f => String(f.ID) === String(bk.FareID)); if (mf) mf.Seats = Number(mf.Seats || 0) + 1; }
+      bk.Status = isVoid ? 'VOIDED' : 'CANCELED'; if (isVoid) { bk.VoidedBy = email; bk.VoidedAt = nowStr; } else { bk.CanceledBy = email; bk.CanceledAt = nowStr; }
       bk.HoldUntil = 0;
+      addSecurityLog(DB, email, bk.Status, `${bk.BookingID} (${bkAg}) Refund: PKR ${refundAmt.toLocaleString()} (Fee: ${fee})`, clientIp);
       await saveDB(DB);
 
       const matchedFare = bk.FareID ? DB.fares.find(f => String(f.ID) === String(bk.FareID)) : null;
       const invoiceUrl = `${getBaseUrl(req)}/api/backend?action=viewInvoice&bookingId=${encodeURIComponent(bk.BookingID)}&sig=${signInvoice(bk.BookingID, bk.PassportNo)}`;
-      const ticketPdfHtml = buildPrintableInvoicePage(bk, agentAcc, matchedFare, false);
-      await sendBookingEmailsSeparate({ adminEmails: DB.admins || [], subAgentEmail: bk.AgentEmail, paxEmail: bk.PassengerEmail, bId: bk.BookingID, dtStr: actionTime, agencyName: bk.AgencyName, paxName: bk.PassengerName, passportNo: bk.PassportNo, category: bk.Category, itemTitle: bk.ItemTitle, farePKR: bk.FarePKR, statusTxt: bk.Refunded ? `${bk.Status} & REFUNDED (PKR ${refundAmt.toLocaleString()})` : bk.Status, opts: { invoiceUrl, isVoided: isVoid, isCanceled: !isVoid, pnr: bk.PNR || '', ticketNo: bk.TicketNo || '', pdfHtml: ticketPdfHtml, bk, agent: agentAcc, matchedFare } });
-
-      return res.json({ ok: true, refundAmountPKR: refundAmt, newBalancePKR: agentAcc ? Number(agentAcc.BalancePKR || 0) : 0, message: bk.Refunded ? `Booking ${bk.Status} & PKR ${refundAmt.toLocaleString()} Refunded to Wallet!` : `Booking ${bk.Status}!` });
+      await sendBookingEmailsSeparate({ adminEmails: DB.admins || [], subAgentEmail: bk.AgentEmail, paxEmail: bk.PassengerEmail, bId: bk.BookingID, dtStr: nowStr, agencyName: bk.AgencyName, paxName: bk.PassengerName, passportNo: bk.PassportNo, category: bk.Category, itemTitle: bk.ItemTitle, farePKR: bk.FarePKR, statusTxt: bk.Status, opts: { invoiceUrl, isVoided: isVoid, isCanceled: !isVoid, pnr: bk.PNR, pdfHtml: buildPrintableInvoicePage(bk, agentAcc, matchedFare, false), bk, agent: agentAcc, matchedFare } });
+      return res.json({ ok: true, refundAmountPKR: refundAmt, newBalancePKR: agentAcc ? Number(agentAcc.BalancePKR || 0) : 0, message: `Booking ${bk.Status} & PKR ${refundAmt.toLocaleString()} Refunded to Wallet!` });
     }
 
     if (action === 'adminDeleteBooking' && isAdmin) {
-      const before = DB.bookings.length;
-      DB.bookings = DB.bookings.filter(b => b.BookingID !== p.bookingId);
+      const before = DB.bookings.length; DB.bookings = DB.bookings.filter(b => b.BookingID !== p.bookingId);
       if (DB.bookings.length === before) return res.json({ ok: false, message: 'Booking not found.' });
+      addSecurityLog(DB, email, 'DELETE_BOOKING', `Deleted ${p.bookingId}`, clientIp);
       await saveDB(DB);
-      return res.json({ ok: true, message: 'Booking deleted permanently!' });
+      return res.json({ ok: true, message: 'Booking deleted!' });
     }
 
     if (action === 'adminAddFare' && isAdmin) {
       const fareVal = Math.round(Number(p.farePKR || 0));
-      if (!p.title || !Number.isFinite(fareVal) || fareVal <= 0) return res.json({ ok: false, message: 'Title and valid PKR fare required.' });
-      const holdMins = clampInt(p.holdMins, 5, 4320, 30), seats = clampInt(p.seats, 0, 500, 15);
-      DB.fares.unshift({ ID: 'FARE-' + Date.now(), Category: p.category || 'Group Flight', Title: String(p.title || '').trim(), Timing: String(p.timing || 'As per Schedule').trim(), Luggage: String(p.luggage || '30 KG + 7 KG').trim(), Meal: String(p.meal || 'Included').trim(), Stay: String(p.stay || 'Direct / N/A').trim(), Details: String(p.details || '').trim(), TravelDate: String(p.travelDate || '').trim(), Seats: seats, HoldMins: holdMins, FarePKR: fareVal, Status: 'ACTIVE' });
+      if (!p.title || !Number.isFinite(fareVal) || fareVal <= 0) return res.json({ ok: false, message: 'Valid title & fare required.' });
+      DB.fares.unshift({ ID: 'FARE-' + Date.now(), Category: p.category || 'Group Flight', Title: String(p.title).trim(), Timing: String(p.timing || 'As per Schedule').trim(), Luggage: String(p.luggage || '30 KG + 7 KG').trim(), Meal: String(p.meal || 'Included').trim(), Stay: String(p.stay || 'Direct').trim(), Details: String(p.details || '').trim(), TravelDate: String(p.travelDate || '').trim(), Seats: clampInt(p.seats, 0, 500, 15), HoldMins: clampInt(p.holdMins, 5, 4320, 30), FarePKR: fareVal, Status: 'ACTIVE' });
       await saveDB(DB);
-      return res.json({ ok: true, message: 'Fare/Package published with ' + holdMins + ' mins hold timer!' });
+      return res.json({ ok: true, message: 'Fare/Package published!' });
     }
 
     if (action === 'adminDeleteFare' && isAdmin) {
-      const before = DB.fares.length;
       DB.fares = DB.fares.filter(f => String(f.ID) !== String(p.fareId));
-      if (DB.fares.length === before) return res.json({ ok: false, message: 'Fare/Package not found.' });
       await saveDB(DB);
-      return res.json({ ok: true, message: 'Fare/Package removed!' });
+      return res.json({ ok: true, message: 'Fare removed!' });
     }
 
     if (action === 'adminAddBank' && isAdmin) {
-      if (!p.bankName || !p.accountNumber) return res.json({ ok: false, message: 'Bank Name and Account Number required.' });
+      if (!p.bankName || !p.accountNumber) return res.json({ ok: false, message: 'Bank & Account Number required.' });
       DB.banks.push({ BankID: 'BNK-' + Date.now(), BankName: String(p.bankName).trim(), AccountTitle: String(p.accountTitle || '').trim(), AccountNumber: String(p.accountNumber).trim(), IBAN: String(p.iban || '').trim() });
       await saveDB(DB);
-      return res.json({ ok: true, message: 'Payment account added!' });
+      return res.json({ ok: true, message: 'Bank account added!' });
     }
 
     if (action === 'adminDeleteBank' && isAdmin) {
-      const before = DB.banks.length;
       DB.banks = DB.banks.filter((b, idx) => (p.bankId && b.BankID) ? String(b.BankID) !== String(p.bankId) : (p.accountNumber ? String(b.AccountNumber) !== String(p.accountNumber) : String(idx) !== String(p.index)));
-      if (DB.banks.length === before) return res.json({ ok: false, message: 'Bank account not found.' });
       await saveDB(DB);
-      return res.json({ ok: true, message: 'Payment account removed!' });
+      return res.json({ ok: true, message: 'Bank removed!' });
     }
 
     if (action === 'adminManageAgent' && isAdmin) {
@@ -873,45 +749,43 @@ module.exports = async function handler(req, res) {
       if (!target) return res.json({ ok: false, message: 'Agent not found.' });
 
       if (p.subAction === 'APPROVE') {
-        target.Status = 'APPROVED'; target.FailedAttempts = 0; target.TotpFailedAttempts = 0; await saveDB(DB);
-        const appBody = `<div style="font-family:Arial,sans-serif;padding:20px;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;"><h2 style="color:#15803d;margin-top:0;">&#10003; B2B Account Approved!</h2><p>Assalam-o-Alaikum <b>${escHtml(target.AgencyName)}</b>, aapka Golan International B2B account approve ho gaya hai.</p></div>`;
-        await sendGasPair({ to: targetEmail, subject: `Account Approved - ${target.AgencyName}`, htmlBody: appBody, agencyName: target.AgencyName }, { to: uniqueEmails(DB.admins || []), subject: `[ADMIN] Account Approved - ${target.AgencyName}`, htmlBody: appBody, agencyName: target.AgencyName });
-        return res.json({ ok: true, message: 'Agent updated: APPROVE' });
-      }
-      const authActions = {
-        GRANT_ISSUE: { field: 'CanIssue', val: true, title: 'Ticket Issue Authority Granted' },
-        REVOKE_ISSUE: { field: 'CanIssue', val: false, title: 'Ticket Issue Authority Revoked' },
-        GRANT_VOID: { field: 'CanVoid', val: true, title: 'Ticket Voiding Authority Granted' },
-        REVOKE_VOID: { field: 'CanVoid', val: false, title: 'Ticket Voiding Authority Revoked' },
-        GRANT_CANCEL: { field: 'CanCancel', val: true, title: 'Booking Cancel Authority Granted' },
-        REVOKE_CANCEL: { field: 'CanCancel', val: false, title: 'Booking Cancel Authority Revoked' }
-      };
-      if (authActions[p.subAction]) {
-        const cfg = authActions[p.subAction];
-        target[cfg.field] = cfg.val;
+        target.Status = 'APPROVED'; target.FailedAttempts = 0; target.TotpFailedAttempts = 0;
+        addSecurityLog(DB, targetEmail, 'APPROVE_AGENT', `Approved by ${email}`, clientIp);
         await saveDB(DB);
-        const aBody = `<div style="font-family:Arial,sans-serif;padding:20px;background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;"><h2 style="color:#0b1f44;margin-top:0;">${cfg.title}</h2><p>Agency: <b>${escHtml(target.AgencyName)}</b></p></div>`;
-        await sendGasPair({ to: targetEmail, subject: `${cfg.title} - ${target.AgencyName}`, htmlBody: aBody, agencyName: target.AgencyName }, { to: uniqueEmails(DB.admins || []), subject: `[ADMIN] ${cfg.title} - ${target.AgencyName}`, htmlBody: aBody, agencyName: target.AgencyName });
-        return res.json({ ok: true, message: `✅ ${cfg.title} for ${target.AgencyName}` });
+        return res.json({ ok: true, message: 'Agent Approved!' });
       }
-      if (p.subAction === 'BLOCK') { target.Status = 'BLOCKED'; target.SessionToken = ''; }
-      else if (p.subAction === 'ADD_LIMIT') {
-        const amt = Math.round(Number(p.amountPKR || 0));
+      const authMap = { GRANT_ISSUE: ['CanIssue', true], REVOKE_ISSUE: ['CanIssue', false], GRANT_VOID: ['CanVoid', true], REVOKE_VOID: ['CanVoid', false], GRANT_CANCEL: ['CanCancel', true], REVOKE_CANCEL: ['CanCancel', false] };
+      if (authMap[p.subAction]) {
+        const [fld, val] = authMap[p.subAction]; target[fld] = val;
+        addSecurityLog(DB, targetEmail, p.subAction, `Changed by ${email}`, clientIp);
+        await saveDB(DB);
+        return res.json({ ok: true, message: `Updated ${p.subAction} for ${target.AgencyName}` });
+      }
+      if (p.subAction === 'BLOCK') {
+        target.Status = 'BLOCKED'; target.SessionToken = ''; target.SessionExpiry = 0;
+        addSecurityLog(DB, targetEmail, 'BLOCK_AGENT', `Blocked by ${email}`, clientIp);
+      } else if (p.subAction === 'FORCE_LOGOUT') {
+        target.SessionToken = ''; target.SessionExpiry = 0;
+        addSecurityLog(DB, targetEmail, 'FORCE_LOGOUT', `Session terminated by ${email}`, clientIp);
+      } else if (p.subAction === 'ADD_LIMIT' || p.subAction === 'DEDUCT_LIMIT') {
+        const isAdd = p.subAction === 'ADD_LIMIT', amt = Math.round(Number(p.amountPKR || 0));
         if (!Number.isFinite(amt) || amt <= 0) return res.json({ ok: false, message: 'Enter valid positive PKR amount.' });
-        const balBefore = Number(target.BalancePKR || 0), balAfter = balBefore + amt, nowStr = getPKTimeStr();
+        const balBefore = Number(target.BalancePKR || 0);
+        if (!isAdd && balBefore < amt) return res.json({ ok: false, message: `Cannot deduct PKR ${amt.toLocaleString()} (Wallet only has PKR ${balBefore.toLocaleString()}).` });
+        const balAfter = isAdd ? (balBefore + amt) : (balBefore - amt), nowStr = getPKTimeStr(), refId = (isAdd ? 'LIM-' : 'DED-') + crypto.randomInt(10000, 99999);
         target.BalancePKR = balAfter;
-        const limId = 'LIM-' + crypto.randomInt(10000, 99999);
-        DB.deposits.unshift({ DepositID: limId, CreatedAt: nowStr, ApprovedAt: nowStr, ApprovedBy: email, AgentEmail: targetEmail, AgencyName: target.AgencyName, BankName: 'Head Office Direct Limit', AmountPKR: amt, TxRef: 'ADMIN-LIMIT', SlipImage: '', Status: 'APPROVED' });
-        addLedgerEntry(DB, { CreatedAt: nowStr, AgentEmail: targetEmail, AgencyName: target.AgencyName, RefID: limId, BookingID: '', Type: 'LIMIT_CREDIT', Direction: 'CREDIT', DebitPKR: 0, CreditPKR: amt, BalanceBefore: balBefore, BalanceAfter: balAfter, Description: `Head Office Wallet Limit Added (+PKR ${amt.toLocaleString()})`, Status: 'APPROVED', PerformedBy: email });
+        if (isAdd) DB.deposits.unshift({ DepositID: refId, CreatedAt: nowStr, ApprovedAt: nowStr, ApprovedBy: email, AgentEmail: targetEmail, AgencyName: target.AgencyName, BankName: 'Head Office Direct Limit', AmountPKR: amt, TxRef: 'ADMIN-LIMIT', SlipImage: '', Status: 'APPROVED' });
+        const reason = String(p.reason || (isAdd ? 'Head Office Limit Added' : 'Head Office Deduction')).trim().slice(0, 120);
+        addLedgerEntry(DB, { CreatedAt: nowStr, AgentEmail: targetEmail, AgencyName: target.AgencyName, RefID: refId, BookingID: '', Type: isAdd ? 'LIMIT_CREDIT' : 'ADMIN_DEDUCT', Direction: isAdd ? 'CREDIT' : 'DEBIT', DebitPKR: isAdd ? 0 : amt, CreditPKR: isAdd ? amt : 0, BalanceBefore: balBefore, BalanceAfter: balAfter, Description: `${reason} (${isAdd ? '+' : '-'}PKR ${amt.toLocaleString()})`, Status: isAdd ? 'APPROVED' : 'DEDUCTED', PerformedBy: email });
+        addSecurityLog(DB, targetEmail, p.subAction, `PKR ${amt.toLocaleString()} (${reason}) by ${email}`, clientIp);
         await saveDB(DB);
-        const limBody = `<div style="font-family:Arial,sans-serif;padding:20px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;"><h2 style="color:#0b1f44;margin-top:0;">Wallet Limit Credited</h2><p><b>Agency:</b> ${escHtml(target.AgencyName)}</p><p><b>Added Amount:</b> PKR ${amt.toLocaleString()}</p><p><b>New Balance:</b> PKR ${balAfter.toLocaleString()}</p></div>`;
-        await sendGasPair({ to: targetEmail, subject: `Wallet Limit Added: PKR ${amt.toLocaleString()} - ${target.AgencyName}`, htmlBody: limBody, agencyName: target.AgencyName }, { to: uniqueEmails(DB.admins || []), subject: `[ADMIN] Wallet Limit Added: PKR ${amt.toLocaleString()} - ${target.AgencyName}`, htmlBody: limBody, agencyName: target.AgencyName });
-        return res.json({ ok: true, message: `✅ PKR ${amt.toLocaleString()} Limit Added & Ledger Updated!` });
+        return res.json({ ok: true, message: `✅ PKR ${amt.toLocaleString()} ${isAdd ? 'Added' : 'Deducted'} & Ledger Updated!` });
       } else if (p.subAction === 'RESET_PASSWORD') {
         const np = String(p.newPassword || '');
-        if (np.length < 6) return res.json({ ok: false, message: 'New password must be at least 6 characters.' });
+        if (np.length < 6) return res.json({ ok: false, message: 'Min 6 chars required.' });
         target.PasswordHash = hashPwd(np); target.TotpSecret = generateSecret(); target.TotpVerified = 'NO'; target.Status = 'APPROVED'; target.FailedAttempts = 0; target.TotpFailedAttempts = 0; target.SessionToken = '';
-      } else return res.json({ ok: false, message: 'Invalid admin sub-action.' });
+        addSecurityLog(DB, targetEmail, 'RESET_PASSWORD', `Password & 2FA reset by ${email}`, clientIp);
+      } else return res.json({ ok: false, message: 'Invalid sub-action.' });
 
       await saveDB(DB);
       return res.json({ ok: true, message: 'Agent updated: ' + p.subAction });
@@ -923,23 +797,24 @@ module.exports = async function handler(req, res) {
       const amt = Math.round(Number(dep.AmountPKR || 0)), nowStr = getPKTimeStr();
       dep.Status = 'APPROVED'; dep.ApprovedAt = nowStr; dep.ApprovedBy = email;
       const targetEmail = String(dep.AgentEmail || '').trim().toLowerCase(), target = DB.agents[targetEmail];
-      const balBefore = target ? Number(target.BalancePKR || 0) : 0;
-      const balAfter = target ? (balBefore + amt) : 0;
+      const balBefore = target ? Number(target.BalancePKR || 0) : 0, balAfter = target ? (balBefore + amt) : 0;
       if (target) target.BalancePKR = balAfter;
-
-      addLedgerEntry(DB, {
-        CreatedAt: nowStr, AgentEmail: targetEmail, AgencyName: dep.AgencyName || (target && target.AgencyName) || '',
-        RefID: dep.DepositID, BookingID: '', Type: 'DEPOSIT_CREDIT', Direction: 'CREDIT',
-        DebitPKR: 0, CreditPKR: amt, BalanceBefore: balBefore, BalanceAfter: balAfter,
-        Description: `Approved Deposit (${dep.BankName} • Ref: ${dep.TxRef})`,
-        Status: 'APPROVED', PerformedBy: email
-      });
-
+      addLedgerEntry(DB, { CreatedAt: nowStr, AgentEmail: targetEmail, AgencyName: dep.AgencyName || (target && target.AgencyName) || '', RefID: dep.DepositID, BookingID: '', Type: 'DEPOSIT_CREDIT', Direction: 'CREDIT', DebitPKR: 0, CreditPKR: amt, BalanceBefore: balBefore, BalanceAfter: balAfter, Description: `Approved Deposit (${dep.BankName} • Ref: ${dep.TxRef})`, Status: 'APPROVED', PerformedBy: email });
+      addSecurityLog(DB, targetEmail, 'DEPOSIT_APPROVE', `${dep.DepositID} PKR ${amt.toLocaleString()} approved by ${email}`, clientIp);
       await saveDB(DB);
       const receiptUrl = `${getBaseUrl(req)}/api/backend?action=viewReceipt&depositId=${encodeURIComponent(dep.DepositID)}&sig=${signReceipt(dep.DepositID, dep.AgentEmail)}`;
-      const emailHtml = buildDepositEmailHtml(dep, receiptUrl), receiptPdfHtml = buildPrintableReceiptPage(dep, false);
-      await sendGasPair({ to: dep.AgentEmail, subject: `Deposit Approved [${dep.DepositID}] PKR ${amt.toLocaleString()}`, htmlBody: emailHtml, pdfHtml: receiptPdfHtml, pdfName: `Receipt-${dep.DepositID}.pdf`, bId: dep.DepositID, agencyName: dep.AgencyName }, { to: uniqueEmails(DB.admins || []), subject: `[ADMIN] Deposit Approved [${dep.DepositID}] PKR ${amt.toLocaleString()}`, htmlBody: emailHtml, pdfHtml: receiptPdfHtml, pdfName: `Receipt-${dep.DepositID}.pdf`, bId: dep.DepositID, agencyName: dep.AgencyName });
-      return res.json({ ok: true, newBalancePKR: balAfter, message: `Deposit Approved & PKR ${amt.toLocaleString()} added to agent wallet & ledger!` });
+      await sendGasPair({ to: dep.AgentEmail, subject: `Deposit Approved [${dep.DepositID}] PKR ${amt.toLocaleString()}`, htmlBody: buildDepositEmailHtml(dep, receiptUrl), pdfHtml: buildPrintableReceiptPage(dep, false), pdfName: `Receipt-${dep.DepositID}.pdf`, bId: dep.DepositID, agencyName: dep.AgencyName }, { to: uniqueEmails(DB.admins || []), subject: `[ADMIN] Deposit Approved [${dep.DepositID}] PKR ${amt.toLocaleString()}`, htmlBody: buildDepositEmailHtml(dep, receiptUrl), pdfHtml: buildPrintableReceiptPage(dep, false), pdfName: `Receipt-${dep.DepositID}.pdf`, bId: dep.DepositID, agencyName: dep.AgencyName });
+      return res.json({ ok: true, newBalancePKR: balAfter, message: `Deposit Approved & PKR ${amt.toLocaleString()} credited!` });
+    }
+
+    if (action === 'adminRejectDeposit' && isAdmin) {
+      const dep = DB.deposits.find(d => String(d.DepositID) === String(p.depositId));
+      if (!dep || String(dep.Status || '').toUpperCase() !== 'PENDING') return res.json({ ok: false, message: 'Pending deposit not found.' });
+      dep.Status = 'REJECTED'; dep.RejectedAt = getPKTimeStr(); dep.RejectedBy = email; dep.RejectReason = String(p.reason || 'Rejected by Admin').slice(0, 160);
+      addSecurityLog(DB, dep.AgentEmail, 'DEPOSIT_REJECT', `${dep.DepositID} rejected: ${dep.RejectReason}`, clientIp);
+      await saveDB(DB);
+      await sendGasPair({ to: dep.AgentEmail, subject: `Deposit Rejected [${dep.DepositID}]`, htmlBody: buildDepositEmailHtml(dep, ''), bId: dep.DepositID, agencyName: dep.AgencyName }, { to: uniqueEmails(DB.admins || []), subject: `[ADMIN] Deposit Rejected [${dep.DepositID}]`, htmlBody: buildDepositEmailHtml(dep, ''), bId: dep.DepositID, agencyName: dep.AgencyName });
+      return res.json({ ok: true, message: `Deposit ${dep.DepositID} marked REJECTED.` });
     }
 
     return res.json({ ok: false, message: 'Invalid request' });
